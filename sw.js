@@ -103,11 +103,6 @@ const SHELL = [
   './src/ui/settings/settings.js',
   './src/ui/settings/status.js',
   './src/ui/typeMeta.js',
-  './src/ui/views/about.js',
-  './src/ui/views/detail.js',
-  './src/ui/views/list.js',
-  './src/ui/views/review.js',
-  './src/ui/views/settings.js',
 ];
 
 self.addEventListener('install', (event) => {
