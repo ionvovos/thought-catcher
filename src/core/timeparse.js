@@ -12,6 +12,10 @@ const RE_REL_DAY = new RegExp(`\\bin ${NUM} (days?|weeks?)\\b`);
 const RE_TOMORROW = /\btomorrow\b/;
 const RE_WEEKDAY = new RegExp(`\\b(?:(?:on|next) )?(${WEEKDAYS.join('|')})\\b`);
 const RE_NEXT_WEEK = /\bnext week\b/;
+const RE_YESTERDAY = /\byesterday\b/;
+// "today" only counts together with a time ("today at 8pm"); "tonight" and "this evening" carry their own default hour.
+const RE_TODAY = /\b(today|tonight|this evening)\b/;
+const DEFAULT_HOUR = { tonight: 20, 'this evening': 20 };
 
 const norm = (text) => String(text ?? '').toLowerCase().replace(/[’‘]/g, "'");
 const num = (s) => (/^\d+$/.test(s) ? Number(s) : NUM_WORDS[s]);
@@ -65,6 +69,16 @@ export function parseWhen(text, now) {
   if (rel !== null) return { due_at: new Date(now.getTime() + rel).toISOString(), kind: 'clock' };
   const c = clock(t);
   const days = dateOffsetDays(t, now);
+  if (days === null && RE_YESTERDAY.test(t)) return { due_at: null, kind: null }; // a past day is not a due time
+  if (days === null) {
+    const today = t.match(RE_TODAY);
+    if (today && (c || DEFAULT_HOUR[today[1]] !== undefined)) {
+      const h = c ? c.h : DEFAULT_HOUR[today[1]];
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, c ? c.min : 0, 0, 0);
+      // a time that has already passed today is not scheduled for tomorrow: the app asks when instead
+      return d.getTime() > now.getTime() ? { due_at: d.toISOString(), kind: 'clock' } : { due_at: null, kind: null };
+    }
+  }
   if (days !== null) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days, c ? c.h : 9, c ? c.min : 0, 0, 0);
     return { due_at: d.toISOString(), kind: c ? 'clock' : 'date' };

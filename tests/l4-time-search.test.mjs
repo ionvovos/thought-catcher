@@ -65,11 +65,11 @@ test('the same phrase parses the same way at another clock (relative to the pass
   assert.equal(new Date(b).getDate(), 6);
 });
 
-test('L4 gap F-time-1: "tonight", "this evening" and "today at ..." are common reminder words and give a time', { todo: 'not parsed: a "remind me tonight" thought becomes a reminder with no time and never resurfaces' }, () => {
+test('L4 gap F-time-1: "tonight", "this evening" and "today at ..." are common reminder words and give a time', () => {
   for (const t of ['remind me tonight', 'this evening', 'today at 8pm']) assert.ok(due(t), t);
 });
 
-test('L4 gap F-time-2: "yesterday at 5pm" is not scheduled for tomorrow', { todo: 'yesterday is ignored and "at 5pm" rolls forward to tomorrow' }, () => {
+test('L4 gap F-time-2: "yesterday at 5pm" is not scheduled for tomorrow', () => {
   const d = due('yesterday at 5pm');
   assert.ok(d === null || Date.parse(d) <= NOW.getTime() || new Date(d).getDate() === 29, String(d));
 });

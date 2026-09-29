@@ -42,3 +42,15 @@ test('scanWhen and input checks', () => {
   parseWhen('tomorrow at 7am', NOW);
   assert.equal(NOW.getTime(), before);
 });
+
+test('tonight, this evening and today at ... resolve to today; a past time or yesterday gives no time', () => {
+  assert.deepEqual(parseWhen('remind me tonight', NOW), { due_at: local(8, 29, 20), kind: 'clock' });
+  assert.deepEqual(parseWhen('this evening', NOW), { due_at: local(8, 29, 20), kind: 'clock' });
+  assert.deepEqual(parseWhen('tonight at 9pm', NOW), { due_at: local(8, 29, 21), kind: 'clock' });
+  assert.deepEqual(parseWhen('today at 8pm', NOW), { due_at: local(8, 29, 20), kind: 'clock' });
+  // NOW is 10:00: 8am today has passed, so no time is parsed (the app asks when) instead of tomorrow
+  assert.deepEqual(parseWhen('today at 8am', NOW), { due_at: null, kind: null });
+  assert.deepEqual(parseWhen('yesterday at 5pm', NOW), { due_at: null, kind: null });
+  assert.deepEqual(parseWhen('yesterday I said remind me tomorrow at 9am', NOW), { due_at: local(8, 30, 9), kind: 'clock' });
+  assert.deepEqual(parseWhen('today was good', NOW), { due_at: null, kind: null });
+});
