@@ -3,7 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; img-src 'self' data: blob:; style-src 'self'; media-src 'self' blob:; base-uri 'self'; object-src 'none'; form-action 'self'">
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#1d4ed8">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon-180.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Thoughts">
   <meta name="description" content="Catch a thought by voice or typing. Sorted for you. Your data stays on your device.">
   <title>Thought Catcher</title>
   <link rel="stylesheet" href="./css/app.css">

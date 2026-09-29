@@ -81,3 +81,7 @@ main().catch((err) => {
   console.error(err);
   showBanner(`Thought Catcher could not start: ${err.message}`);
 });
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+}

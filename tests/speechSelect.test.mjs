@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SpeechError, selectEngine, transcribeWithFallback, speechMessage } from '../src/speech/select.js';
+import { SpeechError, selectEngine, transcribeWithFallback, speechMessage, failureMessage, enginesToMarkFailed, ON_DEVICE_FAILED } from '../src/speech/select.js';
 
 function stub(id, { available = true, result = '', error = null } = {}) {
   const calls = [];
@@ -31,15 +31,27 @@ test('browser preference', () => {
   assert.deepEqual(selectEngine([w, stub('browser', { available: false })], { engine: 'browser' }), { engine: null, reason: 'unavailable' });
 });
 
-test('whisper preference falls back when unavailable or failed', async () => {
+test('whisper preference never falls back to the browser service', async () => {
   const w = stub('whisper', { available: false });
   const b = stub('browser', { result: 'hi' });
-  assert.equal(selectEngine([w, b], { engine: 'whisper' }).engine.id, 'browser');
+  assert.deepEqual(selectEngine([w, b], { engine: 'whisper' }), { engine: null, reason: 'unavailable' });
   const r = await transcribeWithFallback([w, b], { engine: 'whisper' }, null, {});
-  assert.equal(r.text, 'hi');
-  assert.equal(w.calls.length, 0);
-  const w2 = stub('whisper');
-  assert.equal(selectEngine([w2, b], { engine: 'whisper', failed: new Set(['whisper']) }).engine.id, 'browser');
+  assert.equal(r.text, null);
+  assert.equal(b.calls.length, 0);
+  const failing = stub('whisper', { error: new SpeechError('failed') });
+  const r2 = await transcribeWithFallback([failing, b], { engine: 'whisper' }, null, {});
+  assert.equal(r2.text, null);
+  assert.equal(b.calls.length, 0);
+});
+
+test('failure message and session memory for the on-device choice', () => {
+  const result = { text: null, engine: null, errors: [{ engine: 'whisper', code: 'failed' }], reason: 'failed' };
+  assert.equal(failureMessage({ engine: 'whisper' }, result), ON_DEVICE_FAILED);
+  assert.equal(failureMessage({ engine: 'ask' }, result), speechMessage('failed'));
+  const mic = { ...result, errors: [{ engine: 'whisper', code: 'not-allowed' }], reason: 'not-allowed' };
+  assert.equal(failureMessage({ engine: 'whisper' }, mic), speechMessage('not-allowed'));
+  assert.deepEqual(enginesToMarkFailed({ engine: 'whisper' }, result), []);
+  assert.deepEqual(enginesToMarkFailed({ engine: 'ask' }, result), ['whisper']);
 });
 
 test('ask and unknown preference try whisper first', () => {

@@ -16,6 +16,9 @@ export function aboutSections(features = { onDeviceSpeech: false }) {
   const speech = features.onDeviceSpeech
     ? [SPEECH_STATEMENT, 'The on-device model is a one-time download of about 60 MB and suits newer phones. Audio is never saved, only the text.']
     : [SPEECH_NO_MODEL, 'Audio is never saved, only the text.'];
+  const leaves = features.onDeviceSpeech
+    ? 'Nothing else leaves your device, apart from what the Speech and AI sections below describe. The on-device voice model is downloaded once from public servers (jsDelivr and Hugging Face), which see your internet address but none of your thoughts.'
+    : 'Nothing else leaves your device, apart from what the Speech and AI sections below describe.';
   return [
     {
       heading: 'What it is',
@@ -38,7 +41,7 @@ export function aboutSections(features = { onDeviceSpeech: false }) {
     {
       heading: 'Your data',
       paragraphs: [
-        'Your thoughts are stored on this device only. There is no account and no server. Nothing is uploaded unless you set up an AI service, see below.',
+        'Your thoughts are stored on this device only. There is no account and no server. ' + leaves,
         'Clearing your browser data, or iOS removing data from an app you have not opened for a while, can delete your thoughts. Use Export in Settings to keep a backup file now and then. Import restores it.',
       ],
     },

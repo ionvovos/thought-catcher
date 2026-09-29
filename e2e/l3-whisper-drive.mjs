@@ -6,6 +6,7 @@ import { launch, sleep } from './lib/cdp.mjs';
 const b = await launch({ chromeArgs: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', '--autoplay-policy=no-user-gesture-required'] });
 const out = {};
 const q = (s) => `document.querySelector(${JSON.stringify(s)})`;
+await b.send('Browser.grantPermissions', { permissions: ['audioCapture'], origin: b.base });
 await b.load(`${b.base}/#/capture`);
 out.consentBefore = await b.ev(`Boolean(${q('.consent')})`);
 await b.ev(`${q('.record-btn')}.click()`);
@@ -16,7 +17,7 @@ await b.ev(`${q('[data-choice=whisper]')}.click()`);
 const states = [];
 for (let i = 0; i < 600; i += 1) {   // up to 5 min for the first download
   const st = await b.ev(`document.getElementById('capture-status').textContent`);
-  if (states[states.length - 1] !== st) states.push(st);
+  if (states[states.length - 1] !== st) { states.push(st); console.log(new Date().toISOString().slice(11, 19), st); }
   if (st.startsWith('Listening')) break;
   await sleep(500);
 }
@@ -25,7 +26,7 @@ await sleep(2500);
 await b.ev(`${q('.record-btn')}.click()`);   // stop
 for (let i = 0; i < 240; i += 1) {
   const st = await b.ev(`document.getElementById('capture-status').textContent`);
-  if (states[states.length - 1] !== st) states.push(st);
+  if (states[states.length - 1] !== st) { states.push(st); console.log(new Date().toISOString().slice(11, 19), st); }
   if (!/Listening|Turning your voice|Getting/.test(st)) break;
   await sleep(500);
 }

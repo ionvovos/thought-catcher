@@ -14,7 +14,7 @@ export class SpeechError extends Error {
 
 export const ENGINE_ORDER = Object.freeze({
   ask: ['whisper', 'browser'],
-  whisper: ['whisper', 'browser'],
+  whisper: ['whisper'], // chosen for privacy (audio stays on the device): never fall back to a service that receives audio
   browser: ['browser'],
   typing: [],
 });
@@ -27,8 +27,23 @@ const MESSAGES = {
   failed: 'Voice input failed. Type your thought instead.',
 };
 
+export const ON_DEVICE_FAILED = 'On-device voice could not start. Type, or choose the browser speech service in Settings.';
+
 export function speechMessage(code) {
   return MESSAGES[code] ?? MESSAGES.failed;
+}
+
+// The message for a failed transcribeWithFallback result. A failure of the on-device model gets its own text,
+// because the person chose it for privacy and the app does not switch to a service that receives audio.
+export function failureMessage(prefs, result) {
+  const onDevice = prefs?.engine === 'whisper' && result.errors.some((e) => e.engine === 'whisper' && e.code !== 'not-allowed');
+  return onDevice ? ON_DEVICE_FAILED : speechMessage(result.reason);
+}
+
+// Engines to remember as failed for the rest of the session. The on-device engine is never remembered when it is
+// the person's choice, so a temporary problem (network during the first download) can be retried.
+export function enginesToMarkFailed(prefs, result) {
+  return result.errors.map((e) => e.engine).filter((id) => !(prefs?.engine === 'whisper' && id === 'whisper'));
 }
 
 function candidates(engines, prefs) {

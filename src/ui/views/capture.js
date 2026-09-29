@@ -2,7 +2,7 @@
 import { el } from '../dom.js';
 import { sortByRules } from '../../core/sorter.js';
 import { newThought } from '../../core/model.js';
-import { selectEngine, transcribeWithFallback, speechMessage } from '../../speech/select.js';
+import { selectEngine, transcribeWithFallback, speechMessage, failureMessage, enginesToMarkFailed } from '../../speech/select.js';
 import { ensureSpeechChoice } from '../consent.js';
 import { getSettings } from '../../storage/settings.js';
 
@@ -96,26 +96,26 @@ export default async function renderCapture(root, ctx) {
     setRecording(false);
     interim.textContent = '';
     if (result.text === null) {
-      for (const e of result.errors) ctx.speech.failed.add(e.engine);
+      for (const id of enginesToMarkFailed(ctx.speech, result)) ctx.speech.failed.add(id);
       refreshEngine();
-      setStatus(speechMessage(result.reason));
+      setStatus(failureMessage(ctx.speech, result));
       field.focus();
     } else if (result.text === '') {
       setStatus('nothing heard');
     } else {
       field.value = field.value.trim() ? `${field.value.trim()} ${result.text}` : result.text;
       source = 'voice';
-      const fellBack = ctx.speech.engine === 'whisper' && result.engine === 'browser';
-      setStatus(fellBack
-        ? "The on-device model did not load, so your browser's speech service was used. Check the text, then save."
-        : 'Check the text, then save.');
+      setStatus('Check the text, then save.');
       field.focus();
     }
   }
 
+  let saving = false;
   async function save() {
+    if (saving) return; // a second submit in the same instant must not store the thought twice
     const text = field.value.trim();
     if (!text) { setStatus('Nothing to save yet. Type or record a thought first.'); return; }
+    saving = true;
     saveBtn.disabled = true;
     try {
       const now = ctx.now();
@@ -128,6 +128,7 @@ export default async function renderCapture(root, ctx) {
     } catch (err) {
       setStatus(`Could not save: ${err.message}`);
     } finally {
+      saving = false;
       saveBtn.disabled = false;
     }
   }

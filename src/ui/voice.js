@@ -1,5 +1,5 @@
 // Wires a "Speak" button to the speech engines: press to listen, press again to stop, text goes to onText.
-import { selectEngine, transcribeWithFallback, speechMessage } from '../speech/select.js';
+import { selectEngine, transcribeWithFallback, speechMessage, failureMessage, enginesToMarkFailed } from '../speech/select.js';
 import { ensureSpeechChoice } from './consent.js';
 
 // Returns a function that stops any listening and removes the handler.
@@ -33,9 +33,9 @@ export function attachVoice({ button, engines, speech, host, onText, onMessage }
     button.setAttribute('aria-pressed', 'false');
     button.textContent = label;
     if (result.text === null) {
-      for (const e of result.errors) speech.failed.add(e.engine);
+      for (const id of enginesToMarkFailed(speech, result)) speech.failed.add(id);
       refresh();
-      onMessage?.(speechMessage(result.reason));
+      onMessage?.(failureMessage(speech, result));
     } else if (result.text === '') {
       onMessage?.('nothing heard');
     } else {

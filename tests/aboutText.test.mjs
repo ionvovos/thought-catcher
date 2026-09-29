@@ -56,3 +56,13 @@ test('AC-M1.3: the desktop shortcut is documented, and export and backup advice 
   assert.match(t, /iOS removing data/);
   assert.match(t, /spending limit/);
 });
+
+test('Your data: says what else leaves the device, and names the model download only when the model ships', () => {
+  const withModel = aboutSections({ onDeviceSpeech: true }).find((x) => x.heading === 'Your data').paragraphs.join(' ');
+  assert.match(withModel, /Nothing else leaves your device, apart from what the Speech and AI sections below describe\./);
+  assert.match(withModel, /downloaded once from public servers \(jsDelivr and Hugging Face\), which see your internet address but none of your thoughts/);
+  assert.equal(/Nothing is uploaded unless/.test(withModel), false);
+  const without = aboutSections({ onDeviceSpeech: false }).find((x) => x.heading === 'Your data').paragraphs.join(' ');
+  assert.match(without, /Nothing else leaves your device/);
+  assert.equal(/jsDelivr|Hugging Face/.test(without), false);
+});

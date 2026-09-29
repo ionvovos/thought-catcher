@@ -6,14 +6,17 @@ export const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/trans
 export const WHISPER_MODEL = 'onnx-community/whisper-tiny';
 const SAMPLE_RATE = 16000;
 const MIN_SECONDS = 0.4;
+const SILENCE_RMS = 0.004; // below this the recording is silence; Whisper would invent words for it
 
 async function defaultLoadPipeline(onProgress) {
   const { pipeline } = await import(TRANSFORMERS_URL);
-  const make = (device) => pipeline('automatic-speech-recognition', WHISPER_MODEL, { device, dtype: 'q8', progress_callback: onProgress });
-  if (globalThis.navigator?.gpu) {
-    try { return await make('webgpu'); } catch { /* fall through to WebAssembly */ }
-  }
-  return make('wasm');
+  // The runtime remembers a backend that failed to start, so a failed WebGPU attempt cannot be retried on
+  // WebAssembly. Ask for a GPU adapter first and use WebGPU only when one really exists.
+  let adapter = null;
+  try { adapter = await globalThis.navigator?.gpu?.requestAdapter(); } catch { /* no usable GPU */ }
+  return pipeline('automatic-speech-recognition', WHISPER_MODEL, {
+    device: adapter ? 'webgpu' : 'wasm', dtype: 'q8', progress_callback: onProgress,
+  });
 }
 
 // Blob of recorded audio -> 16 kHz mono Float32Array.
@@ -78,11 +81,15 @@ export function createWhisperEngine({ win = globalThis, loadPipeline = defaultLo
     // opts: { stop: AbortSignal, onState(kind, detail) } with kind 'loading' (detail: 0-100), 'listening', 'transcribing'.
     async transcribe(_input, { stop = new AbortController().signal, onState } = {}) {
       // 1. Load the model first, so a failure here happens before the person has spoken and the next engine can take over.
+      // Files join the download one after another, so the average can dip; the bar only moves forward.
       const files = new Map();
+      let shown = 0;
       const progress = (p) => {
         if (p?.status === 'progress' && p.file) files.set(p.file, p.progress ?? 0);
         const values = [...files.values()];
-        if (values.length) onState?.('loading', Math.round(values.reduce((a, b) => a + b, 0) / values.length));
+        if (!values.length) return;
+        shown = Math.max(shown, Math.round(values.reduce((a, b) => a + b, 0) / values.length));
+        onState?.('loading', shown);
       };
       if (!loaded) onState?.('loading', 0);
       let pipe;
@@ -101,6 +108,9 @@ export function createWhisperEngine({ win = globalThis, loadPipeline = defaultLo
       try {
         const audio = await toMono16k(blob, win);
         if (!audio) return '';
+        let sum = 0;
+        for (let i = 0; i < audio.length; i += 1) sum += audio[i] * audio[i];
+        if (Math.sqrt(sum / audio.length) < SILENCE_RMS) return '';
         const out = await pipe(audio, { language: 'english', task: 'transcribe' });
         return String(out?.text ?? '').trim();
       } catch {
