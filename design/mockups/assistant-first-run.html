@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Thought Catcher mockup: Assistant: first run, empty, model loading</title>
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+</head>
+<body>
+<main class="app " data-screen="assistant-first-run">
+
+<header class="topbar"><button class="pill" aria-label="Setting up the assistant, 44 percent"><span class="pill__ring" style="--p:44"></span>Setting up 44%</button><button class="iconbtn" aria-label="Settings"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button></header>
+<section class="stage">
+  <h1 class="greeting">What's on your mind?</h1>
+  <button class="orb " data-state="idle" style="--level:0" aria-label="Tap to talk">
+    <span class="orb__halo"></span><span class="orb__level"></span><span class="orb__ring"></span><span class="orb__ring"></span><span class="orb__ring"></span>
+    <span class="orb__spinner"></span>
+    <span class="orb__core"><span class="orb__swirl"><span class="orb__blob"></span><span class="orb__blob"></span><span class="orb__blob"></span><span class="orb__blob"></span></span><span class="orb__gloss"></span></span>
+  </button>
+  <p class="hint"><strong>Tap to talk.</strong> Hold for longer thoughts.</p>
+  <div class="suggest" aria-label="Try saying">
+    <div class="suggest__item"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 0 0 4 0"/></svg>"Remind me to water the plants on Sunday"</div>
+    <div class="suggest__item"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg>"Idea: a weekend bread-baking workshop"</div>
+  </div>
+</section>
+<div class="strip"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></svg>Until setup finishes I file with simple rules. Nothing is lost.</div>
+<section class="sheet sheet--peek" aria-label="Library"><span class="grabber" role="button" aria-label="Open library"></span>
+  <div class="peek"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 4.5-9 4.5-9-4.5L12 3z"/><path d="M3 12l9 4.5 9-4.5M3 16.5L12 21l9-4.5"/></svg><div class="peek__text"><div class="peek__title">Library</div><div class="peek__sub">Nothing yet. Your first thought lands here.</div></div></div></section>
+</main>
+</body>
+</html>

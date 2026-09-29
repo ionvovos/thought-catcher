@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Thought Catcher mockup: Library: half sheet</title>
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+</head>
+<body>
+<main class="app " data-screen="library-half">
+
+<header class="topbar"><button class="pill" aria-label="Assistant runs on this phone. Open settings"><span class="pill__dot"></span>On this phone</button><button class="iconbtn" aria-label="Settings"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button></header><section class="stage"><h1 class="greeting">Good afternoon</h1><button class="orb " data-state="idle" style="--level:0" aria-label="Tap to talk">
+    <span class="orb__halo"></span><span class="orb__level"></span><span class="orb__ring"></span><span class="orb__ring"></span><span class="orb__ring"></span>
+    <span class="orb__spinner"></span>
+    <span class="orb__core"><span class="orb__swirl"><span class="orb__blob"></span><span class="orb__blob"></span><span class="orb__blob"></span><span class="orb__blob"></span></span><span class="orb__gloss"></span></span>
+  </button><p class="hint"><strong>Tap to talk.</strong></p></section>
+<div class="scrim"></div>
+<section class="sheet sheet--half" aria-label="Library" role="dialog">
+  <span class="grabber" role="button" aria-label="Resize library"></span><div class="sheet__head"><h2 class="sheet__title">Library<span class="sheet__count">24</span></h2><button class="iconbtn" aria-label="Close library"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="searchrow"><label class="search"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input placeholder="Search or ask" aria-label="Search thoughts"></label></div>
+  <div class="chips no-scrollbar" role="toolbar" aria-label="Filter by type">
+  <button class="chip" aria-pressed="true">All <span class="n">24</span></button>
+  <button class="chip t-reminder" aria-pressed="false"><span class="dot"></span>Reminders <span class="n">4</span></button><button class="chip t-task" aria-pressed="false"><span class="dot"></span>Tasks <span class="n">6</span></button><button class="chip t-idea" aria-pressed="false"><span class="dot"></span>Ideas <span class="n">8</span></button><button class="chip t-journal" aria-pressed="false"><span class="dot"></span>Journals <span class="n">6</span></button></div>
+  <div class="sheet__body no-scrollbar">
+    <div class="group-h t-reminder"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 0 0 4 0"/></svg>Reminders <span class="n">4</span></div>
+    <div class="cards">
+      <button class="tcard t-reminder"><span class="ticon t-reminder" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 0 0 4 0"/></svg></span><p class="tcard__title">Pick up the dry cleaning</p><span class="tcard__when tcard__when--due">Today 18:00</span></button>
+      <button class="tcard t-reminder"><span class="ticon t-reminder" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 0 0 4 0"/></svg></span><p class="tcard__title">Call the dentist about the crown</p><span class="tcard__when">Tomorrow 9:00</span></button>
+    </div>
+    <div class="group-h t-task"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.9"/></svg>Tasks <span class="n">6</span></div>
+    <div class="cards">
+      <button class="tcard t-task"><span class="ticon t-task" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.9"/></svg></span><p class="tcard__title">Book the car service</p><span class="tcard__when">Sat 10 Oct</span><p class="tcard__snip">Before the 10th, ask about the rear brakes too.</p><span class="tags"><span class="tag">#car</span></span></button>
+      <button class="tcard t-task"><span class="ticon t-task" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.9"/></svg></span><p class="tcard__title">Send Maria the photos from Sunday</p><span class="tcard__when">Today</span></button>
+    </div>
+  </div>
+</section>
+</main>
+</body>
+</html>

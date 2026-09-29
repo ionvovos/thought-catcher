@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Thought Catcher mockup: Library: full sheet, search</title>
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../tokens.css">
+<link rel="stylesheet" href="../components.css">
+</head>
+<body>
+<main class="app " data-screen="library-full-search">
+
+<header class="topbar"><button class="pill" aria-label="Assistant runs on this phone. Open settings"><span class="pill__dot"></span>On this phone</button><button class="iconbtn" aria-label="Settings"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button></header><section class="stage"><h1 class="greeting">Good afternoon</h1><button class="orb " data-state="idle" style="--level:0" aria-label="Tap to talk">
+    <span class="orb__halo"></span><span class="orb__level"></span><span class="orb__ring"></span><span class="orb__ring"></span><span class="orb__ring"></span>
+    <span class="orb__spinner"></span>
+    <span class="orb__core"><span class="orb__swirl"><span class="orb__blob"></span><span class="orb__blob"></span><span class="orb__blob"></span><span class="orb__blob"></span></span><span class="orb__gloss"></span></span>
+  </button><p class="hint"><strong>Tap to talk.</strong></p></section>
+<div class="scrim"></div>
+<section class="sheet sheet--full" aria-label="Library" role="dialog">
+  <span class="grabber" role="button" aria-label="Resize library"></span>
+  <div class="searchrow" style="padding-top:6px"><label class="search"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input value="gym" aria-label="Search thoughts"><button class="clear" aria-label="Clear search"><span><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></span></button></label><button class="btn btn--plain">Cancel</button></div>
+  <div class="chips no-scrollbar" role="toolbar" aria-label="Filter by type">
+  <button class="chip" aria-pressed="true">All <span class="n">5</span></button>
+  <button class="chip t-reminder" aria-pressed="false"><span class="dot"></span>Reminders <span class="n">1</span></button><button class="chip t-task" aria-pressed="false"><span class="dot"></span>Tasks <span class="n">1</span></button><button class="chip t-idea" aria-pressed="false"><span class="dot"></span>Ideas <span class="n">1</span></button><button class="chip t-journal" aria-pressed="false"><span class="dot"></span>Journals <span class="n">2</span></button></div>
+  <div class="sheet__body no-scrollbar">
+    <p class="results-h">5 thoughts, by meaning and words</p>
+    <div class="cards">
+      <button class="tcard t-idea"><span class="ticon t-idea" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg></span><p class="tcard__title">Gym plan: three short sessions instead of two long ones</p><span class="tcard__when">3 days ago</span><p class="tcard__snip">Mon, Wed, Fri, 35 minutes each. Easier to keep than two long <mark>gym</mark> days.</p><span class="tags"><span class="tag">#fitness</span></span></button>
+      <button class="tcard t-task"><span class="ticon t-task" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-4.9"/></svg></span><p class="tcard__title">Renew <mark>gym</mark> membership</p><span class="tcard__when">Due 12 Oct</span><p class="tcard__snip">Runs out on 12 October. Ask about the off-peak price.</p></button>
+      <button class="tcard t-reminder"><span class="ticon t-reminder" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 0 0 4 0"/></svg></span><p class="tcard__title">Pack <mark>gym</mark> bag the night before</p><span class="tcard__when">Weekdays 21:30</span></button>
+      <button class="tcard t-journal"><span class="ticon t-journal" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v14H7.5A2.5 2.5 0 0 0 5 19.5v-14z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19M9 7.5h6"/></svg></span><p class="tcard__title">Good run by the sea this morning</p><span class="tcard__when">Sun 27 Sep</span><p class="tcard__snip">6 km without stopping. Felt easier than the treadmill at the <mark>gym</mark>.</p></button>
+      <button class="tcard t-journal"><span class="ticon t-journal" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v14H7.5A2.5 2.5 0 0 0 5 19.5v-14z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19M9 7.5h6"/></svg></span><p class="tcard__title">Slept badly, too much coffee after 4</p><span class="tcard__when">Thu 24 Sep</span><p class="tcard__snip">Skipped training. Pattern: late coffee, bad sleep, no workout.</p></button>
+    </div>
+  </div>
+</section>
+</main>
+</body>
+</html>

@@ -1,0 +1,87 @@
+[
+ {
+  "name": "onboarding-1",
+  "title": "Onboarding 1: what it does",
+  "state": "first run"
+ },
+ {
+  "name": "onboarding-2",
+  "title": "Onboarding 2: privacy",
+  "state": "first run"
+ },
+ {
+  "name": "onboarding-3",
+  "title": "Onboarding 3: voice choice",
+  "state": "first run"
+ },
+ {
+  "name": "assistant-first-run",
+  "title": "Assistant: first run, empty, model loading",
+  "state": "first run + empty + loading model"
+ },
+ {
+  "name": "assistant-idle",
+  "title": "Assistant: idle",
+  "state": "idle"
+ },
+ {
+  "name": "assistant-listening",
+  "title": "Assistant: listening",
+  "state": "listening"
+ },
+ {
+  "name": "assistant-thinking",
+  "title": "Assistant: thinking",
+  "state": "thinking"
+ },
+ {
+  "name": "assistant-question",
+  "title": "Assistant: one question with quick replies",
+  "state": "question"
+ },
+ {
+  "name": "assistant-filed",
+  "title": "Assistant: four thoughts filed from one ramble",
+  "state": "filed"
+ },
+ {
+  "name": "library-half",
+  "title": "Library: half sheet",
+  "state": "library half"
+ },
+ {
+  "name": "library-full-search",
+  "title": "Library: full sheet, search",
+  "state": "library full + search"
+ },
+ {
+  "name": "thought-detail",
+  "title": "Thought detail: related and plan",
+  "state": "detail"
+ },
+ {
+  "name": "ask-answer",
+  "title": "Ask your thoughts: answer with sources",
+  "state": "ask"
+ },
+ {
+  "name": "daily-review",
+  "title": "Daily review with undo toast",
+  "state": "review + toast"
+ },
+ {
+  "name": "settings-model-downloading",
+  "title": "Settings: on-device model downloading",
+  "state": "loading model"
+ },
+ {
+  "name": "error-offline",
+  "title": "Offline and a microphone error",
+  "state": "offline + error"
+ },
+ {
+  "name": "no-webgpu-fallback",
+  "title": "Device cannot run the model: rules fallback",
+  "state": "unsupported device"
+ }
+]
