@@ -242,6 +242,102 @@ Object.assign(FIXTURES, {
   }),
 });
 
+// ---- onboarding and the consent card ------------------------------------------------------------------------------------
+
+// A few system voices, so the fixture does not depend on the machine's own list.
+const FAKE_VOICES = [
+  { name: 'Samantha', lang: 'en-US', localService: true },
+  { name: 'Daniel', lang: 'en-GB', localService: true },
+  { name: 'Karen', lang: 'en-AU', localService: true },
+  { name: 'Amélie', lang: 'fr-CA', localService: true },
+];
+
+export async function onboardingFixture(root, start) {
+  const { showOnboarding } = await import('../ui/onboarding/index.js');
+  const ctx = await makeCtx({ thoughts: [], status: STATUS.first });
+  const real = globalThis.speechSynthesis;
+  Object.defineProperty(globalThis, 'speechSynthesis', { value: { getVoices: () => FAKE_VOICES, cancel() {}, speak() {}, addEventListener() {}, removeEventListener() {} }, configurable: true });
+  showOnboarding(root, ctx, { start, onDone: () => { ctx.log.done = true; } });
+  await settle();
+  if (real === undefined) return { ctx };
+  return { ctx };
+}
+
+export async function offerFixture(root, status, act) {
+  const { offerModel } = await import('../ui/onboarding/index.js');
+  const { miniOrb } = await import('../ui/orb/orb.js');
+  const ctx = await makeCtx({ thoughts: [], status });
+  root.replaceChildren(
+    el('header', { class: 'topbar' }, [el('span', { class: 'pill pill--off' }, [el('span', { class: 'pill__dot' }), 'Set up assistant'])]),
+    el('section', { class: 'thread' }, [
+      el('div', { class: 'msg msg--user' }, 'Remind me to water the plants on Sunday'),
+      el('div', { class: 'msg msg--assistant' }, [miniOrb(), el('div', { class: 'msg__body' }, [el('p', {}, 'Filed as a reminder for Sunday 9:00.'), offerModel(ctx)])]),
+    ]),
+  );
+  await settle();
+  if (act) { await act(root, ctx); await settle(); }
+  return { ctx };
+}
+
+Object.assign(FIXTURES, {
+  'onboarding-1': (root) => onboardingFixture(root, 0),
+  'onboarding-2': (root) => onboardingFixture(root, 1),
+  'onboarding-3': (root) => onboardingFixture(root, 2),
+  'offer-model': (root) => offerFixture(root, STATUS.first),
+  'offer-model-embed-only': (root) => offerFixture(root, { ...STATUS.unsupported }),
+  'offer-model-downloading': (root) => offerFixture(root, STATUS.downloading),
+  'offer-model-declined': (root) => offerFixture(root, STATUS.first, (r) => r.querySelector('.consent__acts .btn').click()),
+});
+
+// ---- settings and about -------------------------------------------------------------------------------------------------
+
+export async function settingsFixture(root, o = {}) {
+  const { renderSettings } = await import('../ui/settings/index.js');
+  const ctx = await makeCtx({ thoughts: o.thoughts ?? sampleThoughts(), status: o.status ?? STATUS.downloading, settings: o.settings });
+  if (o.key) { ctx.settings.setSettings({ 'ai.provider': 'anthropic' }); ctx.settings.setKey('sk-ant-fixture-3f9Q', { provider: 'anthropic', host: 'api.anthropic.com' }); }
+  const real = globalThis.speechSynthesis;
+  Object.defineProperty(globalThis, 'speechSynthesis', { value: { getVoices: () => FAKE_VOICES, cancel() {}, speak() {}, addEventListener() {}, removeEventListener() {} }, configurable: true });
+  root.replaceChildren();
+  const cleanup = renderSettings(root, ctx, o.params ?? {});
+  await settle();
+  if (o.act) { await o.act(root, ctx); await settle(); }
+  void real;
+  return { ctx, cleanup };
+}
+
+const rowByLabel = (root, text) => [...root.querySelectorAll('.srow')].find((r) => r.textContent.includes(text));
+
+Object.assign(FIXTURES, {
+  'settings-model-downloading': (root) => settingsFixture(root),
+  'settings-first': (root) => settingsFixture(root, { status: STATUS.first }),
+  'settings-ready': (root) => settingsFixture(root, { status: { ...STATUS.ready, key: 'set', engine: 'key' }, key: true }),
+  'settings-unsupported': (root) => settingsFixture(root, { status: STATUS.unsupported }),
+  'settings-failed': (root) => settingsFixture(root, { status: STATUS.failed }),
+  'settings-own-key': (root) => settingsFixture(root, { status: { ...STATUS.ready, key: 'rejected', engine: 'device' }, key: true, params: { section: 'key' } }),
+  'settings-own-key-empty': (root) => settingsFixture(root, { status: STATUS.first, params: { section: 'key' } }),
+  'settings-listen': (root) => settingsFixture(root, { act: (r) => rowByLabel(r, 'Listening').click() }),
+  'settings-voice': (root) => settingsFixture(root, { act: (r) => rowByLabel(r, 'Reply voice').click() }),
+  'settings-days': (root) => settingsFixture(root, { act: (r) => rowByLabel(r, 'Daily review').click() }),
+  'settings-delete-confirm': (root) => settingsFixture(root, { act: (r) => rowByLabel(r, 'Delete everything').click() }),
+  'import-error': (root) => settingsFixture(root, {
+    act: async (r, ctx) => {
+      const { importFile } = await import('../ui/settings/data.js');
+      const res = await importFile(ctx, new File(['{"hello": 1}'], 'notes.json', { type: 'application/json' }));
+      const input = r.querySelector('input[type=file]');
+      void input; void res;
+      const holder = r.querySelector('.scroll');
+      holder.append(el('p', { class: 'field-error', role: 'alert' }, res.message));
+    },
+  }),
+  about: async (root) => {
+    const { renderAbout } = await import('../ui/about/index.js');
+    const ctx = await makeCtx({});
+    renderAbout(root, ctx);
+    await settle();
+    return { ctx };
+  },
+});
+
 // Adds a screen module's fixtures. Screens append here as they land.
 export function addFixtures(map) { Object.assign(FIXTURES, map); }
 

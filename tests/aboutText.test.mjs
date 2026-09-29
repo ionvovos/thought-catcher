@@ -59,10 +59,27 @@ test('AC-M1.3: the desktop shortcut is documented, and export and backup advice 
 
 test('Your data: says what else leaves the device, and names the model download only when the model ships', () => {
   const withModel = aboutSections({ onDeviceSpeech: true }).find((x) => x.heading === 'Your data').paragraphs.join(' ');
-  assert.match(withModel, /Nothing else leaves your device, apart from what the Speech and AI sections below describe\./);
+  assert.match(withModel, /Nothing else leaves your device, apart from what the Speech, Assistant and AI sections below describe\./);
   assert.match(withModel, /downloaded once from public servers \(jsDelivr and Hugging Face\), which see your internet address but none of your thoughts/);
   assert.equal(/Nothing is uploaded unless/.test(withModel), false);
   const without = aboutSections({ onDeviceSpeech: false }).find((x) => x.heading === 'Your data').paragraphs.join(' ');
   assert.match(without, /Nothing else leaves your device/);
   assert.equal(/jsDelivr|Hugging Face/.test(without), false);
+});
+
+test('AC-B4.2, AC-X10.7: the About text lists every host the app contacts and explains the on-device assistant', () => {
+  const sections = aboutSections({ onDeviceSpeech: true });
+  const hosts = sections.find((x) => x.heading === 'Where the app connects').hosts.map((h) => h.host).join(' ');
+  for (const h of ['ionvovos.github.io', 'cdn.jsdelivr.net', 'huggingface.co', 'raw.githubusercontent.com']) assert.ok(hosts.includes(h), h);
+  assert.match(hosts, /address you saved a key for/);
+  assert.match(hosts, /speech service/);
+  const assistant = sections.find((x) => x.heading === 'Assistant').paragraphs.join(' ');
+  assert.match(assistant, /870 MB/);
+  assert.match(assistant, /29 MB/);
+  assert.match(assistant, /after you agree/);
+  assert.match(assistant, /Not now/);
+});
+
+test('the v2 default describes the on-device speech model', () => {
+  assert.equal(JSON.stringify(aboutSections()), JSON.stringify(aboutSections({ onDeviceSpeech: true })));
 });

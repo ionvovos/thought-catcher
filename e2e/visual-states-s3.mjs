@@ -39,7 +39,8 @@ const audit = `(() => {
   const small = [];
   const sel = 'button, a[href], input, [role=button], [role=radio], [role=checkbox], [role=tab], [role=switch], select, textarea, summary';
   for (const e of document.querySelectorAll(sel)) {
-    const r = e.getBoundingClientRect();
+    const host = e.tagName === 'INPUT' && e.type !== 'file' ? e.closest('label') : null;
+    const r = (host ?? e).getBoundingClientRect();
     if (!r.width || !r.height || getComputedStyle(e).visibility === 'hidden' || e.closest('[hidden]')) continue;
     let w = r.width, h = r.height;
     const a = getComputedStyle(e, '::after');

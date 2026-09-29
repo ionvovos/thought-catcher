@@ -1,3 +1,5 @@
+/* Every hidden element stays hidden even when a component class sets display. */
+[hidden] { display: none !important; }
 /* Thought detail (X6, X7) and the page frame shared by detail, settings and About (navbar, scroll, small controls). Tokens only. */
 .detail { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .navbar { display: flex; align-items: center; justify-content: space-between; min-height: 52px; padding: 0 var(--sp-1); flex: none; }

@@ -1,2 +1,2 @@
-// S3 contract: renderSettings(root, ctx). Stub until the screen lands.
-export function renderSettings(root, ctx) {}
+// S3 contract: renderSettings(root, ctx, params) -> cleanup. #/settings and #/settings/<section> (assistant, key).
+export { renderSettings, applyTheme } from './settings.js';

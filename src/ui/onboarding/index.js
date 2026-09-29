@@ -1,3 +1,3 @@
-// S3 contract: showOnboarding(root, ctx, { onDone }) and offerModel(ctx). Stubs until the screens land.
-export function showOnboarding(root, ctx, { onDone } = {}) { onDone?.(); }
-export function offerModel(ctx) { return document.createElement('div'); }
+// S3 contract: showOnboarding(root, ctx, { onDone }) and offerModel(ctx).
+export { showOnboarding } from './onboarding.js';
+export { offerModel } from './offerModel.js';
