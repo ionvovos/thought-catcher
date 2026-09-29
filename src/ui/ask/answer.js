@@ -74,13 +74,16 @@ export function renderAnswer(answer, ctx) {
     try { all = await ctx.store.getAll(); } catch { /* keep what we have */ }
     const byId = new Map(all.map((t) => [t.id, t]));
     let shown = 0;
-    for (const r of rows) {
+    const gone = new Set();
+    rows.forEach((r, i) => {
       const t = byId.get(r.s.id);
-      if (!t) { r.row.remove(); continue; }
+      if (!t) { r.row.remove(); gone.add(`Source ${i + 1}`); return; }
       shown += 1;
       const due = t.due_at && (t.type === 'task' || t.type === 'reminder');
       r.when.textContent = `${r.meta.label} · ${due ? `due ${dateLabel(t.due_at).replace(/^\w+ /, '')}` : dateLabel(t.created_at)}`;
-    }
+    });
+    // A thought that is gone is never cited, in the sentence either (L4a F11).
+    for (const c of para.querySelectorAll('.cite')) if (gone.has(c.getAttribute('aria-label'))) c.remove();
     prov.replaceChildren(icon('lock'), provenanceText(answer ?? {}, shown, all.length));
     if (sources.length && !shown) para.textContent = "I couldn't find anything about that in your thoughts.";
     if (!shown) saveChip();
