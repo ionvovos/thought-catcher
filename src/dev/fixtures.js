@@ -20,7 +20,7 @@ export const STATUS = {
   downloading: { llm: { state: 'downloading', pct: 42, bytes: 870000000 }, embed: { state: 'ready', model: 'Xenova/all-MiniLM-L6-v2' }, key: 'none', online: true, engine: 'rules' },
   notSupported: { llm: { state: 'not-supported', reason: 'no-webgpu' }, embed: { state: 'ready', model: 'Xenova/all-MiniLM-L6-v2' }, key: 'none', online: true, engine: 'rules' },
   error: { llm: { state: 'error', code: 'load-failed', message: 'The assistant stopped working' }, embed: { state: 'ready', model: 'Xenova/all-MiniLM-L6-v2' }, key: 'none', online: true, engine: 'rules' },
-  offline: { llm: { state: 'ready', model: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC' }, embed: { state: 'ready', model: 'Xenova/all-MiniLM-L6-v2' }, key: 'set', online: false, engine: 'device' },
+  offline: { llm: { state: 'ready', model: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC' }, embed: { state: 'ready', model: 'Xenova/all-MiniLM-L6-v2' }, key: 'set', online: false, engine: 'key' },
 };
 
 const iso = (d, h, m = 0) => new Date(2026, 8, 29 + d, h, m).toISOString();
@@ -38,6 +38,13 @@ export const SAMPLE_THOUGHTS = [
   row('a5', 'idea', 'Gym plan: three short sessions', 'Gym plan: three short sessions instead of two long ones'),
   row('a6', 'journal', 'Good run by the sea', 'Good run by the sea this morning'),
 ];
+
+// The design's library numbers: 8 ideas, 6 tasks, 6 journal notes, 4 reminders.
+const WANT = { idea: 8, task: 6, journal: 6, reminder: 4 };
+for (const type of Object.keys(WANT)) {
+  let n = SAMPLE_THOUGHTS.filter((t) => t.type === type).length;
+  while (n < WANT[type]) { SAMPLE_THOUGHTS.push(row(`z-${type}-${n}`, type, `Sample ${type} ${n + 1}`, `Sample ${type} ${n + 1}`, { done: false })); n += 1; }
+}
 
 const RAMBLE = 'Okay so tomorrow I need to call the dentist about the crown, and book the car service before the tenth. Also send Maria the photos from Sunday. Oh, and an idea: a grocery list that learns what we run out of.';
 
@@ -75,19 +82,19 @@ registerFixture('assistant-first-run', (root) => assistant(root, { status: STATU
 registerFixture('assistant-idle', (root) => assistant(root, { status: STATUS.device }));
 registerFixture('assistant-downloading', (root) => assistant(root, { status: STATUS.downloading }));
 registerFixture('no-webgpu-fallback', (root) => assistant(root, { status: STATUS.notSupported }));
-registerFixture('assistant-listening', (root) => assistant(root, { status: STATUS.device, snap: { st: { ...initialState(), name: 'listening' }, transcript: 'Okay so tomorrow I need to call the dentist about the crown, and book the car service before the tenth' } }));
-registerFixture('assistant-thinking', (root) => assistant(root, { status: STATUS.device, snap: { st: { ...initialState(), name: 'thinking' }, log: [T('time', 'Today 14:32'), { kind: 'user', text: RAMBLE }, { kind: 'thinking', text: 'Sorting your thoughts', by: 'On this phone' }] } }));
-registerFixture('assistant-question', (root) => assistant(root, { status: STATUS.device, snap: { st: { ...initialState(), name: 'asking', items: [{}, {}, {}, {}], question: { index: 0, question: q2 } }, log: [T('time', 'Today 14:32'), { kind: 'user', text: RAMBLE }, { kind: 'assistant', question: { question: q2, count: 4 } }] } }));
+registerFixture('assistant-listening', (root) => assistant(root, { status: STATUS.device, snap: { st: { ...initialState(), name: 'listening' }, level: 0.55, transcript: 'Okay so tomorrow I need to call the dentist about the crown, and book the car service before the tenth' } }));
+registerFixture('assistant-thinking', (root) => assistant(root, { status: STATUS.device, snap: { st: { ...initialState(), name: 'thinking' }, log: [T('time', 'Today 14:32'), { kind: 'user', text: RAMBLE, editable: true }, { kind: 'thinking', text: 'Sorting your thoughts', by: 'On this phone' }] } }));
+registerFixture('assistant-question', (root) => assistant(root, { status: STATUS.device, snap: { st: { ...initialState(), name: 'asking', items: [{}, {}, {}, {}], question: { index: 0, question: q2 } }, log: [T('time', 'Today 14:32'), { kind: 'user', text: RAMBLE, editable: true }, { kind: 'assistant', question: { question: q2, count: 4 } }] } }));
 registerFixture('assistant-filed', (root) => {
   const rows = filedRows();
   const { a } = assistant(root, { status: STATUS.device, snap: { st: { ...initialState(), name: 'filed' }, log: [{ kind: 'user', text: '…a grocery list that learns what we run out of.' }, { kind: 'assistant', text: 'Done. Four thoughts, filed.', filed: true }], capture: rows } });
   return a;
 });
 registerFixture('composer-keyboard', (root) => assistant(root, { status: STATUS.device, snap: { typing: true, log: [T('time', 'Today 15:02'), { kind: 'assistant', text: 'Type your thought. Enter sends it.' }] } }));
-registerFixture('assistant-speaking', (root) => assistant(root, { status: STATUS.device, snap: { st: { ...initialState(), name: 'filed', speaking: true }, log: [{ kind: 'user', text: 'Remind me to call mum on Saturday morning' }, { kind: 'assistant', text: 'Filed as a reminder for Saturday 9:00.', speaking: 'Samantha', filed: true }], capture: [row('s1', 'reminder', 'Call mum', 'Call mum', { due_at: iso(5, 9) })] } }));
-registerFixture('assistant-model-failed', (root) => assistant(root, { status: STATUS.error, snap: { st: { ...initialState(), name: 'filed' }, log: [{ kind: 'user', text: 'Idea: a shared calendar for the flat' }, { kind: 'error', iconName: 'chip', name: 'Assistant stopped', text: "The assistant stopped working, so I'm using simple rules for now. Try again in Settings.", replies: [{ label: 'Open Settings', icon: 'refresh', onClick() {} }] }, { kind: 'assistant', text: 'Filed as an idea.', filed: true }], capture: [row('m1', 'idea', 'Shared calendar for the flat', 'Idea: a shared calendar for the flat', { sort: { by: 'rules', confidence: 0.9, alt_type: null, model: null } })] } }));
+registerFixture('assistant-speaking', (root) => assistant(root, { status: STATUS.device, snap: { st: { ...initialState(), name: 'filed', speaking: true }, log: [{ kind: 'user', text: 'Remind me to call mum on Saturday morning', editable: true }, { kind: 'assistant', text: 'Filed as a reminder for Saturday 9:00.', speaking: 'Samantha', filed: true }], capture: [row('s1', 'reminder', 'Call mum', 'Call mum', { due_at: iso(5, 9) })] } }));
+registerFixture('assistant-model-failed', (root) => assistant(root, { status: STATUS.error, snap: { st: { ...initialState(), name: 'filed' }, log: [{ kind: 'user', text: 'Idea: a shared calendar for the flat', editable: true }, { kind: 'error', iconName: 'chip', name: 'Assistant stopped', text: "The assistant stopped working, so I'm using simple rules for now. Try again in Settings.", replies: [{ label: 'Open Settings', icon: 'refresh', onClick() {} }] }, { kind: 'assistant', text: 'Filed as an idea.', filed: true }], capture: [row('m1', 'idea', 'Shared calendar for the flat', 'Idea: a shared calendar for the flat', { sort: { by: 'rules', confidence: 0.9, alt_type: null, model: null } })] } }));
 registerFixture('error-offline', (root) => assistant(root, { status: STATUS.offline, snap: { st: { ...initialState(), name: 'error', error: 'not-allowed' }, log: [{ kind: 'user', text: 'Remind me to pick up the dry cleaning on Friday' }, { kind: 'assistant', text: 'Filed as a reminder for Friday 18:00.', filed: true }, { kind: 'error', iconName: 'micoff', name: 'Microphone blocked', text: "I couldn't hear you. The browser is blocking the microphone for this app.", replies: [{ label: 'How to allow it', onClick() {} }, { label: 'Type instead', icon: 'keyboard', onClick() {} }] }], capture: [row('e1', 'reminder', 'Pick up the dry cleaning', 'Pick up the dry cleaning', { due_at: iso(2, 18) })] } }));
-registerFixture('assistant-consent', (root) => assistant(root, { status: STATUS.notDownloaded, snap: { st: { ...initialState(), name: 'filed' }, log: [{ kind: 'user', text: 'Remind me to water the plants on Sunday', editable: true }, { kind: 'assistant', text: 'Filed as a reminder for Sunday 9:00.', filed: true }, { kind: 'consent', text: 'Want a smarter assistant?' }], capture: [row('c1', 'reminder', 'Water the plants', 'Remind me to water the plants on Sunday', { due_at: iso(4, 9), sort: { by: 'rules', confidence: 0.9, alt_type: null, model: null } })] } }));
+registerFixture('assistant-consent', (root) => assistant(root, { status: STATUS.notDownloaded, snap: { st: { ...initialState(), name: 'filed' }, log: [{ kind: 'user', text: 'Remind me to water the plants on Sunday', editable: true }, { kind: 'assistant', text: 'Filed as a reminder for Sunday 9:00.', filed: true }, { kind: 'consent', text: 'Want a smarter assistant?' }], capture: [row('c1', 'reminder', 'Water the plants', 'Remind me to water the plants on Sunday', { due_at: iso(5, 9), sort: { by: 'rules', confidence: 0.9, alt_type: null, model: null } })] } }));
 registerFixture('migration-running', (root) => assistant(root, { status: STATUS.device, snap: { migrationRun: { done: 38, total: 52 } } }));
 registerFixture('migration-failed', (root) => assistant(root, { status: STATUS.device, migration: { state: 'failed', count: 0, quarantined: 0, readOnly: true } }));
 

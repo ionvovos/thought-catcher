@@ -25,9 +25,14 @@ test('no CSS file except tokens.css holds a colour literal (AC-D1.1)', () => {
   assert.deepEqual(bad, []);
 });
 
-test('every stylesheet the shell links exists and tokens.css comes first', () => {
+test('every stylesheet the shell links exists and tokens.css comes first; every CSS file is linked', (t) => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const links = [...html.matchAll(/<link rel="stylesheet" href="\.\/(css\/[^"]+)"/g)].map((m) => m[1]);
   assert.equal(links[0], 'css/tokens.css');
   for (const l of links) assert.ok(fs.existsSync(path.join(root, l)), l);
+  // S3's stylesheets may land before index.html links them; reported unless TC_STRICT=1
+  const unlinked = fs.readdirSync(path.join(root, 'css')).map((n) => `css/${n}`).filter((f) => !links.includes(f));
+  const mine = unlinked.filter((f) => !/css\/(library|detail|review|onboarding|settings)\.css$/.test(f) || process.env.TC_STRICT === '1');
+  if (unlinked.length && !mine.length) t.diagnostic(`link in index.html: ${unlinked.join(', ')}`);
+  assert.deepEqual(mine, [], 'stylesheet not linked in index.html');
 });

@@ -115,3 +115,7 @@
 .dock--hint { grid-template-columns: 1fr; }
 .stage__notice { padding: 0 var(--gutter) var(--sp-3); }
 .stage__top { display: contents; }
+.composer__field { padding-top: 0; padding-bottom: 0; }
+.composer__input { min-height: var(--tap); padding: 10px 0; box-sizing: border-box; }
+.msg--wide { max-width: 100%; align-self: stretch; }
+.msg--wide .consent { margin-top: 0; }

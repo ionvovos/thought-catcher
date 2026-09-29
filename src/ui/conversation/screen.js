@@ -64,6 +64,7 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
     onHoldStart: () => dispatch({ type: 'HOLD_START' }),
     onHoldEnd: () => dispatch({ type: 'HOLD_END' }),
   });
+  if (snapshot?.level) orb.setLevel(snapshot.level);
   const meter = createLevelMeter({ onLevel: (v) => orb.setLevel(v) });
   const toaster = createToaster(root);
   const speaker = createSpeaker({ onStart: () => dispatch({ type: 'SPEAK_START' }), onEnd: () => dispatch({ type: 'SPEAK_END' }) });
@@ -179,7 +180,7 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
       case 'error': return V.errorMessage(entry);
       case 'answer': return answerNode(entry);
       case 'lines': return V.assistantMessage([el('p', {}, entry.text), el('ol', { class: 'answer-lines' }, entry.lines.map((l) => el('li', {}, l)))]);
-      case 'consent': return V.assistantMessage([el('p', {}, entry.text ?? 'Want a smarter assistant?'), consentNode()]);
+      case 'consent': return el('div', { class: 'msg msg--wide' }, consentNode());
       default: return null;
     }
   }
@@ -188,7 +189,8 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
     if (s3.offerModel) { try { return s3.offerModel(ctx); } catch (err) { console.error(err); } }
     return el('div', { class: 'consent', role: 'group', 'aria-label': 'Download the assistant' }, [
       el('div', { class: 'consent__head' }, [el('span', { class: 'ticon notice__icon--info' }, icon('chip')), el('h3', {}, 'Want a smarter assistant?')]),
-      el('p', {}, 'It runs on this phone; nothing is sent anywhere. About 870 MB, Wi-Fi recommended, once.'),
+      el('p', {}, 'It splits long rambles, asks better questions and answers "what did I say about…". It runs on this phone; nothing is sent anywhere.'),
+      el('div', { class: 'consent__facts' }, [el('span', { class: 'by' }, [icon('download'), 'about 870 MB']), el('span', { class: 'by' }, 'Wi-Fi recommended'), el('span', { class: 'by' }, [icon('clock'), 'once'])]),
       el('div', { class: 'consent__acts' }, [
         el('button', { type: 'button', class: 'btn btn--secondary', onclick: () => { settings.setSettings({ 'brain.llm_consent': 'no' }); log = log.filter((e) => e.kind !== 'consent'); render(); } }, 'Not now'),
         el('button', { type: 'button', class: 'btn btn--primary', onclick: () => { settings.setSettings({ 'brain.llm_consent': 'yes', 'brain.embed_consent': 'yes' }); brain.prepare({ llm: true, embed: true }); log = log.filter((e) => e.kind !== 'consent'); render(); } }, 'Download'),

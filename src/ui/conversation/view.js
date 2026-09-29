@@ -106,7 +106,7 @@ export function thinkingMessage(text, byText) {
 
 export function questionBlock(question, { count, onAnswer, onSkip }) {
   const lead = count > 1 ? `I found ${count === 2 ? 'two' : count === 3 ? 'three' : count === 4 ? 'four' : count} things. One question first.` : 'One quick question.';
-  const chips = (question.chips ?? []).map((c, i) => Reply({ label: c, variant: i === 0 ? 'accent' : null, iconName: i === 0 && /morning|tonight|tomorrow|weekend/i.test(c) ? 'clock' : null, index: i, onClick: () => onAnswer(c) }));
+  const chips = (question.chips ?? []).map((c, i) => Reply({ label: c, variant: i === 0 ? 'accent' : null, iconName: /pick a time/i.test(c) ? 'calendar' : i === 0 && /\d|morning|tonight|tomorrow|weekend/i.test(c) ? 'clock' : null, index: i, onClick: () => onAnswer(c) }));
   chips.push(Reply({ label: 'Skip', variant: 'quiet', index: chips.length, onClick: onSkip }));
   return [
     el('p', {}, lead),

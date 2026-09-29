@@ -10,7 +10,7 @@ const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 // "Tomorrow 09:00", "Fri 18:00", "Today 18:00".
 export function whenLabel(iso, now) {
-  return iso ? cap(formatWhen(iso, now)) : '';
+  return iso ? cap(formatWhen(iso, now)).replace(/(\s)0(\d:\d\d)$/, '$1$2') : '';
 }
 
 // thoughts: stored rows. handlers: { onType(thought, anchor), onDate(thought, anchor), onTitle(thought, title), onUndoAll(), onKeepOne() }.
@@ -39,7 +39,7 @@ function fileRow(t, i, { now, handlers, many, animate }) {
   if (t.due_at) {
     const label = whenLabel(t.due_at, now);
     metaRow.append(el('button', { type: 'button', class: 'chipdate', 'aria-label': `Change date: ${label}`, 'aria-haspopup': 'menu', onclick: (e) => handlers.onDate?.(t, e.currentTarget) }, [icon('calendar'), label]));
-  } else if (t.type === 'reminder' || t.type === 'task') {
+  } else if (t.type === 'reminder') {
     metaRow.append(el('button', { type: 'button', class: 'chipdate', 'aria-label': 'Add a date', 'aria-haspopup': 'menu', onclick: (e) => handlers.onDate?.(t, e.currentTarget) }, [icon('calendar'), 'Add date']));
   }
   if (t.sort?.by === 'rules' || t.sort?.by === undefined) {
