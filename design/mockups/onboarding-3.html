@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>Thought Catcher mockup: Onboarding 3: voice choice</title>
+<title>Thought Catcher mockup: Onboarding 3: listening and voice</title>
 <link rel="icon" href="../icons/icon-192.png">
 <link rel="stylesheet" href="../tokens.css">
 <link rel="stylesheet" href="../components.css">
@@ -12,16 +12,22 @@
 <body>
 <main class="app " data-screen="onboarding-3">
 
-<section class="ob" style="padding-top:var(--sp-8)">
+<section class="ob" style="padding-top:var(--sp-5)">
   <div class="ob__copy">
-    <h1>How should I listen?</h1>
-    <p>You can change this in Settings.</p>
-    <div class="choices" role="radiogroup" aria-label="Listening">
-      <button class="choice" role="radio" aria-checked="true"><span class="ticon notice__icon--info"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></svg></span><span><span class="choice__t">On this phone</span><span class="choice__s">Private and offline. One download, about 40 MB.</span></span><span class="radio"></span></button>
-      <button class="choice" role="radio" aria-checked="false"><span class="ticon notice__icon--info"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></span><span><span class="choice__t">Phone's speech service</span><span class="choice__s">No download. Audio goes to Apple or Google.</span></span><span class="radio"></span></button>
-      <button class="choice" role="radio" aria-checked="false"><span class="ticon notice__icon--info"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M8 14h8"/></svg></span><span><span class="choice__t">I'll type</span><span class="choice__s">The microphone stays off.</span></span><span class="radio"></span></button>
+    <h1>Your voice, and mine</h1>
+    <p>Both can be changed in Settings.</p>
+    <h2 class="subh">How I listen</h2>
+    <div class="seg-list" role="radiogroup" aria-label="How I listen">
+      <button class="vrow" role="radio" aria-checked="true" style="width:100%;text-align:left"><span class="vrow__name">On this phone<small>Private, one download of about 60 MB</small></span><span class="radio" style="border-color:var(--c-accent);background:var(--c-accent);box-shadow:inset 0 0 0 4px var(--c-surface)"></span></button>
+      <button class="vrow" role="radio" aria-checked="false" style="width:100%;text-align:left"><span class="vrow__name">Phone's speech service<small>No download; audio goes to Apple or Google</small></span><span class="radio"></span></button>
+      <button class="vrow" role="radio" aria-checked="false" style="width:100%;text-align:left"><span class="vrow__name">I'll type<small>The microphone stays off</small></span><span class="radio"></span></button>
     </div>
-    <div class="inline-toggle"><span>Speak replies aloud</span><button class="toggle" role="switch" aria-checked="true" aria-label="Speak replies aloud"></button></div>
+    <h2 class="subh">How I reply</h2>
+    <div class="seg-list" role="radiogroup" aria-label="Reply voice">
+      <button class="vrow" role="radio" aria-checked="true" style="width:100%;text-align:left"><span class="vrow__name">Silent<small>Replies on screen only</small></span><span class="radio" style="border-color:var(--c-accent);background:var(--c-accent);box-shadow:inset 0 0 0 4px var(--c-surface)"></span></button>
+      <div class="vrow" role="radio" aria-checked="false" aria-label="Samantha" tabindex="0"><span class="vrow__name">Samantha<small>System voice, English (US)</small></span><button class="mini-btn" aria-label="Preview Samantha"><svg class="i i--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg> Play</button><span class="radio" aria-hidden="true"></span></div>
+      <div class="vrow" role="radio" aria-checked="false" aria-label="Daniel" tabindex="0"><span class="vrow__name">Daniel<small>System voice, English (UK)</small></span><button class="mini-btn" aria-label="Preview Daniel"><svg class="i i--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4v-5z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg> Play</button><span class="radio" aria-hidden="true"></span></div>
+    </div>
   </div>
   <div class="ob__foot" style="margin-top:auto"><div class="pager" aria-label="Page 3 of 3"><span></span><span></span><span class="on"></span></div><button class="btn btn--primary btn--lg">Start</button></div>
 </section>

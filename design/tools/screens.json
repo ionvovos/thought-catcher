@@ -11,13 +11,23 @@
  },
  {
   "name": "onboarding-3",
-  "title": "Onboarding 3: voice choice",
+  "title": "Onboarding 3: listening and voice",
   "state": "first run"
  },
  {
   "name": "assistant-first-run",
-  "title": "Assistant: first run, empty, model loading",
-  "state": "first run + empty + loading model"
+  "title": "Assistant: first run, empty, rules only until consent",
+  "state": "first run + empty + not-downloaded"
+ },
+ {
+  "name": "assistant-consent",
+  "title": "Assistant: download offer after the first capture",
+  "state": "not-downloaded + consent"
+ },
+ {
+  "name": "assistant-downloading",
+  "title": "Assistant: model downloading after consent",
+  "state": "downloading"
  },
  {
   "name": "assistant-idle",
@@ -56,7 +66,7 @@
  },
  {
   "name": "thought-detail",
-  "title": "Thought detail: related and plan",
+  "title": "Thought detail (idea): expand and related",
   "state": "detail"
  },
  {
@@ -66,8 +76,8 @@
  },
  {
   "name": "daily-review",
-  "title": "Daily review with undo toast",
-  "state": "review + toast"
+  "title": "Daily review card above the orb",
+  "state": "review"
  },
  {
   "name": "settings-model-downloading",
@@ -81,7 +91,67 @@
  },
  {
   "name": "no-webgpu-fallback",
-  "title": "Device cannot run the model: rules fallback",
-  "state": "unsupported device"
+  "title": "Device cannot run the model: rules",
+  "state": "not-supported"
+ },
+ {
+  "name": "assistant-model-failed",
+  "title": "Assistant: model failed, back to rules",
+  "state": "error (load-failed)"
+ },
+ {
+  "name": "assistant-speaking",
+  "title": "Assistant: speaking a reply",
+  "state": "speaking"
+ },
+ {
+  "name": "composer-keyboard",
+  "title": "Typing composer with the keyboard open",
+  "state": "typing"
+ },
+ {
+  "name": "settings-own-key",
+  "title": "Settings: own key, key rejected",
+  "state": "key rejected"
+ },
+ {
+  "name": "about",
+  "title": "About",
+  "state": "about"
+ },
+ {
+  "name": "library-empty",
+  "title": "Library: empty",
+  "state": "empty library"
+ },
+ {
+  "name": "library-search-empty",
+  "title": "Library: search with no match",
+  "state": "empty search"
+ },
+ {
+  "name": "ask-no-answer",
+  "title": "Ask: nothing found",
+  "state": "no answer"
+ },
+ {
+  "name": "thought-detail-rules",
+  "title": "Thought detail (task) without AI",
+  "state": "needs AI + no related"
+ },
+ {
+  "name": "migration-running",
+  "title": "Moving v1 thoughts on first v2 launch",
+  "state": "migration running"
+ },
+ {
+  "name": "migration-failed",
+  "title": "Migration failed, v1 data kept",
+  "state": "migration failed"
+ },
+ {
+  "name": "import-error",
+  "title": "Import: invalid file",
+  "state": "import error"
  }
 ]

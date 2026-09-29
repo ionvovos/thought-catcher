@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>Thought Catcher mockup: Daily review with undo toast</title>
+<title>Thought Catcher mockup: Daily review card above the orb</title>
 <link rel="icon" href="../icons/icon-192.png">
 <link rel="stylesheet" href="../tokens.css">
 <link rel="stylesheet" href="../components.css">
@@ -12,21 +12,22 @@
 <body>
 <main class="app " data-screen="daily-review">
 
-<header class="topbar"><button class="pill" aria-label="Assistant runs on this phone. Open settings"><span class="pill__dot"></span>On this phone</button><button class="iconbtn" aria-label="Close review"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
-<section class="scroll no-scrollbar" style="padding:0 0 var(--safe-bottom)">
-  <article class="review" aria-label="Daily review">
-    <div class="review__eyebrow">Tuesday 29 September</div>
-    <h1>Your quiet minute</h1>
-    <p class="review__lede">One reminder due, two ideas waiting. Yesterday you filed six thoughts.</p>
-    <div class="progress-dots" aria-label="1 of 3 reviewed"><span class="on"></span><span></span><span></span></div>
-    <div class="ritem" style="margin-top:var(--sp-4)"><span class="ticon t-idea" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg></span><div><p class="ritem__title">Weekend bread-baking workshop</p><p class="ritem__sub">Idea from 4 days ago, untouched</p></div>
-      <div class="ritem__acts"><button class="btn btn--tinted"><svg class="i i--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3l1.7 4.6L17.3 9.3l-4.6 1.7L11 15.6l-1.7-4.6L4.7 9.3l4.6-1.7L11 3zM18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"/></svg>Plan it</button><button class="btn btn--secondary">Keep</button><button class="btn btn--secondary">Let go</button></div></div>
-    <div class="ritem"><span class="ticon t-idea" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg></span><div><p class="ritem__title">Grocery list that learns what runs out</p><p class="ritem__sub">Idea from yesterday</p></div>
-      <div class="ritem__acts"><button class="btn btn--tinted"><svg class="i i--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3l1.7 4.6L17.3 9.3l-4.6 1.7L11 15.6l-1.7-4.6L4.7 9.3l4.6-1.7L11 3zM18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"/></svg>Plan it</button><button class="btn btn--secondary">Keep</button><button class="btn btn--secondary">Let go</button></div></div>
-    <button class="btn btn--primary btn--lg" style="margin-top:var(--sp-4)">Finish review</button>
-  </article>
+<header class="topbar"><button class="pill" aria-label="Assistant runs on this phone. Open settings"><span class="pill__dot"></span>On this phone</button><button class="iconbtn" aria-label="Settings"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button></header>
+<article class="review review--compact" aria-label="Daily review" role="region">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div class="review__eyebrow">Tuesday 29 September</div><h1>Your quiet minute</h1></div><button class="iconbtn" aria-label="Close review" style="margin:-6px -8px 0 0"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <p class="review__lede">One reminder due, two ideas waiting.</p>
+  <div class="ritem"><span class="ticon t-reminder" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15L6 16zM10 20.5a2 2 0 0 0 4 0"/></svg></span><div><p class="ritem__title">Pick up the dry cleaning</p><p class="ritem__sub">Today at 18:00</p></div><div class="ritem__acts"><button class="btn btn--tinted"><svg class="i i--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Done</button><button class="btn btn--secondary">Tomorrow</button></div></div>
+  <div class="ritem"><span class="ticon t-idea" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg></span><div><p class="ritem__title">Weekend bread-baking workshop</p><p class="ritem__sub">Idea from 4 days ago</p></div><div class="ritem__acts"><button class="btn btn--tinted"><svg class="i i--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3l1.7 4.6L17.3 9.3l-4.6 1.7L11 15.6l-1.7-4.6L4.7 9.3l4.6-1.7L11 3zM18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"/></svg>Expand</button><button class="btn btn--secondary">Keep</button><button class="btn btn--secondary">Let go</button></div></div>
+  <div class="ritem"><span class="ticon t-idea" aria-hidden="true"><svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z"/></svg></span><div><p class="ritem__title">Grocery list that learns what runs out</p><p class="ritem__sub">Idea from yesterday</p></div><div class="ritem__acts"><button class="btn btn--tinted"><svg class="i i--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3l1.7 4.6L17.3 9.3l-4.6 1.7L11 15.6l-1.7-4.6L4.7 9.3l4.6-1.7L11 3zM18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"/></svg>Expand</button><button class="btn btn--secondary">Keep</button><button class="btn btn--secondary">Let go</button></div></div>
+</article>
+<section class="stage stage--below">
+  <button class="orb " data-state="idle" style="--level:0" aria-label="Tap to talk">
+    <span class="orb__halo"></span><span class="orb__level"></span><span class="orb__ring"></span><span class="orb__ring"></span><span class="orb__ring"></span>
+    <span class="orb__spinner"></span>
+    <span class="orb__core"><span class="orb__swirl"><span class="orb__blob"></span><span class="orb__blob"></span><span class="orb__blob"></span><span class="orb__blob"></span></span><span class="orb__gloss"></span></span>
+  </button>
+  <p class="hint"><strong>Tap to talk.</strong> The review waits.</p>
 </section>
-<div class="toast" role="status">Dry cleaning moved to tomorrow<button class="btn">Undo</button></div>
 </main>
 </body>
 </html>

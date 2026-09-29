@@ -78,6 +78,18 @@
   --orb-ring:         light-dark(rgba(91,91,214,.55), rgba(155,154,251,.6));   /* listening rings */
   --orb-level-1:      light-dark(rgba(91,91,214,.16), rgba(155,154,251,.20));   /* voice level, inner band */
   --orb-level-2:      light-dark(rgba(91,91,214,.07), rgba(155,154,251,.08));   /* voice level, outer band */
+  --c-kbd:            light-dark(#D1D3D9, #2B2B30);   /* on-screen keyboard in mockups only */
+
+  /* ---------- Colour: fixed values used on coloured fills (same in both themes) ---------- */
+  --c-on-color:      #FFFFFF;                          /* glyphs on colour tiles, switch thumb, checked box */
+  --c-thumb-shadow:  rgba(0,0,0,.2);
+  --c-mask:          #000000;                          /* mask-image opacity only, never painted */
+  --orb-gloss:       rgba(255,255,255,.85);
+  --orb-gloss-soft:  rgba(255,255,255,.22);
+  --orb-gloss-none:  rgba(255,255,255,0);
+  --orb-mini-rim:    rgba(255,255,255,.4);
+  --c-sheen:         rgba(255,255,255,.45);            /* progress bar sheen */
+  --c-art-rim:       rgba(255,255,255,.35);            /* onboarding art top edge */
 
   /* ---------- Typography (system stack only; the app is offline) ---------- */
   --font-sans: -apple-system, "SF Pro Text", "SF Pro", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -184,6 +196,7 @@
     --orb-ring: rgba(91,91,214,.55);
     --orb-level-1: rgba(91,91,214,.16);
     --orb-level-2: rgba(91,91,214,.07);
+    --c-kbd: #D1D3D9;
     --shadow-color: rgba(17,17,40,.08);
   }
   @media (prefers-color-scheme: dark) {
@@ -233,6 +246,7 @@
       --orb-ring: rgba(155,154,251,.6);
       --orb-level-1: rgba(155,154,251,.20);
       --orb-level-2: rgba(155,154,251,.08);
+      --c-kbd: #2B2B30;
       --shadow-color: rgba(0,0,0,.5);
     }
   }
@@ -282,6 +296,7 @@
     --orb-ring: rgba(155,154,251,.6);
     --orb-level-1: rgba(155,154,251,.20);
     --orb-level-2: rgba(155,154,251,.08);
+    --c-kbd: #2B2B30;
     --shadow-color: rgba(0,0,0,.5);
   }
 }

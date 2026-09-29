@@ -64,6 +64,10 @@ const ticon = t => `<span class="ticon t-${t}" aria-hidden="true">${ic(t)}</span
 const tcard = (t, title, snip, when, o = {}) => `<button class="tcard t-${t}${o.done ? ' tcard--done' : ''}">${ticon(t)}<p class="tcard__title">${title}</p><span class="tcard__when${o.due ? ' tcard__when--due' : ''}">${when}</span>${snip ? `<p class="tcard__snip">${snip}</p>` : ''}${o.tags ? `<span class="tags">${o.tags.map(g => `<span class="tag">#${g}</span>`).join('')}</span>` : ''}${o.why ? `<span class="rel-why">${ic('link')}${o.why}</span>` : ''}</button>`;
 const topbar = (left, right = `<button class="iconbtn" aria-label="Settings">${ic('settings')}</button>`) => `<header class="topbar">${left}${right}</header>`;
 const pillOk = `<button class="pill" aria-label="Assistant runs on this phone. Open settings"><span class="pill__dot"></span>On this phone</button>`;
+const fitem = (t, title, meta, i) => `<div class="fitem" style="--i:${i}">${ticon(t)}<div class="fitem__main"><p class="fitem__title">${title}</p><div class="fitem__meta">${badge(t, true)}${meta}</div></div><button class="iconbtn" aria-label="Edit ${title}">${ic('pencil')}</button></div>`;
+const dchip = (txt) => `<button class="chipdate" aria-label="Change date: ${txt}">${ic('calendar')}${txt}</button>`;
+const pillRules = `<button class="pill pill--off" aria-label="Sorting with simple rules. Open settings"><span class="pill__dot"></span>Simple rules</button>`;
+const typeBtn = `<div class="row-actions"><button class="btn btn--secondary btn--pill">${ic('keyboard')}Type</button></div>`;
 const dock = (state = 'idle', right = `<button class="dock__done">Done</button>`) =>
   `<footer class="dock"><button class="iconbtn iconbtn--filled" aria-label="Type instead">${ic('keyboard')}</button>${orb(state, 'orb--dock', 0, state === 'thinking' ? 'Thinking. Tap to stop' : 'Tap to talk')}${right}</footer>`;
 const peek = `<section class="sheet sheet--peek" aria-label="Library"><span class="grabber" role="button" aria-label="Open library"></span>
@@ -118,36 +122,69 @@ add('onboarding-2', 'Onboarding 2: privacy', 'first run', `
   <div class="ob__foot"><div class="pager" aria-label="Page 2 of 3"><span></span><span class="on"></span><span></span></div><button class="btn btn--primary btn--lg">Continue</button></div>
 </section>`);
 
-add('onboarding-3', 'Onboarding 3: voice choice', 'first run', `
-<section class="ob" style="padding-top:var(--sp-8)">
+add('onboarding-3', 'Onboarding 3: listening and voice', 'first run', `
+<section class="ob" style="padding-top:var(--sp-5)">
   <div class="ob__copy">
-    <h1>How should I listen?</h1>
-    <p>You can change this in Settings.</p>
-    <div class="choices" role="radiogroup" aria-label="Listening">
-      <button class="choice" role="radio" aria-checked="true"><span class="ticon notice__icon--info">${ic('chip')}</span><span><span class="choice__t">On this phone</span><span class="choice__s">Private and offline. One download, about 40 MB.</span></span><span class="radio"></span></button>
-      <button class="choice" role="radio" aria-checked="false"><span class="ticon notice__icon--info">${ic('mic')}</span><span><span class="choice__t">Phone's speech service</span><span class="choice__s">No download. Audio goes to Apple or Google.</span></span><span class="radio"></span></button>
-      <button class="choice" role="radio" aria-checked="false"><span class="ticon notice__icon--info">${ic('keyboard')}</span><span><span class="choice__t">I'll type</span><span class="choice__s">The microphone stays off.</span></span><span class="radio"></span></button>
+    <h1>Your voice, and mine</h1>
+    <p>Both can be changed in Settings.</p>
+    <h2 class="subh">How I listen</h2>
+    <div class="seg-list" role="radiogroup" aria-label="How I listen">
+      <button class="vrow" role="radio" aria-checked="true" style="width:100%;text-align:left"><span class="vrow__name">On this phone<small>Private, one download of about 60 MB</small></span><span class="radio" style="border-color:var(--c-accent);background:var(--c-accent);box-shadow:inset 0 0 0 4px var(--c-surface)"></span></button>
+      <button class="vrow" role="radio" aria-checked="false" style="width:100%;text-align:left"><span class="vrow__name">Phone's speech service<small>No download; audio goes to Apple or Google</small></span><span class="radio"></span></button>
+      <button class="vrow" role="radio" aria-checked="false" style="width:100%;text-align:left"><span class="vrow__name">I'll type<small>The microphone stays off</small></span><span class="radio"></span></button>
     </div>
-    <div class="inline-toggle"><span>Speak replies aloud</span><button class="toggle" role="switch" aria-checked="true" aria-label="Speak replies aloud"></button></div>
+    <h2 class="subh">How I reply</h2>
+    <div class="seg-list" role="radiogroup" aria-label="Reply voice">
+      <button class="vrow" role="radio" aria-checked="true" style="width:100%;text-align:left"><span class="vrow__name">Silent<small>Replies on screen only</small></span><span class="radio" style="border-color:var(--c-accent);background:var(--c-accent);box-shadow:inset 0 0 0 4px var(--c-surface)"></span></button>
+      <div class="vrow" role="radio" aria-checked="false" aria-label="Samantha" tabindex="0"><span class="vrow__name">Samantha<small>System voice, English (US)</small></span><button class="mini-btn" aria-label="Preview Samantha">${ic('speaker', 'i--sm')} Play</button><span class="radio" aria-hidden="true"></span></div>
+      <div class="vrow" role="radio" aria-checked="false" aria-label="Daniel" tabindex="0"><span class="vrow__name">Daniel<small>System voice, English (UK)</small></span><button class="mini-btn" aria-label="Preview Daniel">${ic('speaker', 'i--sm')} Play</button><span class="radio" aria-hidden="true"></span></div>
+    </div>
   </div>
   <div class="ob__foot" style="margin-top:auto"><div class="pager" aria-label="Page 3 of 3"><span></span><span></span><span class="on"></span></div><button class="btn btn--primary btn--lg">Start</button></div>
 </section>`);
 
 // ---------- Assistant ----------
-add('assistant-first-run', 'Assistant: first run, empty, model loading', 'first run + empty + loading model', `
-${topbar(`<button class="pill" aria-label="Setting up the assistant, 44 percent"><span class="pill__ring" style="--p:44"></span>Setting up 44%</button>`)}
+add('assistant-first-run', 'Assistant: first run, empty, rules only until consent', 'first run + empty + not-downloaded', `
+${topbar(pillRules)}
 <section class="stage">
   <h1 class="greeting">What's on your mind?</h1>
   ${orb('idle', '', 0)}
   <p class="hint"><strong>Tap to talk.</strong> Hold for longer thoughts.</p>
+  ${typeBtn}
   <div class="suggest" aria-label="Try saying">
     <div class="suggest__item">${ic('reminder')}"Remind me to water the plants on Sunday"</div>
     <div class="suggest__item">${ic('idea')}"Idea: a weekend bread-baking workshop"</div>
   </div>
 </section>
-<div class="strip">${ic('info')}Until setup finishes I file with simple rules. Nothing is lost.</div>
 <section class="sheet sheet--peek" aria-label="Library"><span class="grabber" role="button" aria-label="Open library"></span>
   <div class="peek">${ic('stack')}<div class="peek__text"><div class="peek__title">Library</div><div class="peek__sub">Nothing yet. Your first thought lands here.</div></div></div></section>`);
+
+add('assistant-consent', 'Assistant: download offer after the first capture', 'not-downloaded + consent', `
+${topbar(pillRules)}
+<section class="thread">
+  <div class="msg msg--user">Remind me to water the plants on Sunday</div>
+  <button class="msg-edit" aria-label="Edit your message">${ic('pencil')}Edit</button>
+  <div class="msg msg--assistant" role="status">${mini}<div class="msg__body"><p>Filed as a reminder for Sunday 9:00.</p>
+    <div class="filed"><div class="fitem" style="--i:0">${ticon('reminder')}<div class="fitem__main"><p class="fitem__title">Water the plants</p><div class="fitem__meta">${badge('reminder', true)}${dchip('Sun 9:00')}<span class="by">${ic('list')}sorted by rules</span></div></div><button class="iconbtn" aria-label="Edit Water the plants">${ic('pencil')}</button></div></div>
+    <div class="consent" role="group" aria-label="Download the assistant">
+      <div class="consent__head"><span class="ticon notice__icon--info">${ic('chip')}</span><h3>Want a smarter assistant?</h3></div>
+      <p>It splits long rambles, asks better questions and answers "what did I say about…". It runs on this phone; nothing is sent anywhere.</p>
+      <div class="consent__facts"><span class="by">${ic('download')}about 870 MB</span><span class="by">Wi-Fi recommended</span><span class="by">${ic('clock')}once</span></div>
+      <div class="consent__acts"><button class="btn btn--secondary">Not now</button><button class="btn btn--primary">Download</button></div>
+    </div>
+  </div></div>
+</section>
+${dock('idle')}`);
+
+add('assistant-downloading', 'Assistant: model downloading after consent', 'downloading', `
+${topbar(`<button class="pill" aria-label="Getting the assistant ready, 42 percent"><span class="pill__ring" style="--p:42"></span>Getting ready 42%</button>`)}
+<section class="stage">
+  <h1 class="greeting">What's on your mind?</h1>
+  ${orb('idle', '', 0)}
+  <p class="hint" role="status">Getting the assistant ready: 42% of 870 MB. You can keep using the app.</p>
+  ${typeBtn}
+</section>
+${peek}`);
 
 add('assistant-idle', 'Assistant: idle', 'idle', `
 ${topbar(pillOk)}
@@ -168,14 +205,14 @@ add('assistant-listening', 'Assistant: listening', 'listening', `
 </section>
 <footer class="dock" style="grid-template-columns:1fr"><p class="hint">Tap the orb when you're done</p></footer>`);
 
-const ramble = `<div class="msg msg--user">Okay so tomorrow I need to call the dentist about the crown, and book the car service before the tenth. Also send Maria the photos from Sunday. Oh, and an idea: a grocery list that learns what we run out of.</div>`;
+const ramble = `<div class="msg msg--user">Okay so tomorrow I need to call the dentist about the crown, and book the car service before the tenth. Also send Maria the photos from Sunday. Oh, and an idea: a grocery list that learns what we run out of.</div><button class="msg-edit" aria-label="Edit your message">${ic('pencil')}Edit</button>`;
 
 add('assistant-thinking', 'Assistant: thinking', 'thinking', `
 ${topbar(pillOk)}
 <section class="thread">
   <span class="msg-time">Today 14:32</span>
   ${ramble}
-  <div class="msg msg--assistant">${mini}<div class="msg__body"><p class="shimmer" role="status">Sorting your thoughts</p><div class="msg__meta">On this phone</div></div></div>
+  <div class="msg msg--assistant" role="status">${mini}<div class="msg__body"><p class="shimmer" role="status">Sorting your thoughts</p><div class="msg__meta">On this phone</div></div></div>
 </section>
 ${dock('thinking', `<button class="dock__done" aria-label="Stop">Stop</button>`)}`);
 
@@ -184,7 +221,7 @@ ${topbar(pillOk)}
 <section class="thread">
   <span class="msg-time">Today 14:32</span>
   ${ramble}
-  <div class="msg msg--assistant">${mini}<div class="msg__body">
+  <div class="msg msg--assistant" role="status">${mini}<div class="msg__body">
     <p>I found four things. One question first.</p>
     <span class="qtag">${ic('question', 'i--sm')}1 question</span>
     <p><strong>When should I remind you to call the dentist?</strong></p>
@@ -198,19 +235,17 @@ ${topbar(pillOk)}
 </section>
 ${dock('idle')}`);
 
-const fitem = (t, title, meta, i) => `<div class="fitem" style="--i:${i}">${ticon(t)}<div class="fitem__main"><p class="fitem__title">${title}</p><div class="fitem__meta">${badge(t, true)}${meta}</div></div><button class="iconbtn" aria-label="Edit ${title}">${ic('pencil')}</button></div>`;
-const dchip = (txt) => `<button class="chipdate" aria-label="Change date: ${txt}">${ic('calendar')}${txt}</button>`;
 add('assistant-filed', 'Assistant: four thoughts filed from one ramble', 'filed', `
 ${topbar(pillOk)}
 <section class="thread">
   <div class="msg msg--user" style="animation:none">…a grocery list that learns what we run out of.</div>
-  <div class="msg msg--assistant">${mini}<div class="msg__body"><p>Done. Four thoughts, filed.</p>
+  <div class="msg msg--assistant" role="status">${mini}<div class="msg__body"><p>Done. Four thoughts, filed.</p>
     <div class="filed" role="group" aria-label="Filed thoughts">
-      <div class="filed__head"><span class="filed__title">${ic('check')}Filed 4</span><button class="btn btn--plain" style="min-height:36px">Undo all</button></div>
+      <div class="filed__head"><span class="filed__title">${ic('check')}Filed 4</span><span class="filed__acts"><button class="btn btn--plain">Keep as one</button><button class="btn btn--plain">Undo all</button></span></div>
       ${fitem('reminder', 'Call the dentist about the crown', dchip('Tomorrow 9:00'), 0)}
       ${fitem('task', 'Book the car service', dchip('By Sat 10 Oct'), 1)}
       ${fitem('task', 'Send Maria the photos from Sunday', '', 2)}
-      ${fitem('idea', 'Grocery list that learns what runs out', '', 3)}
+      ${fitem('idea', 'Grocery list that learns what runs out', '<span class="by by--guess">best guess</span>', 3)}
     </div>
   </div></div>
 </section>
@@ -230,6 +265,7 @@ ${idleBehind}
   ${libHead(24)}
   <div class="searchrow"><label class="search">${ic('search')}<input placeholder="Search or ask" aria-label="Search thoughts"></label></div>
   ${chips('all')}
+  <div class="chips chips--tags no-scrollbar" role="toolbar" aria-label="Filter by tag and state"><button class="chip chip--tag" aria-pressed="false">Open</button><button class="chip chip--tag" aria-pressed="false">Done</button><button class="chip chip--tag" aria-pressed="false">#car</button><button class="chip chip--tag" aria-pressed="false">#fitness</button><button class="chip chip--tag" aria-pressed="false">#family</button></div>
   <div class="sheet__body no-scrollbar">
     <div class="group-h t-reminder">${ic('reminder')}Reminders <span class="n">4</span></div>
     <div class="cards">
@@ -264,14 +300,14 @@ ${idleBehind}
 </section>`);
 
 // ---------- Detail (X6, X7) ----------
-add('thought-detail', 'Thought detail: related and plan', 'detail', `
+add('thought-detail', 'Thought detail (idea): expand and related', 'detail', `
 <header class="navbar"><button class="navbar__back">${ic('back')}Library</button><div><button class="iconbtn" aria-label="Share">${ic('share')}</button><button class="iconbtn" aria-label="More">${ic('more')}</button></div></header>
 <section class="scroll no-scrollbar">
   ${badge('idea', true)}
   <h1 class="d-title">Gym plan: three short sessions instead of two long ones</h1>
   <div class="d-meta"><span>Spoken, Sat 26 Sep</span><span aria-hidden="true">·</span><span>#fitness</span></div>
   <p class="d-body">Mon, Wed, Fri, 35 minutes each. Easier to keep than two long days, and it fits before work.</p>
-  <div class="section-h"><h2>${ic('sparkles')}Plan</h2><button class="mini-btn">${'Regenerate'}</button></div>
+  <div class="section-h"><h2>${ic('sparkles')}Expand</h2><button class="mini-btn">${'Regenerate'}</button></div>
   <div class="seg" role="tablist"><button role="tab" aria-selected="true">Next steps</button><button role="tab" aria-selected="false">Questions</button><button role="tab" aria-selected="false">Outline</button></div>
   <div class="panel"><ul class="steps">
     <li class="step step--done"><span class="check check--on" role="checkbox" aria-checked="true" aria-label="Done">${ic('check')}</span><span class="step__text">Check the gym's opening hours before 8:00</span></li>
@@ -294,7 +330,7 @@ ${topbar(pillOk)}
 <section class="thread">
   <span class="msg-time">Today 14:40</span>
   <div class="msg msg--user">What did I say about the gym?</div>
-  <div class="msg msg--assistant">${mini}<div class="msg__body">
+  <div class="msg msg--assistant" role="status">${mini}<div class="msg__body">
     <p>You want to swap two long sessions for three short ones<span class="cite">1</span>, and the membership runs out on 12 October<span class="cite">2</span>. On Sunday you wrote that running by the sea felt easier than the treadmill<span class="cite">3</span>.</p>
     <div class="sources" aria-label="Sources">
       ${src(1, 'idea', 'Gym plan: three short sessions', 'Sat 26 Sep')}
@@ -302,28 +338,26 @@ ${topbar(pillOk)}
       ${src(3, 'journal', 'Good run by the sea this morning', 'Sun 27 Sep')}
     </div>
     <div class="provenance">${ic('lock')}From 3 of your 24 thoughts. Searched on this phone.</div>
-    <div class="replies"><button class="reply" style="--i:0">${ic('sparkles', 'i--sm')}Make a plan</button><button class="reply" style="--i:1">Remind me on 10 Oct</button></div>
+    <div class="replies"><button class="reply" style="--i:0">${ic('sparkles', 'i--sm')}Expand the gym idea</button><button class="reply" style="--i:1">Remind me on 10 Oct</button></div>
   </div></div>
 </section>
 ${dock('idle')}`);
 
 // ---------- Daily review (X8) ----------
-add('daily-review', 'Daily review with undo toast', 'review + toast', `
-${topbar(pillOk, `<button class="iconbtn" aria-label="Close review">${ic('x')}</button>`)}
-<section class="scroll no-scrollbar" style="padding:0 0 var(--safe-bottom)">
-  <article class="review" aria-label="Daily review">
-    <div class="review__eyebrow">Tuesday 29 September</div>
-    <h1>Your quiet minute</h1>
-    <p class="review__lede">One reminder due, two ideas waiting. Yesterday you filed six thoughts.</p>
-    <div class="progress-dots" aria-label="1 of 3 reviewed"><span class="on"></span><span></span><span></span></div>
-    <div class="ritem" style="margin-top:var(--sp-4)">${ticon('idea')}<div><p class="ritem__title">Weekend bread-baking workshop</p><p class="ritem__sub">Idea from 4 days ago, untouched</p></div>
-      <div class="ritem__acts"><button class="btn btn--tinted">${ic('sparkles', 'i--sm')}Plan it</button><button class="btn btn--secondary">Keep</button><button class="btn btn--secondary">Let go</button></div></div>
-    <div class="ritem">${ticon('idea')}<div><p class="ritem__title">Grocery list that learns what runs out</p><p class="ritem__sub">Idea from yesterday</p></div>
-      <div class="ritem__acts"><button class="btn btn--tinted">${ic('sparkles', 'i--sm')}Plan it</button><button class="btn btn--secondary">Keep</button><button class="btn btn--secondary">Let go</button></div></div>
-    <button class="btn btn--primary btn--lg" style="margin-top:var(--sp-4)">Finish review</button>
-  </article>
-</section>
-<div class="toast" role="status">Dry cleaning moved to tomorrow<button class="btn">Undo</button></div>`);
+const ritem = (t, title, sub, acts) => `<div class="ritem">${ticon(t)}<div><p class="ritem__title">${title}</p><p class="ritem__sub">${sub}</p></div><div class="ritem__acts">${acts}</div></div>`;
+add('daily-review', 'Daily review card above the orb', 'review', `
+${topbar(pillOk)}
+<article class="review review--compact" aria-label="Daily review" role="region">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div class="review__eyebrow">Tuesday 29 September</div><h1>Your quiet minute</h1></div><button class="iconbtn" aria-label="Close review" style="margin:-6px -8px 0 0">${ic('x')}</button></div>
+  <p class="review__lede">One reminder due, two ideas waiting.</p>
+  ${ritem('reminder', 'Pick up the dry cleaning', 'Today at 18:00', `<button class="btn btn--tinted">${ic('check', 'i--sm')}Done</button><button class="btn btn--secondary">Tomorrow</button>`)}
+  ${ritem('idea', 'Weekend bread-baking workshop', 'Idea from 4 days ago', `<button class="btn btn--tinted">${ic('sparkles', 'i--sm')}Expand</button><button class="btn btn--secondary">Keep</button><button class="btn btn--secondary">Let go</button>`)}
+  ${ritem('idea', 'Grocery list that learns what runs out', 'Idea from yesterday', `<button class="btn btn--tinted">${ic('sparkles', 'i--sm')}Expand</button><button class="btn btn--secondary">Keep</button><button class="btn btn--secondary">Let go</button>`)}
+</article>
+<section class="stage stage--below">
+  ${orb('idle', '', 0, 'Tap to talk')}
+  <p class="hint"><strong>Tap to talk.</strong> The review waits.</p>
+</section>`);
 
 // ---------- Settings ----------
 const srow = (icon, bg, label, sub, trail) => `<div class="srow"><span class="srow__icon ${bg}">${ic(icon)}</span><span class="srow__text"><span class="srow__label">${label}</span>${sub ? `<span class="srow__sub">${sub}</span>` : ''}</span>${trail}</div>`;
@@ -333,16 +367,16 @@ add('settings-model-downloading', 'Settings: on-device model downloading', 'load
   <h1 class="large-title">Settings</h1>
   <h2 class="glabel">Assistant</h2>
   <div class="group">
-    <div class="srow srow--stack"><span class="srow__icon bg-iris">${ic('chip')}</span><span class="srow__text"><span class="srow__label">On-device assistant</span><span class="srow__sub">Downloading, 212 of 480 MB. About 2 min on Wi-Fi.</span></span><button class="mini-btn" aria-label="Pause download">Pause</button>
-      <div class="bar" style="--p:44;margin-left:42px" role="progressbar" aria-valuenow="44" aria-valuemin="0" aria-valuemax="100" aria-label="Model download"><span></span></div></div>
-    ${srow('search', 'bg-teal', 'Search by meaning', 'Ready, 23 MB', `<span class="srow__value" style="color:var(--c-success)">${ic('check')}</span>`)}
+    <div class="srow srow--stack"><span class="srow__icon bg-iris">${ic('chip')}</span><span class="srow__text"><span class="srow__label">On-device assistant</span><span class="srow__sub">Getting the assistant ready: 42% of 870 MB. You can keep using the app.</span></span><button class="mini-btn" aria-label="Cancel download">Cancel</button>
+      <div class="bar" style="--p:42;margin-left:42px" role="progressbar" aria-valuenow="42" aria-valuemin="0" aria-valuemax="100" aria-label="Model download"><span></span></div></div>
+    ${srow('search', 'bg-teal', 'Search by meaning', 'Ready, 29 MB', `<span class="srow__value" style="color:var(--c-success)">${ic('check')}</span>`)}
     ${srow('key', 'bg-grey', 'Your own key', 'Optional. Sharper answers, uses the internet.', `<span class="srow__value">Off</span>${ic('right')}`)}
   </div>
-  <p class="gfoot">Until the download finishes, thoughts are filed with simple rules and upgraded afterwards.</p>
+  <p class="gfoot">Until it is ready, thoughts are sorted with simple rules. Cancel stops the download; you can start it again here.</p>
   <h2 class="glabel">Voice</h2>
   <div class="group">
     ${srow('mic', 'bg-pink', 'Listening', '', `<span class="srow__value">On this phone</span>${ic('right')}`)}
-    ${srow('speaker', 'bg-green', 'Speak replies', '', `<button class="toggle" role="switch" aria-checked="true" aria-label="Speak replies"></button>`)}
+    ${srow('speaker', 'bg-green', 'Reply voice', '', `<span class="srow__value">Silent</span>${ic('right')}`)}
     ${srow('reminder', 'bg-amber', 'Daily review', '', `<span class="srow__value">9:00</span>${ic('right')}`)}
   </div>
   <h2 class="glabel">Appearance</h2>
@@ -363,26 +397,156 @@ ${topbar(`<button class="pill pill--off" aria-label="Offline"><span class="pill_
 <div class="strip">${ic('wifioff')}Offline. The assistant still works on this phone; your key waits for the connection.</div>
 <section class="thread">
   <div class="msg msg--user">Remind me to pick up the dry cleaning on Friday</div>
-  <div class="msg msg--assistant">${mini}<div class="msg__body"><p>Filed as a reminder for Friday 18:00.</p>
+  <div class="msg msg--assistant" role="status">${mini}<div class="msg__body"><p>Filed as a reminder for Friday 18:00.</p>
     <div class="filed"><div class="fitem" style="--i:0">${ticon('reminder')}<div class="fitem__main"><p class="fitem__title">Pick up the dry cleaning</p><div class="fitem__meta">${badge('reminder', true)}${dchip('Fri 18:00')}</div></div><button class="iconbtn" aria-label="Edit">${ic('pencil')}</button></div></div></div></div>
-  <div class="msg msg--assistant msg--error">${mini}<div class="msg__body"><span class="errmark">${ic('micoff', 'i--sm')}Microphone blocked</span><p>I couldn't hear you. The browser is blocking the microphone for this app.</p>
+  <div class="msg msg--assistant msg--error" role="alert">${mini}<div class="msg__body"><span class="errmark">${ic('micoff', 'i--sm')}Microphone blocked</span><p>I couldn't hear you. The browser is blocking the microphone for this app.</p>
     <div class="replies"><button class="reply reply--accent" style="--i:0">How to allow it</button><button class="reply" style="--i:1">${ic('keyboard', 'i--sm')}Type instead</button></div></div></div>
 </section>
 ${dock('idle')}`);
 
-add('no-webgpu-fallback', 'Device cannot run the model: rules fallback', 'unsupported device', `
-${topbar(`<button class="pill pill--warn" aria-label="Basic mode. Open settings"><span class="pill__dot"></span>Basic mode</button>`)}
+add('no-webgpu-fallback', 'Device cannot run the model: rules', 'not-supported', `
+${topbar(`<button class="pill pill--warn" aria-label="Simple rules. Open settings"><span class="pill__dot"></span>Simple rules</button>`)}
 <section class="stage">
   <h1 class="greeting">Good afternoon</h1>
   ${orb('basic', '', 0)}
-  <p class="hint"><strong>Tap to talk.</strong> I'll file it with simple rules.</p>
+  <p class="hint"><strong>Tap to talk.</strong></p>
+  ${typeBtn}
 </section>
 <div style="padding:0 var(--gutter) var(--sp-3)"><div class="notice" role="status">
   <span class="notice__icon">${ic('chip')}</span>
-  <div><h2>This phone can't run the assistant</h2><p>Types, dates and reminders still work. Questions, Ask and Plan need a newer browser or your own key.</p></div>
+  <div><h2>Simple rules on this phone</h2><p>This phone can't run the on-device assistant. I'll sort your thoughts with simple rules. You can add your own AI key in Settings.</p></div>
   <div class="notice__actions"><button class="btn btn--tinted">${ic('key', 'i--sm')}Add your own key</button><button class="btn btn--secondary">Got it</button></div>
 </div></div>
 ${peek}`);
+
+// ---------- Repair round: screens the requirements need (gate VD G4) ----------
+add('assistant-model-failed', 'Assistant: model failed, back to rules', 'error (load-failed)', `
+${topbar(`<button class="pill pill--warn" aria-label="Simple rules. Open settings"><span class="pill__dot"></span>Simple rules</button>`)}
+<section class="thread">
+  <div class="msg msg--user">Idea: a shared calendar for the flat</div>
+  <button class="msg-edit" aria-label="Edit your message">${ic('pencil')}Edit</button>
+  <div class="msg msg--assistant msg--error" role="alert">${mini}<div class="msg__body"><span class="errmark">${ic('chip', 'i--sm')}Assistant stopped</span><p>The assistant stopped working, so I'm using simple rules for now. Try again in Settings.</p>
+    <div class="replies"><button class="reply reply--accent" style="--i:0">${ic('refresh', 'i--sm')}Open Settings</button></div></div></div>
+  <div class="msg msg--assistant" role="status">${mini}<div class="msg__body"><p>Filed as an idea.</p>
+    <div class="filed"><div class="fitem" style="--i:0">${ticon('idea')}<div class="fitem__main"><p class="fitem__title">Shared calendar for the flat</p><div class="fitem__meta">${badge('idea', true)}<span class="by">${ic('list')}sorted by rules</span></div></div><button class="iconbtn" aria-label="Edit Shared calendar for the flat">${ic('pencil')}</button></div></div></div></div>
+</section>
+${dock('idle')}`);
+
+add('assistant-speaking', 'Assistant: speaking a reply', 'speaking', `
+${topbar(pillOk)}
+<section class="thread">
+  <div class="msg msg--user">Remind me to call mum on Saturday morning</div>
+  <button class="msg-edit" aria-label="Edit your message">${ic('pencil')}Edit</button>
+  <div class="msg msg--assistant" role="status">${mini}<div class="msg__body"><p>Filed as a reminder for Saturday 9:00.</p><div class="msg__meta">${ic('speaker', 'i--sm')} Speaking with Samantha. Tap the orb to stop.</div>
+    <div class="filed"><div class="fitem" style="--i:0">${ticon('reminder')}<div class="fitem__main"><p class="fitem__title">Call mum</p><div class="fitem__meta">${badge('reminder', true)}${dchip('Sat 9:00')}</div></div><button class="iconbtn" aria-label="Edit Call mum">${ic('pencil')}</button></div></div></div></div>
+</section>
+<footer class="dock"><button class="iconbtn iconbtn--filled" aria-label="Type instead">${ic('keyboard')}</button>${orb('speaking', 'orb--dock', 0, 'Speaking. Tap to stop')}<button class="dock__done">Done</button></footer>`);
+
+const key = (k) => `<div class="kbd__row">${k.split('').map(c => `<span class="kbd__key">${c}</span>`).join('')}</div>`;
+add('composer-keyboard', 'Typing composer with the keyboard open', 'typing', `
+${topbar(pillOk)}
+<section class="thread">
+  <span class="msg-time">Today 15:02</span>
+  <div class="msg msg--assistant" role="status">${mini}<div class="msg__body"><p>Type your thought. Enter sends it.</p></div></div>
+</section>
+<div class="composer"><button class="iconbtn iconbtn--filled" aria-label="Talk instead">${ic('mic')}</button><label class="composer__field"><span>Buy stamps and post the tax form by Friday<i class="caret"></i></span><button class="dock__send" aria-label="Send">${ic('up')}</button></label></div>
+<div class="kbd" aria-hidden="true">${key('qwertyuiop')}${key('asdfghjkl')}<div class="kbd__row"><span class="kbd__key kbd__key--wide">⇧</span>${'zxcvbnm'.split('').map(c => `<span class="kbd__key">${c}</span>`).join('')}<span class="kbd__key kbd__key--wide">⌫</span></div><div class="kbd__row"><span class="kbd__key kbd__key--wide">123</span><span class="kbd__key kbd__key--space">space</span><span class="kbd__key kbd__key--go">send</span></div></div>`);
+
+add('settings-own-key', 'Settings: own key, key rejected', 'key rejected', `
+<header class="navbar"><button class="navbar__back">${ic('back')}Settings</button></header>
+<section class="scroll no-scrollbar">
+  <h1 class="large-title">Your own key</h1>
+  <h2 class="glabel">Provider</h2>
+  <div class="segsm" role="tablist" aria-label="Provider" style="grid-auto-columns:1fr;padding:3px;border-radius:12px"><button aria-selected="true" style="min-height:38px">Anthropic</button><button aria-selected="false" style="min-height:38px">OpenAI-compatible</button></div>
+  <h2 class="glabel">Connection</h2>
+  <div class="group">
+    <div class="frow"><span class="frow__label">Key</span><span class="frow__value"><span class="mono">sk-ant-••••••••••••••••3f9Q</span><button class="iconbtn" aria-label="Show key" style="margin:-8px -8px -8px 0">${ic('lock')}</button></span></div>
+    <div class="frow"><span class="frow__label">Model</span><span class="frow__value"><span class="mono">claude-haiku-4-5-20251001</span></span></div>
+    <div class="frow"><span class="frow__label">Base URL (OpenAI-compatible only)</span><span class="frow__value" style="color:var(--c-text-3)">Not used for Anthropic</span></div>
+  </div>
+  <p class="field-error" role="alert">${ic('info')}Key rejected. The provider said: "invalid x-api-key". Your thoughts are saved and sorted on this phone.</p>
+  <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-4)"><button class="btn btn--tinted" style="flex:1">${ic('refresh', 'i--sm')}Test connection</button><button class="btn btn--secondary btn--danger" style="flex:1">${ic('trash', 'i--sm')}Remove key</button></div>
+  <p class="gfoot">The key stays on this phone and is sent only to the provider above, with the text you file. It is never in an export.</p>
+</section>`);
+
+add('about', 'About', 'about', `
+<header class="navbar"><button class="navbar__back">${ic('back')}Settings</button></header>
+<section class="scroll no-scrollbar">
+  <div class="about-hero"><img src="../icons/icon-192.png" alt=""><h1>Thought Catcher</h1><p>Say a thought; it gets sorted into ideas, tasks, journal and reminders. Version 2.0.0.</p></div>
+  <h2 class="glabel">Install on iPhone</h2>
+  <div class="group"><ol class="steps-n"><li>Open this page in Safari.</li><li>Tap Share, then Add to Home Screen.</li><li>Open it from the new icon.</li></ol></div>
+  <h2 class="glabel">Install on Android</h2>
+  <div class="group"><ol class="steps-n"><li>Open this page in Chrome.</li><li>Tap the menu, then Install app.</li><li>Open it from the new icon.</li></ol></div>
+  <h2 class="glabel">Privacy</h2>
+  <div class="group"><ol class="steps-n" style="list-style:disc"><li>Thoughts stay on this phone. No account.</li><li>The assistant model downloads once, after you agree, and runs here.</li><li>Speech: on this phone, or Apple's or Google's service if you pick it.</li><li>Your own key sends the text you file to that provider only.</li></ol></div>
+  <h2 class="glabel">Made by</h2>
+  <div class="group">${srow('info', 'bg-grey', 'Ion Vovos / Nexa Systems', 'MIT licence', '')}${srow('link', 'bg-iris', 'Source code', 'github.com/ionvovos/thought-catcher', ic('right'))}</div>
+</section>`);
+
+const libFull = (body, q = '') => `${idleBehind}<div class="scrim"></div><section class="sheet ${q ? 'sheet--full' : 'sheet--half'}" aria-label="Library" role="dialog">${q ? `<span class="grabber" role="button" aria-label="Resize library"></span><div class="searchrow" style="padding-top:6px"><label class="search">${ic('search')}<input value="${q}" aria-label="Search thoughts"><button class="clear" aria-label="Clear search"><span>${ic('x')}</span></button></label><button class="btn btn--plain">Cancel</button></div>` : `${libHead(0)}<div class="searchrow"><label class="search">${ic('search')}<input placeholder="Search or ask" aria-label="Search thoughts"></label></div>`}<div class="sheet__body no-scrollbar">${body}</div></section>`;
+add('library-empty', 'Library: empty', 'empty library', libFull(`<div class="empty">${ic('stack')}<strong>Nothing yet</strong>Your first thought lands here. Tap the orb and say anything.</div>`));
+add('library-search-empty', 'Library: search with no match', 'empty search', libFull(`<div class="empty" role="status">${ic('search')}<strong>No thoughts match "passport"</strong>Try other words, or ask the assistant.<button class="btn btn--tinted btn--pill" style="margin-top:var(--sp-2)">${ic('sparkles', 'i--sm')}Ask instead</button></div>`, 'passport'));
+
+add('ask-no-answer', 'Ask: nothing found', 'no answer', `
+${topbar(pillOk)}
+<section class="thread">
+  <div class="msg msg--user">What did I say about the passport?</div>
+  <div class="msg msg--assistant" role="status">${mini}<div class="msg__body"><p>I couldn't find anything about that in your thoughts.</p>
+    <div class="provenance">${ic('lock')}Searched 24 thoughts on this phone.</div>
+    <div class="replies"><button class="reply reply--accent" style="--i:0">${ic('plus', 'i--sm')}Save this as a thought</button></div></div></div>
+</section>
+${dock('idle')}`);
+
+add('thought-detail-rules', 'Thought detail (task) without AI', 'needs AI + no related', `
+<header class="navbar"><button class="navbar__back">${ic('back')}Library</button><div><button class="iconbtn" aria-label="More">${ic('more')}</button></div></header>
+<section class="scroll no-scrollbar">
+  <div style="display:flex;gap:8px;align-items:center">${badge('task', true)}<span class="by">${ic('list')}sorted by rules</span></div>
+  <h1 class="d-title">Renew gym membership</h1>
+  <div class="d-meta"><span>Typed, Sun 27 Sep</span><span aria-hidden="true">·</span><span>Due 12 Oct</span></div>
+  <p class="d-body">Runs out on 12 October. Ask about the off-peak price.</p>
+  <div class="section-h"><h2>${ic('list')}Plan</h2></div>
+  <button class="needs-ai" aria-disabled="true">${ic('sparkles')}<span><strong>Break into steps</strong>Download the assistant or add a key</span><span class="pilltag">needs AI</span></button>
+  <div class="section-h"><h2>${ic('link')}Related</h2></div>
+  <div class="empty" style="padding:var(--sp-4) 0">${ic('link')}<strong>No related thoughts yet</strong>Thoughts with shared words or tags show up here.</div>
+</section>
+<footer class="actionbar"><button class="btn btn--tinted">${ic('check', 'i--sm')}Mark done</button><button class="btn btn--secondary">${ic('trash', 'i--sm')}Delete</button></footer>`);
+
+add('migration-running', 'Moving v1 thoughts on first v2 launch', 'migration running', `
+${topbar(`<button class="pill" aria-label="Moving thoughts, 38 of 52"><span class="pill__ring" style="--p:73"></span>Moving 38 of 52</button>`)}
+<section class="stage">
+  <h1 class="greeting">Welcome back</h1>
+  ${orb('thinking', '', 0, 'Moving your thoughts')}
+  <p class="hint" role="status">Moving your thoughts to the new version: 38 of 52. You can already talk to me.</p>
+  ${typeBtn}
+</section>
+${peek}`);
+
+add('migration-failed', 'Migration failed, v1 data kept', 'migration failed', `
+${topbar(pillOk)}
+<section class="stage">
+  <h1 class="greeting">Welcome back</h1>
+  ${orb('idle', '', 0)}
+  ${typeBtn}
+</section>
+<div style="padding:0 var(--gutter) var(--sp-3)"><div class="notice" role="alert">
+  <span class="notice__icon" style="background:var(--c-danger-soft);color:var(--c-danger)">${ic('info')}</span>
+  <div><h2>Your old thoughts couldn't be moved</h2><p>They are safe and unchanged. Export them now, then try again.</p></div>
+  <div class="notice__actions"><button class="btn btn--tinted">${ic('share', 'i--sm')}Export</button><button class="btn btn--secondary">${ic('refresh', 'i--sm')}Try again</button></div>
+</div></div>
+${peek}`);
+
+add('import-error', 'Import: invalid file', 'import error', `
+<header class="navbar"><button class="navbar__back">${ic('back')}Settings</button></header>
+<section class="scroll no-scrollbar">
+  <h1 class="large-title">Your data</h1>
+  <div class="group">
+    ${srow('share', 'bg-teal', 'Export thoughts', '52 thoughts, one file', ic('right'))}
+    ${srow('download', 'bg-green', 'Import', 'Merge a Thought Catcher file', ic('right'))}
+  </div>
+  <p class="field-error" role="alert">${ic('info')}"notes.json" is not a Thought Catcher export, so nothing was imported. Your thoughts are unchanged.</p>
+  <h2 class="glabel" style="margin-top:var(--sp-6)">Danger zone</h2>
+  <div class="group">${srow('trash', 'bg-red', 'Delete everything', 'Asks before it deletes', ic('right'))}</div>
+</section>`);
 
 for (const s of screens) writeFileSync(join(out, `${s.name}.html`), s.html);
 
