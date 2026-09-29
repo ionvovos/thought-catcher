@@ -61,3 +61,6 @@ mark { background: var(--c-accent-soft); color: var(--c-accent-text); border-rad
 .page-slot { z-index: 30; }
 .page-slot.app { min-height: 0; }
 .app-slot > .app { height: 100%; min-height: 0; }
+
+/* D4.1: no control keeps the browser's own look; every control is styled by this design. */
+button, input, textarea { -webkit-appearance: none; appearance: none; }
