@@ -1,9 +1,9 @@
 // The voice orb (design.md 2.1): a <button class="orb" data-state> built from the design's layers. All look and motion
 // come from css/orb.css and the tokens; this file sets data-state, the label and the --level custom property.
-// Tap starts and stops; press and hold records until release (a hold over 400 ms switches to hold mode).
+// Tap starts and stops; press and hold records until release (a press of 300 ms or more switches to hold mode).
 import { el } from '../dom.js';
 
-export const HOLD_MS = 400;
+export const HOLD_MS = 300; // AC-X1.3: a press of 300 ms or more is a hold
 
 export const ORB_LABELS = Object.freeze({
   idle: 'Tap to talk',
