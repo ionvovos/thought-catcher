@@ -3,7 +3,7 @@
 import { el } from '../dom.js';
 import { icon } from '../icons.js';
 
-export function createComposer({ onSend, onVoice, placeholder = 'Type a thought, or ask a question' }) {
+export function createComposer({ onSend, onVoice, placeholder = 'Type a thought, or ask' }) {
   const field = el('textarea', { class: 'composer__input', rows: '1', placeholder, 'aria-label': 'Your thought', autocomplete: 'off', enterkeyhint: 'send' });
   const send = el('button', { type: 'button', class: 'dock__send', 'aria-label': 'Send', disabled: true, onclick: () => submit() }, icon('up'));
   const node = el('div', { class: 'composer' }, [
