@@ -4,7 +4,7 @@
 import { parseWhen, scanWhen } from '../core/timeparse.js';
 import { sortByRules, APPOINTMENT_VERBS } from '../core/sorter.js';
 import { splitByRules, MAX_ITEMS } from '../core/splitter.js';
-import { makeTitle, contentWords, normalizeTags, TYPES } from '../core/model.js';
+import { makeTitle, contentWords, normalizeTags } from '../core/model.js';
 import { detectAmbiguity } from '../core/ambiguity.js';
 import { intent as detectIntent } from '../core/intent.js';
 import { replyFor, answerTemplate, limitWords } from '../core/reply.js';
@@ -732,6 +732,7 @@ export function createBrainCore(deps) {
 
   const unsubscribe = typeof store?.onChange === 'function' ? store.onChange(({ kind, ids }) => {
     if (kind === 'clear') return;
+    if (kind === 'put' && (ids?.length ?? 0) > 4) { reindex(); return; } // an import or a big edit: embed in batches of 16
     for (const id of ids ?? []) {
       if (kind === 'delete') { unindex(id); continue; }
       store.get(id).then((t) => (t ? index(t) : undefined)).catch(() => {});
@@ -766,4 +767,3 @@ export function createBrainCore(deps) {
   });
 }
 
-export { TYPES };

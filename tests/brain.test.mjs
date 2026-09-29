@@ -737,3 +737,18 @@ test('an on-device answer that is not based on the cited thoughts is replaced by
   const ok = await withCorpus({ llm: grounded });
   assert.equal((await ok.brain.ask('what did I say about the gym?')).by, 'device');
 });
+
+test('a bulk write (an import) is embedded in batches, not one call per thought', async () => {
+  const items = corpus();
+  const embedder = stubEmbedder(items);
+  const { brain, store } = mkBrain({ embedder });
+  await brain.ready;
+  await brain.prepare({ embed: true });
+  const before = embedder.calls.length;
+  await store.putMany(items.map((t) => stored(t.id, t.type, t.text)));
+  await brain.ask('what about Berlin?'); // waits for the queue
+  await brain.reindex();
+  assert.equal((await store.getAllEmbeddings()).length, THOUGHTS.length);
+  assert.ok(embedder.calls.slice(before).every((n) => n > 1 || n === 1), 'calls recorded');
+  assert.ok(embedder.calls.slice(before).some((n) => n === 16), 'a batch of 16 was embedded at once');
+});
