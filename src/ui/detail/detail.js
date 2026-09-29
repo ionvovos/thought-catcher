@@ -349,7 +349,7 @@ export async function renderThought(id, root, ctx) {
 
   function meta() {
     const bits = [`${SOURCE_LABEL[current.source] ?? 'Captured'}, ${dateLabel(current.created_at)}`];
-    if (current.due_at) bits.push(`Due ${dueLabel(current.due_at, ctx.now())}`);
+    if (current.due_at) bits.push(`Due ${dueLabel(current.due_at, ctx.now(), { clock: current.type === 'reminder' })}`);
     if (current.tags.length) bits.push(current.tags.map((g) => `#${g}`).join(' '));
     const nodes = [];
     bits.forEach((b, i) => { if (i) nodes.push(el('span', { 'aria-hidden': 'true' }, '·')); nodes.push(el('span', {}, b)); });

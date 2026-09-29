@@ -20,13 +20,14 @@ const clock = (d) => `${d.getHours()}:${pad(d.getMinutes())}`;
 const dayMonth = (d) => `${WEEKDAY[d.getDay()]} ${d.getDate()} ${MONTH[d.getMonth()]}`;
 
 // "Today 18:00", "Tomorrow 9:00", "Sat 10 Oct" (a reminder's due time in local time; a due date with no clock time still shows the time).
-export function dueLabel(iso, now) {
+// clock: a reminder's time is the point of it, so beyond tomorrow it still shows: "Fri 2 Oct 10:00" (build gate G5).
+export function dueLabel(iso, now, { clock: withClock = false } = {}) {
   const d = new Date(iso);
   const diff = dayDiff(d, now);
   if (diff === 0) return `Today ${clock(d)}`;
   if (diff === 1) return `Tomorrow ${clock(d)}`;
   if (diff === -1) return `Yesterday ${clock(d)}`;
-  return dayMonth(d);
+  return withClock ? `${dayMonth(d)} ${clock(d)}` : dayMonth(d);
 }
 
 // When it was captured: "Today", "Yesterday", "3 days ago", else "Sun 27 Sep".
@@ -43,7 +44,7 @@ export function whenLabel(t, now) {
   if (t.type === 'reminder' && t.due_at) {
     const overdue = !t.done && Date.parse(t.due_at) <= now.getTime();
     const today = dayDiff(new Date(t.due_at), now) === 0;
-    return { text: dueLabel(t.due_at, now), due: !t.done && (today || overdue) };
+    return { text: dueLabel(t.due_at, now, { clock: true }), due: !t.done && (today || overdue) };
   }
   if (t.type === 'task' && t.due_at) return { text: `Due ${new Date(t.due_at).getDate()} ${MONTH[new Date(t.due_at).getMonth()]}`, due: false };
   return { text: agoLabel(t.created_at, now), due: false };

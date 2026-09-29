@@ -130,3 +130,13 @@ test('highlightParts marks every match, keeps all the text and never treats it a
   assert.deepEqual(parts.filter((p) => p.hit).map((p) => p.text), ['Gym', 'gym']);
   assert.deepEqual(highlightParts('plain', ''), [{ text: 'plain', hit: false }]);
 });
+
+import { dueLabel as dueLabelG5, whenLabel as whenLabelG5 } from '../src/ui/library/view.js';
+test('G5: a reminder beyond tomorrow shows its clock; a task does not', () => {
+  const now = new Date(2026, 8, 29, 10, 0);
+  const iso = new Date(2026, 9, 2, 10, 0).toISOString();
+  assert.equal(dueLabelG5(iso, now), 'Fri 2 Oct');
+  assert.equal(dueLabelG5(iso, now, { clock: true }), 'Fri 2 Oct 10:00');
+  assert.equal(whenLabelG5({ type: 'reminder', due_at: iso, done: false, created_at: iso }, now).text, 'Fri 2 Oct 10:00');
+  assert.equal(whenLabelG5({ type: 'task', due_at: iso, created_at: iso }, now).text, 'Due 2 Oct');
+});
