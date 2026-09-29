@@ -119,7 +119,9 @@ export default async function renderCapture(root, ctx) {
   };
   document.addEventListener('keydown', onKey);
 
-  root.append(el('h2', {}, 'Catch a thought'), recordBtn, note, status, interim, form, clarifyBox, hint);
+  const due = ctx.getReviewCount?.() ?? 0;
+  const nudge = due > 0 ? el('p', { class: 'review-nudge' }, el('a', { href: '#/review', class: 'btn' }, `${due} to review`)) : null;
+  root.append(el('h2', {}, 'Catch a thought'), nudge, recordBtn, note, status, interim, form, clarifyBox, hint);
   refreshEngine();
   const focus = ctx.consumeInitialFocus?.();
   if (focus === 'record') recordBtn.focus();

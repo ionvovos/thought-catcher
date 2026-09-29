@@ -6,6 +6,7 @@ import { startRouter } from './ui/router.js';
 import { createAiFlow } from './ui/aiFlow.js';
 import { getSettings } from './storage/settings.js';
 import { resolveStale } from './core/clarify.js';
+import { reviewOnOpen, showReviewCount, watchNewDay } from './core/reviewOnOpen.js';
 
 const banner = document.getElementById('banner');
 function showBanner(message) {
@@ -37,6 +38,7 @@ async function main() {
   const q = new URLSearchParams(window.location.search);
   let initialFocus = q.get('type') === '1' ? 'text' : q.get('capture') === '1' ? 'record' : null;
 
+  let reviewCount = 0;
   const ctx = {
     store,
     engines,
@@ -44,17 +46,32 @@ async function main() {
     now,
     navigate: (hash) => { window.location.hash = hash; },
     showBanner,
+    getReviewCount: () => reviewCount,
     consumeInitialFocus: () => { const f = initialFocus; initialFocus = null; return f; },
   };
 
   ctx.ai = createAiFlow({ store, now, engines, speech });
   ctx.afterSave = ctx.ai.afterSave;
 
-  startRouter({
-    root: document.getElementById('app'),
-    nav: document.querySelector('.app-nav'),
-    ctx,
-  });
+  const nav = document.querySelector('.app-nav');
+
+  // Review check (M7). A home-screen launch (?capture=1) stays on capture: the count shows in the navigation and
+  // on the capture screen instead of taking over the screen.
+  const runReview = async (interrupt) => {
+    try {
+      const r = await reviewOnOpen({ store, getSettings, now, navigate: ctx.navigate, interrupt });
+      reviewCount = r.count;
+      showReviewCount(nav, r.count);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  const launchedToCapture = initialFocus !== null;
+  // The review check reads the store before the first screen, so an auto-shown review replaces capture at once.
+  await runReview(!launchedToCapture);
+
+  startRouter({ root: document.getElementById('app'), nav, ctx });
+  watchNewDay(document, now, () => runReview(true));
 }
 
 main().catch((err) => {

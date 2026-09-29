@@ -53,6 +53,22 @@ for (const h of ['#/settings', '#/about', '#/review']) {
   await b.ev(`location.hash = '${h}'`); await sleep(400);
   out[h] = (await b.ev(`${q('.app-main')}.innerText`)).slice(0, 60).replace(/\n/g, ' | ');
 }
+// review on open (M7): an old idea is due; a plain open shows the review, a home-screen launch stays on capture
+await b.ev(`new Promise((res) => { const r = indexedDB.open('thought-catcher'); r.onsuccess = () => {
+  const tx = r.result.transaction('thoughts', 'readwrite'); const st = tx.objectStore('thoughts');
+  const old = new Date(Date.now() - 5 * 86400000).toISOString();
+  st.put({ id: 'old-idea', text: 'an old idea about gardens', type: 'idea', title: 'Old garden idea', tags: [], created_at: old, updated_at: old, source: 'typed',
+    sort: { by: 'rules', confidence: 1, alt_type: null, model: null }, due_at: null, done: false, done_at: null,
+    clarify: { state: 'none', case: null, question: null, answer: null }, expansion: null, review: { last_reviewed_at: null, snoozed_until: null, dismissed: false } });
+  tx.oncomplete = () => res(true); }; })`);
+await b.load(`${b.base}/?capture=1`);
+out.captureLaunchHash = await b.ev(`location.hash || '(none)'`);
+out.captureLaunchNudge = await b.ev(`${q('.review-nudge')}?.innerText ?? null`);
+out.navReview = await b.ev(`${q('a[data-route=review]')}.textContent`);
+await b.ev(`localStorage.removeItem('thought-catcher.review.last_shown_date')`);
+await b.load(`${b.base}/`);
+out.plainOpenHash = await b.ev(`location.hash`);
+out.plainOpenText = (await b.ev(`${q('.app-main')}.innerText`)).slice(0, 60).replace(/\n/g, ' | ');
 console.log(JSON.stringify(out, null, 2));
 console.log('PROBLEMS', JSON.stringify(b.problems, null, 2));
 console.log('NON-LOCAL', JSON.stringify(b.network.filter((u) => !u.startsWith(b.base) && !/^(data|blob):/.test(u))));
