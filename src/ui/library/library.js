@@ -6,7 +6,7 @@ import { icon } from '../icons.js';
 import { Button } from '../components/button.js';
 import { Chip } from '../components/chip.js';
 import { typeMeta } from '../typeMeta.js';
-import { TYPE_ORDER, TYPE_PLURAL, libraryView, countsOf, whenLabel, snippetOf, highlightParts } from './view.js';
+import { TYPE_ORDER, TYPE_PLURAL, libraryView, countsOf, whenLabel, snippetOf, highlightParts, topicLine } from './view.js';
 import { renderAnswer } from '../ask/index.js';
 
 const marked = (text, q) => highlightParts(text, q).map((p) => (p.hit ? el('mark', {}, p.text) : p.text));
@@ -31,8 +31,9 @@ function thoughtCard(t, ctx, q) {
 }
 
 export function mountLibrary(sheetBody, ctx) {
-  const f = { q: '', type: null, tag: null, state: null };
+  const f = { q: '', type: null, tag: null, state: null, topic: null };
   let thoughts = [];
+  let topics = [];
   let alive = true;
   let answerToken = 0;
 
@@ -114,7 +115,7 @@ export function mountLibrary(sheetBody, ctx) {
 
   function draw() {
     if (!alive) return;
-    const view = libraryView(thoughts, f);
+    const view = libraryView(thoughts, { ...f, ids: f.topic?.ids ?? null });
     const all = countsOf(thoughts);
     clearBtn.hidden = !f.q;
     const searching = Boolean(f.q) || document.activeElement === input;
@@ -123,6 +124,20 @@ export function mountLibrary(sheetBody, ctx) {
     if (f.tag && !view.tags.includes(f.tag) && thoughts.length) f.tag = null;
     drawChips(view);
     const kids = [];
+    if (f.topic) {
+      kids.push(el('div', { class: 'topicbar' }, [
+        el('span', {}, [icon('hash'), `Topic: ${f.topic.label}`]),
+        el('button', { type: 'button', class: 'mini-btn', onclick: () => { f.topic = null; draw(); } }, 'Show all'),
+      ]));
+    } else if (!view.filtered) {
+      for (const tp of topics.slice(0, 2)) {
+        const members = thoughts.filter((t) => tp.ids.includes(t.id));
+        if (members.length < 3) continue;
+        kids.push(el('button', { type: 'button', class: 'topic', onclick: () => { f.topic = { label: tp.label, ids: tp.ids }; draw(); } }, [
+          icon('hash'), el('div', {}, [el('strong', {}, tp.label.charAt(0).toUpperCase() + tp.label.slice(1)), el('span', {}, topicLine(members))]),
+        ]));
+      }
+    }
     if (!view.shown) kids.push(emptyState(view));
     else {
       if (f.q.trim()) kids.push(el('p', { class: 'results-h' }, `${view.shown} ${view.shown === 1 ? 'thought' : 'thoughts'}`));
@@ -140,6 +155,8 @@ export function mountLibrary(sheetBody, ctx) {
 
   async function load() {
     try { thoughts = await ctx.store.getAll(); } catch { thoughts = []; }
+    draw();
+    try { topics = (await ctx.brain.topics?.()) ?? []; } catch { topics = []; }
     draw();
   }
 

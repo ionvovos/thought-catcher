@@ -11,7 +11,7 @@ function sectionBody(s) {
     kids.push(el('h3', { class: 'about-sub' }, g.label), el('ol', { class: 'steps-n' }, g.steps.map((t) => el('li', {}, t))));
   }
   for (const h of s.hosts ?? []) {
-    kids.push(el('p', { class: 'about-p' }, [el('strong', {}, h.name), ' ', el('span', { class: 'srow__sub' }, h.host), el('br'), h.why]));
+    kids.push(el('p', { class: 'about-p' }, [el('strong', {}, h.name), ' ', el('span', { class: 'srow__sub' }, h.host), h.why]));
   }
   if (s.link) {
     kids.push(el('a', { class: 'srow srow--btn', href: s.link.href, rel: 'noopener', target: '_blank' }, [

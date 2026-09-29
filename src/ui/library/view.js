@@ -89,11 +89,12 @@ export function topTags(thoughts) {
   return [...count.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, TAG_CHIPS_MAX).map(([g]) => g);
 }
 
-// filters: { q, type: Type|null, tag: string|null, state: 'open'|'done'|null }.
+// filters: { q, type: Type|null, tag: string|null, state: 'open'|'done'|null, ids: string[]|null (a topic's members) }.
 // The open/done filter narrows to tasks. Counts ignore the type filter so the chips keep showing every type's size for the
 // current search. Groups are in TYPE_ORDER, each newest first (reminders soonest due first); each group's count is the number listed.
-export function libraryView(thoughts, { q = '', type = null, tag = null, state = null } = {}) {
-  const searched = searchThoughts(thoughts, q);
+export function libraryView(thoughts, { q = '', type = null, tag = null, state = null, ids = null } = {}) {
+  const scoped = ids ? thoughts.filter((t) => ids.includes(t.id)) : thoughts;
+  const searched = searchThoughts(scoped, q);
   const tagged = tag ? searched.filter((t) => (t.tags ?? []).includes(tag)) : searched;
   const stated = state ? tagged.filter((t) => t.type === 'task' && (state === 'done' ? t.done : !t.done)) : tagged;
   const counts = { all: stated.length };
@@ -102,7 +103,7 @@ export function libraryView(thoughts, { q = '', type = null, tag = null, state =
   const groups = TYPE_ORDER
     .map((ty) => ({ type: ty, items: shown.filter((t) => t.type === ty).sort(ty === 'reminder' ? byDue : byNewest) }))
     .filter((g) => g.items.length > 0);
-  return { total: thoughts.length, counts, groups, shown: shown.length, tags: topTags(thoughts), filtered: Boolean(q.trim() || type || tag || state) };
+  return { total: thoughts.length, counts, groups, shown: shown.length, tags: topTags(thoughts), filtered: Boolean(q.trim() || type || tag || state || ids) };
 }
 
 export const countsOf = (thoughts) => {

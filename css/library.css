@@ -64,3 +64,8 @@
 .provenance { display: flex; align-items: center; gap: 6px; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--c-text-3); margin-top: var(--sp-3); }
 .provenance .i { width: 13px; height: 13px; stroke-width: 2; }
 .answer__acts { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-3); }
+
+/* Topic filter bar (a topic card was tapped) */
+.topicbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin: 0 0 var(--sp-3); font-size: var(--fs-subhead); font-weight: var(--fw-semibold); color: var(--c-accent-text); }
+.topicbar > span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.topicbar .i { width: 18px; height: 18px; }

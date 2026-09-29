@@ -65,6 +65,14 @@ test('type, tag and open/done filters combine with search', () => {
   assert.equal(libraryView(SET, { type: 'idea' }).counts.task, 2);
 });
 
+test('a topic (a list of ids) narrows the library to its members and combines with search', () => {
+  const v = libraryView(SET, { ids: ['a', 'b', 'd'] });
+  assert.equal(v.shown, 3);
+  assert.equal(v.filtered, true);
+  assert.equal(libraryView(SET, { ids: ['a', 'b', 'd'], q: 'gym' }).shown, 2);
+  assert.equal(libraryView(SET, { ids: [] }).shown, 0);
+});
+
 test('the filtered flag is false for the plain library and true when anything narrows it', () => {
   assert.equal(libraryView(SET).filtered, false);
   assert.equal(libraryView(SET, { q: ' ' }).filtered, false);

@@ -177,6 +177,7 @@ const click = (root, sel) => root.querySelector(sel).click();
 
 export const FIXTURES = {
   'library-half': (root) => libraryFixture(root),
+  'library-topic': (root) => libraryFixture(root, { ctx: { brain: { async topics() { return [{ label: 'fitness', ids: ['i1', 't3', 'j1', 'j2', 'i6'] }]; } } } }),
   'library-full-search': (root) => libraryFixture(root, { full: true, query: 'gym' }),
   'library-empty': (root) => libraryFixture(root, { ctx: { thoughts: [] } }),
   'library-search-empty': (root) => libraryFixture(root, { full: true, query: 'passport' }),
@@ -318,17 +319,26 @@ Object.assign(FIXTURES, {
   'settings-listen': (root) => settingsFixture(root, { act: (r) => rowByLabel(r, 'Listening').click() }),
   'settings-voice': (root) => settingsFixture(root, { act: (r) => rowByLabel(r, 'Reply voice').click() }),
   'settings-days': (root) => settingsFixture(root, { act: (r) => rowByLabel(r, 'Daily review').click() }),
-  'settings-delete-confirm': (root) => settingsFixture(root, { act: (r) => rowByLabel(r, 'Delete everything').click() }),
+  'settings-delete-confirm': (root) => settingsFixture(root, { act: async (r) => { rowByLabel(r, 'Delete everything').click(); await settle(); r.querySelector('.confirm').scrollIntoView({ block: 'end' }); } }),
   'import-error': (root) => settingsFixture(root, {
-    act: async (r, ctx) => {
-      const { importFile } = await import('../ui/settings/data.js');
-      const res = await importFile(ctx, new File(['{"hello": 1}'], 'notes.json', { type: 'application/json' }));
+    act: async (r) => {
       const input = r.querySelector('input[type=file]');
-      void input; void res;
-      const holder = r.querySelector('.scroll');
-      holder.append(el('p', { class: 'field-error', role: 'alert' }, res.message));
+      const dt = new DataTransfer();
+      dt.items.add(new File(['{"hello": 1}'], 'notes.json', { type: 'application/json' }));
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change'));
+      await settle(120);
+      r.querySelector('.field-error').scrollIntoView({ block: 'center' });
     },
   }),
+  'about-hosts': async (root) => {
+    const { renderAbout } = await import('../ui/about/index.js');
+    const ctx = await makeCtx({});
+    renderAbout(root, ctx);
+    await settle();
+    [...root.querySelectorAll('.glabel')].find((h) => h.textContent === 'Where the app connects').scrollIntoView({ block: 'start' });
+    return { ctx };
+  },
   about: async (root) => {
     const { renderAbout } = await import('../ui/about/index.js');
     const ctx = await makeCtx({});
@@ -336,6 +346,40 @@ Object.assign(FIXTURES, {
     await settle();
     return { ctx };
   },
+});
+
+// ---- ask -----------------------------------------------------------------------------------------------------------
+
+export async function askFixture(root, answer, question) {
+  const { renderAnswer } = await import('../ui/ask/index.js');
+  const { miniOrb } = await import('../ui/orb/orb.js');
+  const ctx = await makeCtx({});
+  root.replaceChildren(
+    el('header', { class: 'topbar' }, [el('span', { class: 'pill' }, [el('span', { class: 'pill__dot' }), 'On this phone'])]),
+    el('section', { class: 'thread' }, [
+      el('div', { class: 'msg msg--user' }, question),
+      el('div', { class: 'msg msg--assistant' }, [miniOrb(), el('div', { class: 'msg__body' }, renderAnswer({ ...answer, question }, ctx))]),
+    ]),
+  );
+  await settle(150);
+  return { ctx };
+}
+
+const GYM_ANSWER = {
+  answer: 'You want to swap two long sessions for three short ones [1], and the membership runs out on 12 October [2]. On Saturday you wrote that running by the sea felt easier than the treadmill [3].',
+  sources: [
+    { id: 'i1', score: 0.71, title: 'Gym plan: three short sessions', type: 'idea' },
+    { id: 't3', score: 0.66, title: 'Renew gym membership', type: 'task' },
+    { id: 'j1', score: 0.6, title: 'Good run by the sea this morning', type: 'journal' },
+  ],
+  mode: 'meaning', by: 'device',
+};
+
+Object.assign(FIXTURES, {
+  'ask-answer': (root) => askFixture(root, GYM_ANSWER, 'What did I say about the gym?'),
+  'ask-answer-keyword': (root) => askFixture(root, { ...GYM_ANSWER, answer: 'I found 2 thoughts about that.', sources: GYM_ANSWER.sources.slice(0, 2), mode: 'keyword', by: 'rules' }, 'gym membership?'),
+  'ask-no-answer': (root) => askFixture(root, { answer: "I couldn't find anything about that.", sources: [], mode: 'meaning', by: 'device' }, 'What did I say about the passport?'),
+  'ask-deleted-source': (root) => askFixture(root, { ...GYM_ANSWER, sources: [...GYM_ANSWER.sources.slice(0, 2), { id: 'gone', score: 0.5, title: 'A deleted thought', type: 'idea' }] }, 'What did I say about the gym?'),
 });
 
 // Adds a screen module's fixtures. Screens append here as they land.
