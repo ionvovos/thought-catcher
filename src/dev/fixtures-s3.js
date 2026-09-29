@@ -124,16 +124,17 @@ function assistantBehind() {
   ];
 }
 
-function sheetFrame(root, kind) {
-  const sheet = el('section', { class: `sheet sheet--${kind}`, role: 'dialog', 'aria-label': 'Library' }, [el('span', { class: 'grabber', role: 'button', 'aria-label': 'Resize library' })]);
-  root.replaceChildren(...assistantBehind(), el('div', { class: 'scrim' }), sheet);
-  return sheet;
+async function sheetFrame(root, kind, count) {
+  const { openSheet } = await import('../ui/components/sheet.js');
+  root.replaceChildren(...assistantBehind());
+  return openSheet({ host: root, title: 'Library', count, detent: kind, onClose: () => {} });
 }
 
 export async function libraryFixture(root, o = {}) {
   const { mountLibrary } = await import('../ui/library/index.js');
   const ctx = await makeCtx(o.ctx);
-  const sheet = sheetFrame(root, o.full ? 'full' : 'half');
+  const frame = await sheetFrame(root, o.full ? 'full' : 'half', (o.ctx?.thoughts ?? sampleThoughts()).length);
+  const sheet = frame.body;
   const handle = mountLibrary(sheet, ctx);
   await settle();
   if (o.query !== undefined) {

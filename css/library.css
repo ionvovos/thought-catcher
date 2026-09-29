@@ -14,9 +14,7 @@
 .search .clear span { width: 18px; height: 18px; border-radius: 50%; background: var(--c-text-3); color: var(--c-surface); display: grid; place-items: center; }
 .search .clear .i { width: 12px; height: 12px; stroke-width: 3; }
 .searchrow { display: flex; align-items: center; gap: var(--sp-1); padding: 0 var(--gutter) var(--sp-3); }
-.searchrow .btn[hidden], .sheet__head[hidden] { display: none; }
-.sheet__head + .searchrow { padding-top: 0; }
-.lib > .searchrow:first-child { padding-top: 6px; }
+.searchrow .btn[hidden] { display: none; }
 
 /* Filter chips (the chip itself is a shared component) */
 .chips { display: flex; gap: var(--sp-2); overflow-x: auto; padding: 0 var(--gutter) var(--sp-3); scroll-padding: var(--gutter);

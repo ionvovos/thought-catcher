@@ -1,8 +1,9 @@
-// Library sheet content (X4): search, filters, thoughts grouped by type. S1 owns the sheet frame (grabber, detents, Back);
-// this fills the sheet body. Text from thoughts only ever reaches the DOM as text nodes.
+// Library sheet content (X4): search, filters, thoughts grouped by type. S1's openSheet owns the frame (grabber, title and
+// count, close, detents, Back); this fills sheet.body. Focusing the search field asks for the full detent through a bubbling
+// `sheet-detent` event (detail: 'full'). Text from thoughts only ever reaches the DOM as text nodes.
 import { el } from '../dom.js';
 import { icon } from '../icons.js';
-import { IconButton, Button } from '../components/button.js';
+import { Button } from '../components/button.js';
 import { Chip } from '../components/chip.js';
 import { typeMeta } from '../typeMeta.js';
 import { TYPE_ORDER, TYPE_PLURAL, libraryView, countsOf, whenLabel, snippetOf, highlightParts } from './view.js';
@@ -35,14 +36,6 @@ export function mountLibrary(sheetBody, ctx) {
   let alive = true;
   let answerToken = 0;
 
-  const title = el('h2', { class: 'sheet__title' }, 'Library');
-  const count = el('span', { class: 'sheet__count' }, '0');
-  title.append(count);
-  const head = el('div', { class: 'sheet__head' }, [
-    title,
-    IconButton({ name: 'x', label: 'Close library', onClick: () => ctx.nav.back() }),
-  ]);
-
   const input = el('input', {
     type: 'text', class: 'search__input', placeholder: 'Search or ask', 'aria-label': 'Search thoughts',
     autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'search', inputmode: 'search',
@@ -58,7 +51,7 @@ export function mountLibrary(sheetBody, ctx) {
   const tagChips = el('div', { class: 'chips chips--tags no-scrollbar', role: 'toolbar', 'aria-label': 'Filter by tag and state' });
   const list = el('div', { class: 'sheet__body lib__list no-scrollbar' });
   const live = el('p', { class: 'sr-only', role: 'status' });
-  const root = el('div', { class: 'lib' }, [head, searchRow, typeChips, tagChips, list, live]);
+  const root = el('div', { class: 'lib' }, [searchRow, typeChips, tagChips, list, live]);
   sheetBody.append(root);
 
   const askText = (text) => ctx.brain?.intent?.(text)?.kind === 'ask';
@@ -123,10 +116,8 @@ export function mountLibrary(sheetBody, ctx) {
     if (!alive) return;
     const view = libraryView(thoughts, f);
     const all = countsOf(thoughts);
-    count.textContent = String(all.all);
     clearBtn.hidden = !f.q;
     const searching = Boolean(f.q) || document.activeElement === input;
-    head.hidden = searching;
     cancel.hidden = !searching;
     typeChips.hidden = tagChips.hidden = thoughts.length === 0 || (view.shown === 0 && Boolean(f.q.trim()));
     if (f.tag && !view.tags.includes(f.tag) && thoughts.length) f.tag = null;

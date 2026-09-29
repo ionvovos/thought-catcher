@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createMemoryStore } from '../src/storage/memory.js';
 import { newThought } from '../src/core/model.js';
-import { checkReview, reviewOnOpen, showReviewCount, watchNewDay } from '../src/core/reviewOnOpen.js';
+import { checkReview, reviewCardData, watchNewDay } from '../src/core/reviewOnOpen.js';
 
 const DAY = 86400000;
 const NOW = new Date(2026, 8, 29, 10, 0, 0);
@@ -18,21 +18,33 @@ async function setup(thoughts) {
   return store;
 }
 
-test('due items and not yet shown today: navigates to the review', async () => {
+test('due items and not yet shown today: the card shows (AC-X8.3)', async () => {
   const store = await setup([idea('a', 4)]);
-  const nav = [];
-  const r = await reviewOnOpen({ store, getSettings: () => S, now: () => NOW, navigate: (h) => nav.push(h) });
-  assert.deepEqual(r, { count: 1, autoShow: true, shown: true });
-  assert.deepEqual(nav, ['#/review']);
+  const r = await checkReview({ store, getSettings: () => S, now: () => NOW });
+  assert.deepEqual(r, { count: 1, autoShow: true });
 });
 
 test('nothing due: never shown', async () => {
   const store = await setup([idea('a', 1)]);
-  const nav = [];
-  const r = await reviewOnOpen({ store, getSettings: () => S, now: () => NOW, navigate: (h) => nav.push(h) });
+  const r = await checkReview({ store, getSettings: () => S, now: () => NOW });
   assert.equal(r.count, 0);
-  assert.equal(r.shown, false);
-  assert.deepEqual(nav, []);
+  assert.equal(r.autoShow, false);
+});
+
+test('the card lists at most five items and counts the rest (AC-X8.3)', async () => {
+  const store = await setup(Array.from({ length: 8 }, (_, i) => idea(`n${i}`, 4 + i)));
+  const d = await reviewCardData({ store, getSettings: () => S, now: () => NOW });
+  assert.equal(d.count, 8);
+  assert.equal(d.shown.length, 5);
+  assert.equal(d.more, 3);
+  assert.equal(d.autoShow, true);
+});
+
+test('an idea 3 days old is on the card and one 2 days old is not; the threshold comes from settings (AC-X8.1, AC-X8.5)', async () => {
+  const store = await setup([idea('three', 3), idea('two', 2)]);
+  assert.deepEqual((await reviewCardData({ store, getSettings: () => S, now: () => NOW })).shown.map((i) => i.thought.id), ['three']);
+  const d = await reviewCardData({ store, getSettings: () => ({ ...S, 'review.days': 2 }), now: () => NOW });
+  assert.deepEqual(d.shown.map((i) => i.thought.id).sort(), ['three', 'two']);
 });
 
 test('already shown today and nothing left unresolved: not shown again; left unresolved: shown', async () => {
@@ -40,27 +52,6 @@ test('already shown today and nothing left unresolved: not shown again; left unr
   const shownToday = { ...S, 'review.last_shown_date': '2026-09-29' };
   assert.equal((await checkReview({ store, getSettings: () => shownToday, now: () => NOW })).autoShow, false);
   assert.equal((await checkReview({ store, getSettings: () => ({ ...shownToday, 'review.left_unresolved': true }), now: () => NOW })).autoShow, true);
-});
-
-test('interrupt false (home-screen capture launch): counted and autoShow true but no navigation', async () => {
-  const store = await setup([idea('a', 4)]);
-  const nav = [];
-  const r = await reviewOnOpen({ store, getSettings: () => S, now: () => NOW, navigate: (h) => nav.push(h), interrupt: false });
-  assert.equal(r.autoShow, true);
-  assert.equal(r.shown, false);
-  assert.deepEqual(nav, []);
-});
-
-test('showReviewCount labels the nav link', () => {
-  const link = { textContent: 'Review', attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, removeAttribute(k) { delete this.attrs[k]; } };
-  const nav = { querySelector: (sel) => (sel === 'a[data-route="review"]' ? link : null) };
-  showReviewCount(nav, 3);
-  assert.equal(link.textContent, 'Review (3)');
-  assert.equal(link.attrs['aria-label'], 'Review, 3 due');
-  showReviewCount(nav, 0);
-  assert.equal(link.textContent, 'Review');
-  assert.equal('aria-label' in link.attrs, false);
-  assert.doesNotThrow(() => showReviewCount(null, 2));
 });
 
 test('watchNewDay runs only when the page turns visible on a different local day', () => {

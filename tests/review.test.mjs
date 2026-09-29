@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newThought } from '../src/core/model.js';
 import {
-  computeReview, markReviewed, keepThought, dismissReminder, shouldAutoShow, shownPatch, localDate, reviewDays,
+  computeReview, markReviewed, keepThought, dismissReminder, letGoIdea, markReminderDone, snoozeToTomorrow, reviewLede, ideaAge, visibleItems, shouldAutoShow, shownPatch, localDate, reviewDays,
 } from '../src/core/review.js';
 
 const DAY = 86400000;
@@ -110,4 +110,38 @@ test('closing the review records the date and whether items remain', () => {
 test('now is a parameter: same input, same result', () => {
   const t = [make('a', 'idea', ago(4))];
   assert.deepEqual(computeReview(t, S, NOW), computeReview(t, S, NOW));
+});
+
+test('let go: a dismissed idea stays out of the review but is not deleted', () => {
+  const idea = make('i', 'idea', ago(10));
+  assert.equal(computeReview([idea], S, NOW).count, 1);
+  const gone = letGoIdea(idea, NOW);
+  assert.equal(gone.review.dismissed, true);
+  assert.equal(gone.text, idea.text);
+  assert.equal(computeReview([gone], S, NOW).count, 0);
+});
+
+test('reminder done leaves the review; tomorrow brings it back at 9:00 local time the next day', () => {
+  const rem = make('r', 'reminder', ago(2), { due_at: ago(1).toISOString() });
+  assert.equal(computeReview([markReminderDone(rem, NOW)], S, NOW).count, 0);
+  const snoozed = snoozeToTomorrow(rem, NOW);
+  assert.equal(computeReview([snoozed], S, NOW).count, 0);
+  const at = new Date(snoozed.review.snoozed_until);
+  assert.equal(at.getDate(), NOW.getDate() + 1);
+  assert.equal(at.getHours(), 9);
+  assert.equal(computeReview([snoozed], S, new Date(at.getTime() + 60000)).count, 1);
+});
+
+test('lede and idea age read as plain sentences; the card caps at five', () => {
+  const r = { kind: 'reminder' };
+  const d = { kind: 'idea' };
+  assert.equal(reviewLede([r, d, d]), 'One reminder due, two ideas waiting.');
+  assert.equal(reviewLede([d]), 'One idea waiting.');
+  assert.equal(reviewLede([r, r, r]), 'Three reminders due.');
+  assert.equal(reviewLede([]), 'All clear for today.');
+  assert.equal(ideaAge(make('a', 'idea', ago(4)), NOW), 'Idea from 4 days ago');
+  assert.equal(ideaAge(make('b', 'idea', ago(1)), NOW), 'Idea from yesterday');
+  assert.equal(ideaAge(make('c', 'idea', ago(0)), NOW), 'Idea from today');
+  const v = visibleItems(Array.from({ length: 7 }, (_, i) => i));
+  assert.deepEqual([v.shown.length, v.more], [5, 2]);
 });
