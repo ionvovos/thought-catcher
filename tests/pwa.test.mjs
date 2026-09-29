@@ -59,7 +59,7 @@ const shell = [...sw.slice(sw.indexOf('const SHELL'), sw.indexOf('];', sw.indexO
 // Files other shards own may land before `node tools/sync-precache.mjs` runs; they are reported, not failed, unless
 // TC_STRICT=1 (release and L4 run strict). S1's own files are always strict.
 const OTHER = /^\.\/(src\/(brain|core|storage|ui\/(library|detail|ask|review|onboarding|settings|about|views)|dev\/fixtures-s3)|css\/(library|detail|review|onboarding|settings))/;
-const strict = process.env.TC_STRICT === '1';
+const strict = process.env.TC_STRICT !== '0'; // strict by default now that every shard has landed
 
 test('sw.js: precache list has only existing relative files and covers every file the browser loads', (t) => {
   const gone = shell.filter((f) => f !== './' && !fs.existsSync(path.join(root, f)));

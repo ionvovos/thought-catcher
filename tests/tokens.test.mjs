@@ -32,7 +32,7 @@ test('every stylesheet the shell links exists and tokens.css comes first; every 
   for (const l of links) assert.ok(fs.existsSync(path.join(root, l)), l);
   // S3's stylesheets may land before index.html links them; reported unless TC_STRICT=1
   const unlinked = fs.readdirSync(path.join(root, 'css')).map((n) => `css/${n}`).filter((f) => !links.includes(f));
-  const mine = unlinked.filter((f) => !/css\/(library|detail|review|onboarding|settings)\.css$/.test(f) || process.env.TC_STRICT === '1');
+  const mine = unlinked.filter((f) => !/css\/(library|detail|review|onboarding|settings)\.css$/.test(f) || process.env.TC_STRICT !== '0');
   if (unlinked.length && !mine.length) t.diagnostic(`link in index.html: ${unlinked.join(', ')}`);
   assert.deepEqual(mine, [], 'stylesheet not linked in index.html');
 });
