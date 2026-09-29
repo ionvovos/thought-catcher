@@ -119,3 +119,6 @@
 .composer__input { min-height: var(--tap); padding: 10px 0; box-sizing: border-box; }
 .msg--wide { max-width: 100%; align-self: stretch; }
 .msg--wide .consent { margin-top: 0; }
+
+.thread { scrollbar-width: none; }
+.thread::-webkit-scrollbar { display: none; }

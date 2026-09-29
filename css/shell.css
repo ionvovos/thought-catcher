@@ -27,3 +27,11 @@
 .typedots span { display: inline-flex; align-items: center; gap: 4px; }
 .typedots span::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--td); }
 .sheet--peek { position: relative; z-index: 2; padding-bottom: var(--safe-bottom); }
+
+/* L4a F3: everything between the top bar and the peek scrolls together instead of overlapping; the peek never moves. */
+.home { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; overscroll-behavior: contain; scrollbar-width: none; }
+.home::-webkit-scrollbar { display: none; }
+.home > * { flex: none; }
+.home > .stage { flex: 1 0 auto; padding-top: var(--sp-2); padding-bottom: var(--sp-3); }
+.home > .review { max-height: none; overflow: visible; margin-bottom: var(--sp-2); }
+.sheet--peek { flex: none; touch-action: none; }

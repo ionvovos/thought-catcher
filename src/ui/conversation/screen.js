@@ -73,6 +73,8 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
     onVoice: () => { typing = false; dispatch({ type: 'TAP_ORB' }); },
   });
   const stage = el('section', { class: 'stage' });
+  // Review card, stage, due card and notices scroll together when they do not fit; the peek stays fixed (L4a F3).
+  const home = el('div', { class: 'home no-scrollbar' });
   const thread = el('section', { class: 'thread', 'aria-label': 'Conversation' });
   thread.tabIndex = -1;
 
@@ -143,7 +145,7 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
       bottom.push(pendingChoice ? el('div', { class: 'stage__choice' }) : V.transcriptView(transcript));
       if (speechNote) bottom.push(el('p', { class: 'hint', role: 'status' }, speechNote));
     } else {
-      top.append(el('h1', { class: 'greeting' }, V.greeting(now(), firstRun)));
+      if (!reviewNode) top.append(el('h1', { class: 'greeting' }, V.greeting(now(), firstRun)));
       const blocked = readOnly() ? 'Capturing is paused until your thoughts are updated. Export them from Settings.' : null;
       bottom.push(V.hintLine({ firstRun, engineRules: orbStateFor(status) === 'basic', download: downloadLine(status), blocked }));
       if (!readOnly()) bottom.push(V.typeButton(openTyping));
@@ -246,15 +248,17 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
       orb.el.classList.remove('orb--dock');
       const choiceHost = renderStage();
       stage.classList.toggle('stage--below', Boolean(reviewNode) && !listening);
-      if (reviewNode && !listening) parts.push(reviewNode);
-      parts.push(stage);
       if (listening) {
-        parts.push(dock());
+        parts.push(stage, dock());
       } else {
-        const notices = stageNotices();
+        const inHome = [];
+        if (reviewNode) inHome.push(reviewNode);
+        inHome.push(stage);
         const due = dueToday();
-        if (due) parts.push(V.dueCard(due, `Due today, ${whenLabel(due.due_at, now()).replace(/^Today /, '')}`, () => markDone(due)));
-        parts.push(...notices, peekNode());
+        if (due) inHome.push(V.dueCard(due, `Due today, ${whenLabel(due.due_at, now()).replace(/^Today /, '')}`, () => markDone(due)));
+        inHome.push(...stageNotices());
+        home.replaceChildren(...inHome);
+        parts.push(home, peekNode());
       }
       root.replaceChildren(...parts, ...overlays());
       if (pendingChoice && choiceHost) choiceHost.append(pendingChoice);
@@ -708,7 +712,14 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
     const tag = document.activeElement?.tagName;
     const inField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement?.isContentEditable;
     if (e.key === 'Escape' && (st.name === 'listening' || st.name === 'transcribing')) { dispatch({ type: 'CANCEL' }); return; }
-    if ((e.key === 'r' || e.key === 'R') && !inField && !location.hash.startsWith('#/library') && (st.name === 'idle' || st.name === 'listening')) { e.preventDefault(); dispatch({ type: 'TAP_ORB' }); }
+    if ((e.key === 'r' || e.key === 'R') && !inField && !location.hash.startsWith('#/library') && (st.name === 'idle' || st.name === 'listening')) {
+      e.preventDefault();
+      // No speech engine at all (AC-X1.8): the shortcut focuses the text field instead of showing an error.
+      const pref = settings.getSettings()['speech.engine'];
+      speechPrefs.engine = pref;
+      const noEngine = !engines.some((x) => x.isAvailable()) || (pref !== 'ask' && !selectEngine(engines, speechPrefs).engine);
+      if (st.name === 'idle' && noEngine) openTyping(); else dispatch({ type: 'TAP_ORB' });
+    }
   };
   let unsubStore = null;
 
