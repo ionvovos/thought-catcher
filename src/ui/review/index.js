@@ -1,2 +1,2 @@
-// S3 contract: renderReviewCard(ctx) -> Promise<HTMLElement|null>, the daily review card. Stub until the screen lands.
-export async function renderReviewCard(ctx) { return null; }
+// S3 contract: renderReviewCard(ctx) -> Promise<HTMLElement|null>, the daily review card above the orb.
+export { renderReviewCard } from './card.js';

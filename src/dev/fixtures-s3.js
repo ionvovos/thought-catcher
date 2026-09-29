@@ -205,6 +205,43 @@ Object.assign(FIXTURES, {
   'thought-detail-missing': (root) => detailFixture(root, { id: 'nope' }),
 });
 
+// ---- review --------------------------------------------------------------------------------------------------------
+
+const reviewThoughts = () => sampleThoughts().map((t) => {
+  if (t.id === 'r1') return { ...t, due_at: at(29, 9).toISOString() };
+  if (t.id === 'r2') return { ...t, due_at: at(30, 9).toISOString() };
+  if (t.id === 'r3') return { ...t, due_at: at(29, 21, 30).toISOString() };
+  if (t.id === 'r4') return { ...t, due_at: new Date(2026, 9, 4, 9).toISOString() };
+  if (t.id === 'i2') return { ...t, created_at: at(25).toISOString() };
+  if (t.id === 'i3') return { ...t, created_at: at(24).toISOString() };
+  if (['i1', 'i4', 'i5', 'i6', 'i7', 'i8'].includes(t.id)) return { ...t, review: { ...t.review, snoozed_until: at(30).toISOString() } };
+  return t;
+});
+
+export async function reviewFixture(root, o = {}) {
+  const { renderReviewCard } = await import('../ui/review/index.js');
+  const { createOrb } = await import('../ui/orb/orb.js');
+  const ctx = await makeCtx({ thoughts: o.thoughts ?? reviewThoughts(), settings: o.settings });
+  root.replaceChildren(
+    el('header', { class: 'topbar' }, [el('span', { class: 'pill' }, [el('span', { class: 'pill__dot' }), 'On this phone'])]),
+  );
+  const card = await renderReviewCard(ctx);
+  if (card) root.append(card);
+  root.append(el('section', { class: 'stage stage--below' }, [createOrb({}).el, el('p', { class: 'hint' }, [el('strong', {}, 'Tap to talk.'), ' The review waits.'])]));
+  await settle();
+  if (o.act) { await o.act(root, ctx); await settle(80); }
+  return { ctx, card };
+}
+
+Object.assign(FIXTURES, {
+  'daily-review': (root) => reviewFixture(root),
+  'daily-review-more': (root) => reviewFixture(root, { thoughts: reviewThoughts().map((t) => (t.type === 'idea' ? { ...t, review: { ...t.review, snoozed_until: null }, created_at: at(20).toISOString() } : t)) }),
+  'daily-review-clear': (root) => reviewFixture(root, {
+    thoughts: reviewThoughts().filter((t) => t.id !== 'i3' && t.id !== 'i2' && t.id !== 'r3'),
+    act: async (r) => { for (const label of ['Done', 'Tomorrow']) { r.querySelector('.ritem__acts .btn')?.click(); await settle(60); } },
+  }),
+});
+
 // Adds a screen module's fixtures. Screens append here as they land.
 export function addFixtures(map) { Object.assign(FIXTURES, map); }
 
