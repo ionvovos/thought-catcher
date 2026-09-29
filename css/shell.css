@@ -38,7 +38,7 @@
 .home { padding-bottom: var(--sp-5); -webkit-mask: linear-gradient(to bottom, var(--c-mask) calc(100% - 20px), transparent); mask: linear-gradient(to bottom, var(--c-mask) calc(100% - 20px), transparent); }
 .review + .stage, .review + .stage--below { padding-top: var(--sp-5); }
 
-@media (max-height: 820px) {
+@media (max-height: 900px) {
   .home--crowded > .stage { gap: var(--sp-4); }
   .home--crowded .orb { --size: 148px; }
 }
