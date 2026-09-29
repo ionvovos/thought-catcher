@@ -34,7 +34,14 @@ export const ANSWER_SYSTEM = `You answer a question using only the saved thought
 Field: "answer" (at most 40 words, plain sentences, no invented facts; if the thoughts do not answer it, say so). ${JSON_ONLY}
 Example reply: {"answer":"You said you keep skipping the gym and feel worse for it. You also had an idea for a streak calendar in the gym app."}`;
 
-export const splitPrompt = (text) => ({ system: SPLIT_SYSTEM, user: cut(text) });
+// Own-key providers (strong models) also word the confirmation; the on-device prompt stays the spike-tested v3.
+export const SPLIT_REPLY_NOTE = 'Also add a top-level field "reply": one short friendly sentence (at most 30 words) that says what you filed, without repeating the note word for word.';
+export const WORD_SYSTEM = `You reword one clarifying question for a personal note-taking assistant. ${DATA_NOTE}
+Keep the meaning and any options in it. At most 20 words. ${JSON_ONLY}
+Example: {"question":"Should I treat that as a task, or remind you at a set time?"}`;
+
+export const splitPrompt = (text, { withReply = false } = {}) => ({ system: withReply ? `${SPLIT_SYSTEM}\n${SPLIT_REPLY_NOTE}` : SPLIT_SYSTEM, user: cut(text) });
+export const wordPrompt = (question, note) => ({ system: WORD_SYSTEM, user: `Note: ${cut(note, 300)}\nQuestion: ${cut(question, 200)}` });
 export const classifyPrompt = (text) => ({ system: CLASSIFY_SYSTEM, user: cut(text) });
 export const expandPrompt = (thought) => ({ system: EXPAND_SYSTEM, user: `Idea: ${cut(thought.text)}\nTitle: ${thought.title}` });
 export const planPrompt = (thought) => ({ system: PLAN_SYSTEM, user: `Task: ${cut(thought.text)}\nTitle: ${thought.title}` });

@@ -187,3 +187,40 @@ test('configFromSettings and isAiConfigured', () => {
   assert.equal(isAiConfigured({ ...base, 'ai.provider': 'openai', 'ai.model': 'm', 'ai.base_url': 'http://localhost:11434/v1' }, null), true);
   assert.equal(isAiConfigured({ ...base, 'ai.provider': 'openai', 'ai.model': 'm', 'ai.base_url': 'https://api.x.test/v1' }, 'k'), true);
 });
+
+// ---- v2 calls (architecture 2.2): split, classify, plan, answer, question wording ----
+const SPLIT_JSON = { reply: 'Filed two things for you.', items: [{ type: 'task', title: 'Buy milk', text: 'buy milk', when: null }, { type: 'reminder', title: 'Call mum', text: 'remind me at 6pm to call mum', when: '6pm' }] };
+
+test('v2 calls on both providers: validated, with the note in the prompt and the key never in the body', async () => {
+  for (const [config, ok] of [[{ provider: 'anthropic' }, anthropicOk], [{ provider: 'openai', model: 'gpt-x', baseUrl: 'https://api.openai.com/v1' }, openaiOk]]) {
+    const { fetch, calls } = recorder((n) => ok([SPLIT_JSON, { type: 'idea', title: 'Gym app', when: null }, { steps: ['a', 'b', 'c'] }, { answer: 'You said to buy milk.' }, { question: 'Task, or a reminder at a set time?' }][n - 1]));
+    const p = mk(config, fetch);
+    const items = await p.split('buy milk and remind me at 6pm to call mum');
+    assert.deepEqual(items.map((i) => i.type), ['task', 'reminder']);
+    assert.equal(items.reply, 'Filed two things for you.');
+    assert.equal(items[1].when, '6pm');
+    assert.deepEqual(await p.classify('gym app idea'), { type: 'idea', title: 'Gym app', when: null });
+    assert.deepEqual((await p.plan({ text: 'pay bill', title: 'Pay bill' })).steps.map((s) => s.done), [false, false, false]);
+    assert.equal(await p.answer('what about milk?', [{ title: 'Buy milk', text: 'buy milk' }]), 'You said to buy milk.');
+    assert.equal(await p.word('Task or reminder?', 'call mum'), 'Task, or a reminder at a set time?');
+    assert.equal(calls.length, 5);
+    assert.match(JSON.stringify(calls[0].body), /buy milk and remind me at 6pm/);
+    assert.match(JSON.stringify(calls[0].body), /top-level field \\"reply\\"/, 'the split prompt asks a key provider for the confirmation wording');
+    assert.match(JSON.stringify(calls[3].body), /Question: what about milk\?/);
+    assert.equal(JSON.stringify(calls.map((c) => c.body)).includes('sk-test-KEY'), false);
+  }
+});
+
+test('v2 calls: malformed replies throw AiError malformed and nothing is returned', async () => {
+  const bad = [{ items: [] }, { items: [{ type: 'note', title: 't', text: 'x' }] }, { nothing: 1 }];
+  for (const body of bad) {
+    const { fetch } = recorder(() => anthropicOk(body));
+    await assert.rejects(mk({ provider: 'anthropic' }, fetch).split('x'), (e) => e.kind === 'malformed');
+  }
+  const p = mk({ provider: 'anthropic' }, recorder(() => anthropicOk({ steps: ['only one'] })).fetch);
+  await assert.rejects(p.plan({ text: 'x', title: 'x' }), (e) => e.kind === 'malformed');
+  const q = mk({ provider: 'anthropic' }, recorder(() => anthropicOk({ question: 'not a question' })).fetch);
+  await assert.rejects(q.word('a?', 'b'), (e) => e.kind === 'malformed');
+  const long = mk({ provider: 'anthropic' }, recorder(() => anthropicOk({ answer: 'w '.repeat(60) })).fetch);
+  assert.ok((await long.answer('q', [{ title: 't', text: 't' }])).split(' ').length <= 40);
+});

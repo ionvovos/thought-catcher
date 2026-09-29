@@ -4,8 +4,8 @@ import { TYPES, LIMITS, normalizeTags } from '../model.js';
 import { AiError, describeAiError } from './http.js';
 import { createAnthropic, ANTHROPIC_DEFAULT_MODEL, ANTHROPIC_URL } from './anthropic.js';
 import { createOpenAi, OPENAI_DEFAULT_BASE_URL } from './openai.js';
-import { splitPrompt, classifyPrompt, planPrompt, answerPrompt } from '../../brain/prompts.js';
-import { validateSplit, validateClassify, validatePlan, validateAnswer } from '../../brain/validate.js';
+import { splitPrompt, classifyPrompt, planPrompt, answerPrompt, wordPrompt } from '../../brain/prompts.js';
+import { validateSplit, validateClassify, validatePlan, validateAnswer, validateWording, optionalReply } from '../../brain/validate.js';
 
 export { AiError, describeAiError, ANTHROPIC_DEFAULT_MODEL, OPENAI_DEFAULT_BASE_URL };
 
@@ -246,8 +246,13 @@ export function createProvider(config, { fetch, now = () => new Date(), getKey =
       return validateExpansion(await ask(expandPrompt(thought), 900, TIMEOUTS.expand));
     },
     // v2 calls (architecture 2.2): the same JSON the on-device model returns; src/brain/core.js refines it.
+    // Resolves to the validated items, with the provider's optional `reply` wording attached as a property.
     async split(text) {
-      return validateSplit(await ask(splitPrompt(text), 800, TIMEOUTS.split));
+      const obj = await ask(splitPrompt(text, { withReply: true }), 900, TIMEOUTS.split);
+      return Object.assign(validateSplit(obj), { reply: optionalReply(obj) });
+    },
+    async word(question, note) {
+      return validateWording(await ask(wordPrompt(question, note), 200, TIMEOUTS.classify));
     },
     async classify(text) {
       return validateClassify(await ask(classifyPrompt(text), 300, TIMEOUTS.classify));

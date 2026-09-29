@@ -317,6 +317,20 @@ export function createBrainCore(deps) {
     return assignQuestions(items, { source, aiAvailable: engineNow() !== 'rules' });
   }
 
+  // With an own key the provider also rewords the question text (code still chose the case and the chips).
+  async function wordQuestion(items) {
+    const provider = getProvider();
+    const at = items.findIndex((i) => i.question);
+    if (at < 0 || !provider || keyRejectedFor === provider || !online() || typeof provider.word !== 'function') return items;
+    try {
+      const text = await withTimeout(provider.word(items[at].question.text, items[at].text), 8000, () => new AiError('timeout', 'The AI did not answer in time.'));
+      return items.map((it, i) => (i === at ? { ...it, question: { ...it.question, text } } : it));
+    } catch (e) {
+      if (e?.kind === 'auth') { keyRejectedFor = provider; emit(); }
+      return items;
+    }
+  }
+
   function splitRules(text, { source = 'typed' } = {}) {
     const items = splitRulesItems(oneLine(text) ? String(text) : '', clock());
     return assignQuestions(items, { source, aiAvailable: false });
@@ -327,6 +341,7 @@ export function createBrainCore(deps) {
     if (!note) return [];
     const at = clock();
     let items = null;
+    let keyReply = null;
     try {
       const r = await runAi('split', {
         key: (p) => p.split(note),
@@ -335,10 +350,14 @@ export function createBrainCore(deps) {
       if (r.by) {
         try { items = refineSplit(r.value, note, at, r.by); } catch (e) { onDeviceError(e); }
       }
+      if (items) keyReply = r.by === 'key' ? (r.value.reply ?? null) : null;
     } catch (e) { onDeviceError(e); }
     if (!items) items = splitRulesItems(note, at);
     if (!items.length) items = [classifyRulesItem(note, at)];
-    return finishItems(items, source);
+    let done = finishItems(items, source);
+    if (keyReply) remember(done, keyReply);
+    if (items.some((i) => i.by === 'key')) done = await wordQuestion(done);
+    return done;
   }
 
   async function classify(text, { source = 'typed' } = {}) {
@@ -376,7 +395,15 @@ export function createBrainCore(deps) {
     return { type: item.type, title: item.title, tags: item.tags, due_at: item.due_at };
   }
 
-  const reply = (items) => replyFor(items, { now: clock() });
+  // A key provider words the confirmation inside the split call; the sync reply() returns it for the same items.
+  const replies = new Map();
+  const replyKey = (items) => items.map((i) => i.text).join('\u0001');
+  const remember = (items, text) => {
+    if (!text) return;
+    replies.set(replyKey(items), text);
+    if (replies.size > 30) replies.delete(replies.keys().next().value);
+  };
+  const reply = (items) => replies.get(replyKey(items)) ?? replyFor(items, { now: clock() });
 
   // ---- expand and plan (never write; the caller stores the result) ----
   async function generate(op, prompt, { validate, maxTokens, keyCall }) {

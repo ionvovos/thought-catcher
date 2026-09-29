@@ -63,3 +63,19 @@ export function validateAnswer(obj) {
   if (!words.length) throw bad('the answer is empty');
   return words.length <= 40 ? words.join(' ') : `${words.slice(0, 40).join(' ').replace(/[,;:]$/, '')}.`;
 }
+
+// A reworded question: one line, at most 20 words, still a question.
+export function validateWording(obj) {
+  if (!obj || typeof obj !== 'object') throw bad('no object');
+  const words = wordsOf(obj.question);
+  if (!words.length || words.length > 20) throw bad('the question is empty or too long');
+  const text = words.join(' ');
+  if (!/\?$/.test(text)) throw bad('the reworded question is not a question');
+  return text;
+}
+
+// The optional confirmation a key provider adds to a split: at most 40 words, else ignored.
+export function optionalReply(obj) {
+  const words = wordsOf(obj?.reply);
+  return words.length >= 1 && words.length <= 40 ? words.join(' ') : null;
+}

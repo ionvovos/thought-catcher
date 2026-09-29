@@ -246,6 +246,49 @@ test('a provider failure or offline falls to the device model when ready, else r
   assert.equal(offline.brain.getStatus().online, false);
 });
 
+
+test('AC-B3.3: with a key the provider words the reply and the question; failures keep the templates', async () => {
+  const items = Object.assign([{ type: 'task', title: 'Call the dentist', text: 'call the dentist tomorrow', when: 'tomorrow' }], { reply: 'Got it, the dentist call is on your list.' });
+  const provider = stubProvider({ split: async () => items, word: async (q) => `Friendly: ${q}` });
+  const llm = stubLlm('{}');
+  const { brain } = mkBrain({ provider, llm });
+  const out = await brain.split('call the dentist tomorrow');
+  assert.equal(brain.reply(out), 'Got it, the dentist call is on your list.');
+  assert.equal(out[0].question?.case, 1);
+  assert.match(out[0].question.text, /^Friendly: Task to do, or a reminder/);
+  assert.deepEqual(out[0].question.chips, ['Task', 'Reminder'], 'code still owns the case and the chips');
+  assert.equal(llm.calls.length, 0);
+  const failing = mkBrain({ provider: stubProvider({ split: async () => items, word: async () => { throw new AiError('timeout', 't'); } }) });
+  const again = await failing.brain.split('call the dentist tomorrow');
+  assert.match(again[0].question.text, /^Task to do, or a reminder/);
+  const plain = mkBrain();
+  const rules = await plain.brain.split('buy milk');
+  assert.match(plain.brain.reply(rules), /^Filed as a task/);
+});
+
+test('AC-B3.4 through the brain: a saved key goes only to its provider host, and a provider switch to another address sends nothing', async () => {
+  const settings = mkSettings({ 'ai.provider': 'anthropic' });
+  const binding = { provider: 'anthropic', host: 'api.anthropic.com' };
+  settings.setKey('sk-ant-SECRET', binding);
+  const sent = [];
+  const fetch = async (url, init) => {
+    sent.push({ url, key: init.headers['x-api-key'] ?? init.headers.authorization ?? null });
+    return { ok: true, status: 200, text: async () => JSON.stringify({ content: [{ type: 'text', text: json({ items: [{ type: 'task', title: 'Buy milk', text: 'buy milk', when: null }] }) }] }) };
+  };
+  const { brain } = mkBrain({ settings, fetch, provider: undefined });
+  assert.equal(brain.getStatus().engine, 'key');
+  assert.equal((await brain.split('buy milk'))[0].by, 'key');
+  assert.ok(sent.length >= 1 && sent.every((s) => s.url.startsWith('https://api.anthropic.com/') && s.key === 'sk-ant-SECRET'));
+  const before = sent.length;
+  settings.setSettings({ 'ai.provider': 'openai', 'ai.model': 'gpt-x', 'ai.base_url': 'https://other.example.test/v1' });
+  assert.equal(brain.getStatus().key, 'none', 'a key entered for another host is not used');
+  assert.equal((await brain.split('buy eggs'))[0].by, 'rules');
+  assert.equal(sent.length, before, 'nothing was sent to the new address');
+  settings.removeKey();
+  settings.setSettings({ 'ai.provider': 'none' });
+  assert.equal(brain.getStatus().key, 'none');
+});
+
 // ---- status events ----
 function fakeHost({ check = null, load } = {}) {
   const host = { model: 'fake-model', calls: [], loadedFlag: false, check: async () => check, loaded: () => host.loadedFlag, cancel() { host.calls.push('cancel'); }, generate: async () => '{}',
