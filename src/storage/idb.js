@@ -3,6 +3,7 @@
 // versionchange transaction (architecture 3.3). A failed upgrade aborts, IndexedDB keeps version 1 untouched, and the
 // store opens that v1 database read-only so the person can still export.
 import { upgradeThought, planMigration } from '../core/migrate.js';
+import { queueUntilReady } from './queued.js';
 
 const DB_NAME = 'thought-catcher';
 const DB_VERSION = 2;
@@ -149,4 +150,11 @@ export async function createIdbStore(idbFactory, { upgrade = upgradeThought } = 
 
   if (!readOnly && (await store.getSetting('schema.version', undefined)) !== 2) await store.setSetting('schema.version', 2);
   return store;
+}
+
+// The shell's entry: returns a store at once. Every call waits for the open (and the v1 -> v2 migration) to finish, so a
+// capture made while migrating is queued, not lost or failed. `store.ready` rejects when storage is unavailable, and
+// `store.migration.state` is 'migrating' until then.
+export function openIdbStore(idbFactory, opts) {
+  return queueUntilReady(createIdbStore(idbFactory, opts));
 }
