@@ -54,6 +54,10 @@ export function snippetOf(t, max = 160) {
   const text = String(t.text ?? '').replace(/\s+/g, ' ').trim();
   const title = String(t.title ?? '').trim();
   if (!text || text.toLowerCase() === title.toLowerCase()) return '';
+  // Body that only repeats the title plus its capture wording ("Remind me on Friday at 10 to renew the car insurance")
+  // adds nothing under the title (build gate G4).
+  const at = text.toLowerCase().indexOf(title.toLowerCase());
+  if (title.length >= 8 && at >= 0 && text.length - title.length < 40) return '';
   return text.length > max ? `${text.slice(0, max).trim()}…` : text;
 }
 

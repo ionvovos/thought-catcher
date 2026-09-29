@@ -63,5 +63,5 @@ export function sortByRules(text, now) {
   }
 
   const due_at = type === 'reminder' || type === 'task' ? parseWhen(t, now).due_at : null;
-  return { type, alt_type, confidence, title: makeTitle(raw), tags: normalizeTags(seen.slice(0, 3)), due_at, scores };
+  return { type, alt_type, confidence, title: makeTitle(raw, { stripWhen: Boolean(due_at) }), tags: normalizeTags(seen.slice(0, 3)), due_at, scores };
 }

@@ -35,17 +35,38 @@ export function normalizeTags(tags) {
   return out;
 }
 
-const FILLERS = ['remind me to', "don't forget to", 'remember to', 'i need to', 'i have to', 'i should really', 'i should', 'need to', 'oh and', 'and also', 'also', 'i think', 'so'];
+const FILLERS = ['remind me to', "don't forget to", 'remember to', 'i need to', 'i have to', 'i should really', 'i should', 'need to', 'oh and', 'and also', 'also', 'i think', 'so',
+  'i want to', 'i wanna', "i'd like to", 'i would like to', "i've got to", 'i must', 'we need to', 'we have to', 'we should', 'gotta', 'please', 'okay so', 'ok so'];
+
+// Capture wording a title must not repeat (build gate G4): a label ("An idea:", "Note to self:") and the "remind me on Friday at 10 to" lead-in.
+const LABEL = /^(?:(?:a|an|my|new)\s+)?(?:idea|thought|note(?:\s+to\s+self)?|reminder|task|to-?do|journal(?:\s+entry)?)\s*[:,\-–]\s*/i;
+const REMIND_LEAD = /^remind me(?:\s+(?!to\b)[\w:.'’-]+){1,7}?\s+to\s+/i;
+
+const DAYS = '(?:mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun)(?:day|sday|nesday|rsday|urday)?';
+// Date and time phrases; removed from a title only when the same information is on the thought's due chip.
+const WHEN_PHRASES = [
+  /\b(?:on|by|next|this)\s+DAYS\b/gi, /\bDAYS\b/gi,
+  /\b(?:tomorrow|tonight|today|this (?:morning|afternoon|evening)|next week|this weekend|at the weekend)\b/gi,
+  /\b(?:at|by|around)\s+\d{1,2}(?:[:.]\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.)?(?=\W|$)/gi,
+  /\bin\s+\d+\s+(?:minutes?|hours?|days?|weeks?)\b/gi,
+].map((re) => new RegExp(re.source.replace(/DAYS/g, DAYS), re.flags));
+
+function stripWhenPhrases(text) {
+  let out = text;
+  for (const re of WHEN_PHRASES) out = out.replace(re, ' ');
+  return out.replace(/\s+/g, ' ').replace(/\s+([,.;:!?])/g, '$1').replace(/(?:\s+(?:on|at|by|for|in|to|the|a|and|before|until))+\s*$/i, '').trim();
+}
 
 function firstSentence(text) {
   const m = text.match(/^[\s\S]*?[.!?](?=\s|$)/);
   return m ? m[0] : text;
 }
 
-export function makeTitle(text) {
+// stripWhen: true when the thought has a due time, so the date and time words are on its chip and not repeated in the title.
+export function makeTitle(text, { stripWhen = false } = {}) {
   const trimmed = String(text ?? '').trim();
   const sentence = firstSentence(trimmed).trim();
-  let s = sentence;
+  let s = sentence.replace(LABEL, '').replace(REMIND_LEAD, '');
   for (let changed = true; changed;) {
     changed = false;
     for (const f of FILLERS) {
@@ -56,6 +77,7 @@ export function makeTitle(text) {
       }
     }
   }
+  if (stripWhen) { const stripped = stripWhenPhrases(s); if (stripped.split(' ').length >= 2) s = stripped; }
   s = s.replace(/[.,;:!?\s]+$/, '').trim();
   if (!s) s = sentence.replace(/[.,;:!?\s]+$/, '').trim();
   if (!s) s = trimmed;

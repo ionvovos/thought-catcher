@@ -73,3 +73,14 @@ test('validateThought rejects bad records', () => {
     assert.ok(r.errors.length > 0, name);
   }
 });
+
+test('G4: titles drop capture wording; date and time words go only when the thought has a due time', () => {
+  assert.equal(makeTitle('An idea: an app that sorts receipts from a photo'), 'An app that sorts receipts from a photo');
+  assert.equal(makeTitle('Idea: a weekend bread-baking workshop'), 'A weekend bread-baking workshop');
+  assert.equal(makeTitle('Remind me on Friday at 10 to renew the car insurance'), 'Renew the car insurance');
+  assert.equal(makeTitle('Remind me to water the plants on Sunday', { stripWhen: true }), 'Water the plants');
+  assert.equal(makeTitle('I need to call the dentist tomorrow at 9', { stripWhen: true }), 'Call the dentist');
+  assert.equal(makeTitle('I want to renew my gym membership'), 'Renew my gym membership');
+  assert.equal(makeTitle('remind me to call mum at 6pm'), 'Call mum at 6pm', 'without a due time the words stay');
+  assert.equal(makeTitle('Meet at 10.30 sharp', { stripWhen: true }), 'Meet sharp');
+});

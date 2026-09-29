@@ -34,7 +34,7 @@ test('worked checks (architecture 6.4)', () => {
   assert.equal(r.alt_type, null);
   assert.equal(r.confidence, 1);
   assert.ok(r.due_at);
-  assert.equal(r.title, 'Call mum at 6pm');
+  assert.equal(r.title, 'Call mum');
 
   r = s('I keep thinking we should move to a smaller place');
   assert.deepEqual(r.scores, { reminder: 0, task: 0, idea: 1, journal: 1 });

@@ -87,7 +87,7 @@ export function refineItem(mi, now, by) {
     type,
     alt_type: alt,
     confidence,
-    title: mi.title && aligned({ title: mi.title, text }) ? mi.title : makeTitle(text),
+    title: mi.title && aligned({ title: mi.title, text }) ? mi.title : makeTitle(text, { stripWhen: Boolean(due) }),
     tags: normalizeTags(rules.tags),
     due_at: due,
     by,
