@@ -1,17 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { upgradeThought, planMigration } from '../src/core/migrate.js';
-import { newThought, validateThought } from '../src/core/model.js';
-import { sortByRules } from '../src/core/sorter.js';
-
-const NOW = new Date(2026, 8, 29, 10, 0, 0);
-
-// A thought exactly as build a999310 stored it: no origin, best_guess, plan or v.
-export function v1Thought(text, id, patch = {}) {
-  const t = newThought({ text, id, sortResult: sortByRules(text, NOW), now: NOW });
-  for (const k of ['origin', 'best_guess', 'plan', 'v']) delete t[k];
-  return { ...t, ...patch };
-}
+import { validateThought } from '../src/core/model.js';
+import { v1Thought, V1_NOW as NOW } from './fixtures/v1.js';
 
 test('upgradeThought adds the four v2 fields and leaves every v1 field equal', () => {
   const v1 = v1Thought('buy milk tomorrow', 'a', { done: true, done_at: NOW.toISOString(), expansion: { next_steps: ['x'], questions: ['y'], outline: ['z'], generated_at: NOW.toISOString(), model: 'm' } });

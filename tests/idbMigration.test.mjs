@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { planMigration } from '../src/core/migrate.js';
 import { validateThought } from '../src/core/model.js';
-import { v1Thought } from './migrate.test.mjs';
+import { v1Thought } from './fixtures/v1.js';
 
 // The IndexedDB version bump itself runs in e2e/v2-brain.mjs (headless Chrome, a database seeded with the a999310 schema).
 // Here: the row logic it runs inside the versionchange transaction, over a v1 fixture set (AC-X10.1).
