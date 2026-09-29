@@ -37,9 +37,13 @@ test('normalizeTags', () => {
 test('newThought shape', () => {
   const t = newThought({ text: '  buy milk  ', sortResult, now: NOW });
   assert.deepEqual(Object.keys(t).sort(), [
-    'clarify', 'created_at', 'done', 'done_at', 'due_at', 'expansion', 'id', 'review',
-    'sort', 'source', 'tags', 'text', 'title', 'type', 'updated_at',
+    'best_guess', 'clarify', 'created_at', 'done', 'done_at', 'due_at', 'expansion', 'id', 'origin', 'plan', 'review',
+    'sort', 'source', 'tags', 'text', 'title', 'type', 'updated_at', 'v',
   ]);
+  assert.equal(t.v, 2);
+  assert.equal(t.origin, null);
+  assert.equal(t.plan, null);
+  assert.equal(t.best_guess, false);
   assert.match(t.id, /^[0-9a-f]{8}-[0-9a-f]{4}-/);
   assert.equal(t.text, 'buy milk');
   assert.equal(t.created_at, NOW.toISOString());

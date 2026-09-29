@@ -2,7 +2,8 @@
 
 export const TYPES = Object.freeze(['idea', 'task', 'journal', 'reminder']);
 export const SOURCES = Object.freeze(['typed', 'voice', 'import']);
-export const SORT_BY = Object.freeze(['rules', 'ai']);
+// 'ai' is the v1 spelling of 'key'; it stays valid so v1 rows and v1 export files still validate before they are upgraded.
+export const SORT_BY = Object.freeze(['rules', 'device', 'key', 'ai']);
 export const CLARIFY_STATES = Object.freeze(['none', 'pending', 'answered', 'skipped', 'unavailable']);
 export const LIMITS = Object.freeze({ TITLE_MAX: 60, TAGS_MAX: 5 });
 
@@ -16,6 +17,12 @@ a an the and or but if then than so because about above after again also just on
 think thinking thought idea ideas differently imagine remind reminder remember forget today tonight tomorrow yesterday morning evening week weekend next last day days hour hours minute minutes monday tuesday wednesday thursday friday saturday sunday keep feel felt make made take time todo
 `));
 
+// Lowercase words of four letters or more that are not stopwords: what a note is about.
+export function contentWords(text) {
+  return (String(text ?? '').toLowerCase().replace(/[’‘]/g, "'").match(/[a-z]+(?:'[a-z]+)*/g) ?? [])
+    .filter((w) => w.length >= 4 && !w.includes("'") && !STOPWORDS.has(w));
+}
+
 export function normalizeTags(tags) {
   if (!Array.isArray(tags)) return [];
   const out = [];
@@ -28,7 +35,7 @@ export function normalizeTags(tags) {
   return out;
 }
 
-const FILLERS = ['remind me to', 'i think', 'so'];
+const FILLERS = ['remind me to', "don't forget to", 'remember to', 'i need to', 'i have to', 'i should really', 'i should', 'need to', 'oh and', 'and also', 'also', 'i think', 'so'];
 
 function firstSentence(text) {
   const m = text.match(/^[\s\S]*?[.!?](?=\s|$)/);
@@ -65,7 +72,7 @@ function validDate(d) {
   return d instanceof Date && !Number.isNaN(d.getTime());
 }
 
-export function newThought({ text, source = 'typed', sortResult, now, id } = {}) {
+export function newThought({ text, source = 'typed', sortResult, now, id, by = 'rules', model = null, origin = null, bestGuess = false } = {}) {
   const clean = typeof text === 'string' ? text.trim() : '';
   if (!clean) throw new TypeError('text must be a non-empty string');
   if (!validDate(now)) throw new TypeError('now must be a valid Date');
@@ -81,10 +88,10 @@ export function newThought({ text, source = 'typed', sortResult, now, id } = {})
     updated_at: iso,
     source,
     sort: {
-      by: 'rules',
+      by,
       confidence: sortResult.confidence,
       alt_type: sortResult.alt_type ?? null,
-      model: null,
+      model,
     },
     due_at: sortResult.due_at ?? null,
     done: false,
@@ -92,7 +99,26 @@ export function newThought({ text, source = 'typed', sortResult, now, id } = {})
     clarify: { state: 'none', case: null, question: null, answer: null },
     expansion: null,
     review: { last_reviewed_at: null, snoozed_until: null, dismissed: false },
+    origin,
+    best_guess: bestGuess,
+    plan: null,
+    v: 2,
   };
+}
+
+// A brain Item (architecture 2.2) becomes a stored thought. origin: { id, index, count } or null.
+export function thoughtFromItem(item, { source = 'typed', now, id, origin = null, model = null } = {}) {
+  return newThought({
+    text: item.text,
+    source,
+    now,
+    id,
+    by: item.by ?? 'rules',
+    model,
+    origin,
+    bestGuess: Boolean(item.best_guess),
+    sortResult: { type: item.type, title: item.title, tags: item.tags, confidence: item.confidence, alt_type: item.alt_type, due_at: item.due_at },
+  });
 }
 
 const isIso = (v) => typeof v === 'string' && !Number.isNaN(Date.parse(v));
@@ -117,7 +143,7 @@ export function validateThought(t) {
   if (!isObj(t.sort)) {
     errors.push('sort must be an object');
   } else {
-    if (!SORT_BY.includes(t.sort.by)) errors.push('sort.by must be rules or ai');
+    if (!SORT_BY.includes(t.sort.by)) errors.push('sort.by must be rules, device or key');
     if (typeof t.sort.confidence !== 'number' || !(t.sort.confidence >= 0 && t.sort.confidence <= 1)) {
       errors.push('sort.confidence must be a number from 0 to 1');
     }
@@ -136,5 +162,12 @@ export function validateThought(t) {
     if (t.review.snoozed_until !== null && !isIso(t.review.snoozed_until)) errors.push('review.snoozed_until is invalid');
     if (typeof t.review.dismissed !== 'boolean') errors.push('review.dismissed must be a boolean');
   }
+  // v2 fields are optional so v1 rows validate; when present they must be well formed.
+  if (t.origin !== undefined && t.origin !== null) {
+    if (!isObj(t.origin) || typeof t.origin.id !== 'string' || !t.origin.id
+      || !Number.isInteger(t.origin.index) || !Number.isInteger(t.origin.count)) errors.push('origin must be null or { id, index, count }');
+  }
+  if (t.best_guess !== undefined && typeof t.best_guess !== 'boolean') errors.push('best_guess must be a boolean');
+  if (t.plan !== undefined && t.plan !== null && !isObj(t.plan)) errors.push('plan must be null or an object');
   return { ok: errors.length === 0, errors };
 }

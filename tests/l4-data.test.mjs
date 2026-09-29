@@ -34,7 +34,7 @@ test('AC-M8.5 / M9.3: a real settings store holding a key exports without the ke
 test('AC-M2.6: a saved thought has no audio field; the export carries only text', () => {
   const t = newThought({ text: 'said out loud', source: 'voice', sortResult: sortByRules('said out loud', NOW), now: NOW });
   const keys = Object.keys(t).sort();
-  assert.deepEqual(keys, ['clarify', 'created_at', 'done', 'done_at', 'due_at', 'expansion', 'id', 'review', 'sort', 'source', 'tags', 'text', 'title', 'type', 'updated_at']);
+  assert.deepEqual(keys, ['best_guess', 'clarify', 'created_at', 'done', 'done_at', 'due_at', 'expansion', 'id', 'origin', 'plan', 'review', 'sort', 'source', 'tags', 'text', 'title', 'type', 'updated_at', 'v']);
   const text = JSON.stringify(buildExport([t], {}, NOW));
   assert.equal(/audio|blob|wav|webm|base64|data:/i.test(text), false);
 });

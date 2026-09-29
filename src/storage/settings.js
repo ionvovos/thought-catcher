@@ -14,7 +14,21 @@ export const DEFAULTS = Object.freeze({
   'review.days': 3,
   'review.last_shown_date': null,
   'review.left_unresolved': false,
+  // v2 (architecture 3.3). The last three brain.* keys are the brain's own bookkeeping, not shown in Settings.
+  'onboarding.done': false,
+  'brain.llm_consent': 'ask',
+  'brain.embed_consent': 'ask',
+  'voice.speak': false,
+  'voice.name': null,
+  theme: 'system',
+  'migration.notice_shown': false,
+  'brain.llm_loading': null,
+  'brain.llm_ready_once': false,
+  'brain.embed_ready_once': false,
 });
+
+export const CONSENTS = Object.freeze(['ask', 'yes', 'no']);
+export const THEMES = Object.freeze(['system', 'light', 'dark']);
 
 export const SPEECH_ENGINES = Object.freeze(['ask', 'whisper', 'browser', 'typing']);
 
@@ -30,7 +44,11 @@ function clean(patchKey, value) {
     const v = String(value ?? '').trim();
     return v || null;
   }
-  if (patchKey === 'review.left_unresolved') return Boolean(value);
+  if (['review.left_unresolved', 'onboarding.done', 'voice.speak', 'migration.notice_shown', 'brain.llm_ready_once', 'brain.embed_ready_once'].includes(patchKey)) return Boolean(value);
+  if (patchKey === 'brain.llm_consent' || patchKey === 'brain.embed_consent') return CONSENTS.includes(value) ? value : 'ask';
+  if (patchKey === 'theme') return THEMES.includes(value) ? value : 'system';
+  if (patchKey === 'voice.name') return typeof value === 'string' && value.trim() ? value.trim() : null;
+  if (patchKey === 'brain.llm_loading') return typeof value === 'string' && value ? value : null;
   return value;
 }
 
@@ -150,3 +168,4 @@ export const reconcileKey = (binding) => api.reconcileKey(binding);
 export const removeKey = () => api.removeKey();
 export const hasKey = () => api.hasKey();
 export const clearAll = () => api.clearAll();
+export { api as settingsApi };

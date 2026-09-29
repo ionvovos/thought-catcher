@@ -4,11 +4,13 @@ import { TYPES, LIMITS, normalizeTags } from '../model.js';
 import { AiError, describeAiError } from './http.js';
 import { createAnthropic, ANTHROPIC_DEFAULT_MODEL, ANTHROPIC_URL } from './anthropic.js';
 import { createOpenAi, OPENAI_DEFAULT_BASE_URL } from './openai.js';
+import { splitPrompt, classifyPrompt, planPrompt, answerPrompt } from '../../brain/prompts.js';
+import { validateSplit, validateClassify, validatePlan, validateAnswer } from '../../brain/validate.js';
 
 export { AiError, describeAiError, ANTHROPIC_DEFAULT_MODEL, OPENAI_DEFAULT_BASE_URL };
 
 export const PROVIDERS = Object.freeze(['none', 'anthropic', 'openai']);
-export const TIMEOUTS = Object.freeze({ sort: 15000, clarify: 15000, expand: 45000, test: 10000 });
+export const TIMEOUTS = Object.freeze({ sort: 15000, clarify: 15000, expand: 45000, test: 10000, split: 20000, classify: 20000, plan: 45000, answer: 20000 });
 const MAX_TEXT = 2000;
 
 // ---- JSON extraction and validation ----
@@ -242,6 +244,19 @@ export function createProvider(config, { fetch, now = () => new Date(), getKey =
     },
     async expand(thought) {
       return validateExpansion(await ask(expandPrompt(thought), 900, TIMEOUTS.expand));
+    },
+    // v2 calls (architecture 2.2): the same JSON the on-device model returns; src/brain/core.js refines it.
+    async split(text) {
+      return validateSplit(await ask(splitPrompt(text), 800, TIMEOUTS.split));
+    },
+    async classify(text) {
+      return validateClassify(await ask(classifyPrompt(text), 300, TIMEOUTS.classify));
+    },
+    async plan(thought) {
+      return validatePlan(await ask(planPrompt(thought), 900, TIMEOUTS.plan));
+    },
+    async answer(question, thoughts) {
+      return validateAnswer(await ask(answerPrompt(question, thoughts), 300, TIMEOUTS.answer));
     },
     async test() {
       await core.complete({ system: 'Reply with the single word ok.', user: 'ping', maxTokens: 8, timeoutMs: TIMEOUTS.test });

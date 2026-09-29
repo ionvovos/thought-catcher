@@ -1,6 +1,6 @@
 // Shared by the AI providers: the error type and one POST helper with a hard timeout. Pure: fetch is injected.
 
-export const AI_ERROR_KINDS = Object.freeze(['auth', 'rate', 'timeout', 'network', 'malformed', 'provider']);
+export const AI_ERROR_KINDS = Object.freeze(['auth', 'rate', 'timeout', 'network', 'malformed', 'provider', 'unavailable']);
 
 export class AiError extends Error {
   constructor(kind, message, { status = null } = {}) {
@@ -77,6 +77,7 @@ const MESSAGES = {
   timeout: 'The AI took too long. Your thought is saved.',
   network: 'Could not reach the AI service.',
   malformed: 'The AI reply was not usable. Your thought is unchanged.',
+  unavailable: 'No AI is available right now. Set up the on-device assistant or add your own key in Settings.',
 };
 
 // One line for the user, from any error thrown by the AI layer.

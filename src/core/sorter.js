@@ -10,7 +10,7 @@ export const TASK_VERBS = Object.freeze(('buy call email send fix pay book clean
 
 const TWO_WORD = ['pick up', 'drop off', 'sort out', 'look up'];
 const SINGLE_TASK_VERBS = new Set(TASK_VERBS.filter((v) => !['up', 'off', 'out'].includes(v)));
-const APPOINTMENT_VERBS = new Set(['call', 'phone', 'ring', 'book']);
+export const APPOINTMENT_VERBS = new Set(['call', 'phone', 'ring', 'book']);
 
 const REMINDER_CUES = ['remind me', 'reminder', "don't forget", 'remember to'];
 const TASK_CUES = ['need to', 'have to', 'must', 'todo', 'to do'];

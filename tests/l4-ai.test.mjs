@@ -16,8 +16,8 @@ const SORT = { type: 'idea', alt_type: null, confidence: 0.9, title: 'Share list
 const EXPAND = { next_steps: ['a', 'b', 'c'], questions: ['q1', 'q2', 'q3'], outline: ['o1', 'o2', 'o3'] };
 const hang = () => new Promise(() => {});
 
-test('timeout budgets are 15 s sort, 15 s clarify, 45 s expand, 10 s test', () => {
-  assert.deepEqual({ ...TIMEOUTS }, { sort: 15000, clarify: 15000, expand: 45000, test: 10000 });
+test('timeout budgets: v1 15 s sort, 15 s clarify, 45 s expand, 10 s test; v2 20 s split/classify/answer, 45 s plan', () => {
+  assert.deepEqual({ ...TIMEOUTS }, { sort: 15000, clarify: 15000, expand: 45000, test: 10000, split: 20000, classify: 20000, plan: 45000, answer: 20000 });
 });
 
 for (const [name, config] of [['anthropic', ANTHROPIC], ['openai', OPENAI]]) {
