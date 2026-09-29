@@ -184,7 +184,7 @@ export default async function renderDetail(root, ctx) {
         if (alive) { status.textContent = `Sorted by AI as ${current.type}: ${current.title}`; draw(); }
       },
     });
-    page.replaceChildren(
+    page.replaceChildren(...[
       el('p', {}, el('a', { href: '#/inbox' }, '← Inbox')),
       el('h2', {}, current.title),
       el('p', { class: 'thought-meta' }, [
@@ -198,7 +198,7 @@ export default async function renderDetail(root, ctx) {
       expansionSection(),
       el('div', { class: 'row' }, [resort]),
       el('div', { class: 'section' }, [deleteControl()]),
-    );
+    ].filter(Boolean));
   }
 
   draw();

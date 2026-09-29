@@ -57,6 +57,17 @@ test('fallback to the second engine when the first fails', async () => {
   });
 });
 
+test('a fatal failure does not fall back to the next engine', async () => {
+  const fatal = new SpeechError('failed');
+  fatal.fatal = true;
+  const w = stub('whisper', { error: fatal });
+  const b = stub('browser', { result: 'never used' });
+  const r = await transcribeWithFallback([w, b], { engine: 'ask' }, null, {});
+  assert.equal(r.text, null);
+  assert.equal(r.reason, 'failed');
+  assert.equal(b.calls.length, 0);
+});
+
 test('empty transcript is a result, not a failure', async () => {
   const w = stub('whisper', { result: '' });
   const b = stub('browser', { result: 'x' });

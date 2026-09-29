@@ -1,8 +1,9 @@
 // Wires a "Speak" button to the speech engines: press to listen, press again to stop, text goes to onText.
 import { selectEngine, transcribeWithFallback, speechMessage } from '../speech/select.js';
+import { ensureSpeechChoice } from './consent.js';
 
 // Returns a function that stops any listening and removes the handler.
-export function attachVoice({ button, engines, speech, onText, onMessage }) {
+export function attachVoice({ button, engines, speech, host, onText, onMessage }) {
   let controller = null;
   let alive = true;
   const label = button.textContent;
@@ -14,13 +15,19 @@ export function attachVoice({ button, engines, speech, onText, onMessage }) {
 
   async function onClick() {
     if (controller) { controller.abort(); return; }
+    const pref = await ensureSpeechChoice({ engines, speech, host: host ?? button.parentElement });
+    if (!alive) return;
+    if (pref === 'typing') { onMessage?.(speechMessage('typing')); return; }
     const sel = selectEngine(engines, speech);
     if (!sel.engine) { onMessage?.(speechMessage(sel.reason)); return; }
     controller = new AbortController();
     button.setAttribute('aria-pressed', 'true');
     button.textContent = 'Stop';
     onMessage?.('');
-    const result = await transcribeWithFallback(engines, speech, null, { stop: controller.signal });
+    const result = await transcribeWithFallback(engines, speech, null, {
+      stop: controller.signal,
+      onState: (kind, detail) => { if (alive && kind === 'loading') onMessage?.(`Getting the on-device model ready… ${detail}%`); },
+    });
     controller = null;
     if (!alive) return;
     button.setAttribute('aria-pressed', 'false');

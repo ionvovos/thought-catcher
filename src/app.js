@@ -2,6 +2,8 @@
 import { createIdbStore } from './storage/idb.js';
 import { createMemoryStore } from './storage/memory.js';
 import { createWebSpeechEngine } from './speech/webspeech.js';
+import { createWhisperEngine } from './speech/whisper.js';
+import { FEATURES } from './features.js';
 import { startRouter } from './ui/router.js';
 import { createAiFlow } from './ui/aiFlow.js';
 import { getSettings } from './storage/settings.js';
@@ -24,6 +26,7 @@ async function main() {
   }
 
   const engines = [createWebSpeechEngine(window)];
+  if (FEATURES.onDeviceSpeech) engines.unshift(createWhisperEngine({ win: window }));
   const speech = { engine: getSettings()['speech.engine'], failed: new Set() };
   const now = () => new Date();
 

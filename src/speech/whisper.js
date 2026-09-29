@@ -1,0 +1,113 @@
+// On-device speech to text: Whisper (tiny) through transformers.js, loaded from a pinned CDN URL on first use.
+// Audio never leaves the device and is never stored: it is recorded in memory, converted to text, then dropped.
+import { SpeechError } from './select.js';
+
+export const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0';
+export const WHISPER_MODEL = 'onnx-community/whisper-tiny';
+const SAMPLE_RATE = 16000;
+const MIN_SECONDS = 0.4;
+
+async function defaultLoadPipeline(onProgress) {
+  const { pipeline } = await import(TRANSFORMERS_URL);
+  const make = (device) => pipeline('automatic-speech-recognition', WHISPER_MODEL, { device, dtype: 'q8', progress_callback: onProgress });
+  if (globalThis.navigator?.gpu) {
+    try { return await make('webgpu'); } catch { /* fall through to WebAssembly */ }
+  }
+  return make('wasm');
+}
+
+// Blob of recorded audio -> 16 kHz mono Float32Array.
+async function toMono16k(blob, win) {
+  const Ctx = win.AudioContext || win.webkitAudioContext;
+  const ctx = new Ctx();
+  try {
+    const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
+    const length = Math.ceil(decoded.duration * SAMPLE_RATE);
+    if (length < SAMPLE_RATE * MIN_SECONDS) return null;
+    const offline = new win.OfflineAudioContext(1, length, SAMPLE_RATE);
+    const source = offline.createBufferSource();
+    source.buffer = decoded;
+    source.connect(offline.destination);
+    source.start();
+    return (await offline.startRendering()).getChannelData(0);
+  } finally {
+    ctx.close?.();
+  }
+}
+
+// Records until `stop` aborts. Resolves with the audio Blob, or null when nothing was captured.
+async function record(win, stop) {
+  let stream;
+  try {
+    stream = await win.navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch {
+    throw new SpeechError('not-allowed');
+  }
+  try {
+    const recorder = new win.MediaRecorder(stream);
+    const chunks = [];
+    recorder.ondataavailable = (e) => { if (e.data?.size) chunks.push(e.data); };
+    const finished = new Promise((resolve) => { recorder.onstop = resolve; });
+    recorder.start();
+    if (stop.aborted) recorder.stop();
+    else stop.addEventListener('abort', () => { if (recorder.state !== 'inactive') recorder.stop(); }, { once: true });
+    await finished;
+    return chunks.length ? new Blob(chunks, { type: recorder.mimeType || 'audio/webm' }) : null;
+  } finally {
+    for (const track of stream.getTracks()) track.stop();
+  }
+}
+
+export function createWhisperEngine({ win = globalThis, loadPipeline = defaultLoadPipeline } = {}) {
+  let asr = null; // Promise of the loaded pipeline
+  let loaded = false;
+
+  const load = (onProgress) => {
+    if (!asr) {
+      asr = loadPipeline(onProgress).then((p) => { loaded = true; return p; }, (err) => { asr = null; throw err; });
+    }
+    return asr;
+  };
+
+  return {
+    id: 'whisper',
+    isLoaded: () => loaded,
+    isAvailable() {
+      return Boolean(win.MediaRecorder && win.navigator?.mediaDevices?.getUserMedia && (win.AudioContext || win.webkitAudioContext) && win.OfflineAudioContext);
+    },
+    // opts: { stop: AbortSignal, onState(kind, detail) } with kind 'loading' (detail: 0-100), 'listening', 'transcribing'.
+    async transcribe(_input, { stop = new AbortController().signal, onState } = {}) {
+      // 1. Load the model first, so a failure here happens before the person has spoken and the next engine can take over.
+      const files = new Map();
+      const progress = (p) => {
+        if (p?.status === 'progress' && p.file) files.set(p.file, p.progress ?? 0);
+        const values = [...files.values()];
+        if (values.length) onState?.('loading', Math.round(values.reduce((a, b) => a + b, 0) / values.length));
+      };
+      if (!loaded) onState?.('loading', 0);
+      let pipe;
+      try {
+        pipe = await load(progress);
+      } catch {
+        throw new SpeechError('failed');
+      }
+      if (stop.aborted) return '';
+
+      // 2. Record. From here on the audio exists only here, so a later failure must not silently retry elsewhere.
+      onState?.('listening');
+      const blob = await record(win, stop);
+      if (!blob) return '';
+      onState?.('transcribing');
+      try {
+        const audio = await toMono16k(blob, win);
+        if (!audio) return '';
+        const out = await pipe(audio, { language: 'english', task: 'transcribe' });
+        return String(out?.text ?? '').trim();
+      } catch {
+        const err = new SpeechError('failed');
+        err.fatal = true;
+        throw err;
+      }
+    },
+  };
+}

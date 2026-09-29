@@ -131,3 +131,8 @@ kbd { padding: 0 0.35rem; border: 1px solid var(--line); border-radius: 0.25rem;
 .btn--danger { color: var(--error); border-color: var(--error); }
 .progress { width: 100%; height: 0.75rem; }
 .prose p, .prose li { max-width: 60ch; }
+
+.consent { margin: 0.5rem 0 1rem; padding: 0.75rem; border: 1px solid var(--line); border-radius: 0.5rem; background: var(--card); }
+.consent h3 { margin: 0 0 0.25rem; font-size: 1.05rem; }
+.consent-choice { display: block; width: 100%; height: auto; padding: 0.5rem 0.75rem; margin-top: 0.5rem; text-align: left; }
+.review-nudge { margin: 0 0 0.5rem; text-align: center; }

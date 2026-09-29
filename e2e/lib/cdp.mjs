@@ -14,7 +14,7 @@ const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css
 export const sleep = (ms) => new Promise((r) => { setTimeout(r, ms); });
 
 // apiHandler(req, res, body) returns true when it handled the request (used for a mock AI endpoint under /v1).
-export async function launch({ apiHandler } = {}) {
+export async function launch({ apiHandler, chromeArgs = [] } = {}) {
   const requests = [];
   const server = http.createServer((req, res) => {
     const u = decodeURIComponent(new URL(req.url, 'http://x').pathname);
@@ -32,7 +32,7 @@ export async function launch({ apiHandler } = {}) {
   await new Promise((r) => { server.listen(0, '127.0.0.1', r); });
   const base = `http://127.0.0.1:${server.address().port}`;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tc-chrome-'));
-  const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', '--remote-debugging-port=0', `--user-data-dir=${dir}`, '--no-first-run', 'about:blank'], { stdio: 'ignore' });
+  const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', '--remote-debugging-port=0', `--user-data-dir=${dir}`, '--no-first-run', ...chromeArgs, 'about:blank'], { stdio: 'ignore' });
   let port;
   for (let i = 0; i < 100 && !port; i += 1) {
     await sleep(100);

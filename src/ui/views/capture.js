@@ -3,6 +3,8 @@ import { el } from '../dom.js';
 import { sortByRules } from '../../core/sorter.js';
 import { newThought } from '../../core/model.js';
 import { selectEngine, transcribeWithFallback, speechMessage } from '../../speech/select.js';
+import { ensureSpeechChoice } from '../consent.js';
+import { getSettings } from '../../storage/settings.js';
 
 export default async function renderCapture(root, ctx) {
   let alive = true;
@@ -22,6 +24,8 @@ export default async function renderCapture(root, ctx) {
     'Shortcut: press ', el('kbd', {}, 'R'), ' to start or stop recording, ', el('kbd', {}, 'Esc'), ' to stop.',
   ]);
   const clarifyBox = el('div', { class: 'clarify', hidden: true });
+  const consentHost = el('div', { class: 'consent-host' });
+  const progress = el('progress', { class: 'progress', max: '100', value: '0', hidden: true, 'aria-label': 'Downloading the on-device model' });
 
   const setStatus = (msg) => { status.textContent = msg; };
   const setRecording = (on) => {
@@ -32,6 +36,7 @@ export default async function renderCapture(root, ctx) {
   };
 
   function refreshEngine() {
+    ctx.speech.engine = getSettings()['speech.engine'];
     const sel = selectEngine(ctx.engines, ctx.speech);
     recordBtn.classList.toggle('is-unavailable', !sel.engine);
     if (sel.engine) {
@@ -50,19 +55,44 @@ export default async function renderCapture(root, ctx) {
     return sel;
   }
 
+  let choosing = false;
   async function toggleRecording() {
     if (recording) { recording.abort(); return; }
+    if (choosing) return;
+    choosing = true;
+    let pref;
+    try {
+      pref = await ensureSpeechChoice({ engines: ctx.engines, speech: ctx.speech, host: consentHost });
+    } finally {
+      choosing = false;
+    }
+    if (!alive) return;
     const sel = refreshEngine();
+    if (pref === 'typing') { setStatus(speechMessage('typing')); field.focus(); return; }
     if (!sel.engine) { field.focus(); return; }
     recording = new AbortController();
     setRecording(true);
-    setStatus('Listening… tap again to stop.');
+    setStatus(sel.engine.id === 'whisper' ? 'Getting ready…' : 'Listening… tap again to stop.');
+    const onState = (kind, detail) => {
+      if (!alive) return;
+      progress.hidden = kind !== 'loading';
+      if (kind === 'loading') {
+        progress.value = detail;
+        setStatus(`Getting the on-device model ready… ${detail}%`);
+      } else if (kind === 'listening') {
+        setStatus('Listening… tap again to stop.');
+      } else if (kind === 'transcribing') {
+        setStatus('Turning your voice into text…');
+      }
+    };
     const result = await transcribeWithFallback(ctx.engines, ctx.speech, null, {
       stop: recording.signal,
       onInterim: (t) => { if (alive) interim.textContent = t; },
+      onState,
     });
     recording = null;
     if (!alive) return;
+    progress.hidden = true;
     setRecording(false);
     interim.textContent = '';
     if (result.text === null) {
@@ -75,7 +105,10 @@ export default async function renderCapture(root, ctx) {
     } else {
       field.value = field.value.trim() ? `${field.value.trim()} ${result.text}` : result.text;
       source = 'voice';
-      setStatus('Check the text, then save.');
+      const fellBack = ctx.speech.engine === 'whisper' && result.engine === 'browser';
+      setStatus(fellBack
+        ? "The on-device model did not load, so your browser's speech service was used. Check the text, then save."
+        : 'Check the text, then save.');
       field.focus();
     }
   }
@@ -121,7 +154,7 @@ export default async function renderCapture(root, ctx) {
 
   const due = ctx.getReviewCount?.() ?? 0;
   const nudge = due > 0 ? el('p', { class: 'review-nudge' }, el('a', { href: '#/review', class: 'btn' }, `${due} to review`)) : null;
-  root.append(el('h2', {}, 'Catch a thought'), nudge, recordBtn, note, status, interim, form, clarifyBox, hint);
+  root.append(el('h2', {}, 'Catch a thought'), nudge, recordBtn, consentHost, note, status, progress, interim, form, clarifyBox, hint);
   refreshEngine();
   const focus = ctx.consumeInitialFocus?.();
   if (focus === 'record') recordBtn.focus();

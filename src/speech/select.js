@@ -60,6 +60,8 @@ export async function transcribeWithFallback(engines, prefs, input, opts) {
       return { text, engine: e.id, errors };
     } catch (err) {
       errors.push({ engine: e.id, code: err?.code ?? 'failed' });
+      // A failure after audio was already captured cannot be replayed to another engine: report it, do not re-listen.
+      if (err?.fatal) break;
     }
   }
   return { text: null, engine: null, errors, reason: errors.length ? errors[errors.length - 1].code : 'unavailable' };
