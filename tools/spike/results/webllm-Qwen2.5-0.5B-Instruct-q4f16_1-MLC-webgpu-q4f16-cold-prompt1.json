@@ -1,0 +1,143 @@
+{
+  "lib": "webllm",
+  "model": "Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
+  "device": "webgpu",
+  "dtype": "q4f16",
+  "fresh": true,
+  "noGpu": false,
+  "flags": [
+    "--enable-unsafe-webgpu",
+    "--enable-gpu",
+    "--use-angle=metal",
+    "--ignore-gpu-blocklist"
+  ],
+  "wallMs": 35670,
+  "peakChromeRssMb": 1714,
+  "downloadedMbByHost": {
+    "127.0.0.1:58005": 0,
+    "cdn.jsdelivr.net": 1.7,
+    "huggingface.co": 2,
+    "raw.githubusercontent.com": 4.6,
+    "us.aws.cdn.hf.co": 265.3
+  },
+  "at": "2026-09-29T11:31:23.859Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": "apple metal-3",
+      "shaderF16": true
+    },
+    "loadMs": 31952,
+    "results": [
+      {
+        "text": "{\"items\":[{\"type\":\"reminder\",\"title\":\"appointment to the dentist\",\"when\":\"tomorrow at 9:00 AM\",\"text\":\"I need to move my appointment to the dentist on tomorrow.\"}]\n,\"tasks\":[{\"type\":\"idea\",\"title\":\"buy dog food\",\"when\":\"tomorrow at 12:00 PM\",\"text\":\"I had an idea for buying dog food on the way home.\"}]\n,\"tasks\":[{\"type\":\"reminder\",\"title\":\"send invoice to Maria\",\"when\":\"Friday at 6 PM\",\"text\":\"I had this idea, what if the gym app showed a streak calendar?\"}]\"}\"]",
+        "ttftMs": 967,
+        "totalMs": 1826,
+        "tokens": 125,
+        "promptTokens": 194,
+        "decodeTps": 146.45577035415585,
+        "prefillTps": 200.89054571828692,
+        "json": null,
+        "validJson": false
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"reminder\",\"title\":\"meeting went badly\",\"text\":\"Had a rough day at work, the meeting went badly and I felt nobody listened.\",\"when\":\"the date or time phrase copied from the note, or null\"}]}",
+        "ttftMs": 47,
+        "totalMs": 305,
+        "tokens": 48,
+        "promptTokens": 162,
+        "decodeTps": 187.42678641046734,
+        "prefillTps": 3446.808510638298,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "meeting went badly",
+              "text": "Had a rough day at work, the meeting went badly and I felt nobody listened.",
+              "when": "the date or time phrase copied from the note, or null"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"idea\",\"title\":\"small herb garden\",\"text\":\"Idea for the weekend: a small herb garden on the balcony, basil and mint, maybe with a drip system so it survives August.\"},{\"type\":\"reminder\",\"title\":\"reminder\",\"when\":\"the date or time phrase copied from the note, or null\"}]}",
+        "ttftMs": 46,
+        "totalMs": 413,
+        "tokens": 68,
+        "promptTokens": 165,
+        "decodeTps": 186.4546202323821,
+        "prefillTps": 3586.9565217391305,
+        "json": {
+          "items": [
+            {
+              "type": "idea",
+              "title": "small herb garden",
+              "text": "Idea for the weekend: a small herb garden on the balcony, basil and mint, maybe with a drip system so it survives August."
+            },
+            {
+              "type": "reminder",
+              "title": "reminder",
+              "when": "the date or time phrase copied from the note, or null"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"reminder\",\"title\":\"pay the electricity bill before the 5th\",\"text\":\"the words from the note for this item\",\"when\":\"before the 5th\",\"date\":\"2023-10-04\",\"item\":\"electricity bill\"},{\"item\":\"rent car insurance next week\",\"type\":\"car insurance renewal\",\"title\":\"next week\",\"date\":\"2023-11-01\",\"item\":\"car insurance renewal\"}]}",
+        "ttftMs": 39,
+        "totalMs": 561,
+        "tokens": 96,
+        "promptTokens": 154,
+        "decodeTps": 185.00674504209545,
+        "prefillTps": 3958.8688947531923,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "pay the electricity bill before the 5th",
+              "text": "the words from the note for this item",
+              "when": "before the 5th",
+              "date": "2023-10-04",
+              "item": "electricity bill"
+            },
+            {
+              "item": "car insurance renewal",
+              "type": "car insurance renewal",
+              "title": "next week",
+              "date": "2023-11-01"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"reminder\",\"title\":\"remember mum's birthday on October 12th\",\"text\":\"I should really think about going back to the gym, I keep skipping it and I feel worse.\",\"when\":\"October 12th, date or time phrase copied from the note, null\"}]}",
+        "ttftMs": 45,
+        "totalMs": 372,
+        "tokens": 62,
+        "promptTokens": 171,
+        "decodeTps": 190.76923077141754,
+        "prefillTps": 3783.1858407703253,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "remember mum's birthday on October 12th",
+              "text": "I should really think about going back to the gym, I keep skipping it and I feel worse.",
+              "when": "October 12th, date or time phrase copied from the note, null"
+            }
+          ]
+        },
+        "validJson": true
+      }
+    ],
+    "logTail": [
+      "Loading model from cache[8/8]: 266MB loaded. 100% completed, 30 secs elapsed.",
+      "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+      "Finish loading on WebGPU - apple"
+    ]
+  },
+  "problems": []
+}

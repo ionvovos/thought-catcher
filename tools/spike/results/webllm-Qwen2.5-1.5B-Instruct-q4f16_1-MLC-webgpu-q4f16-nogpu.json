@@ -1,0 +1,31 @@
+{
+  "lib": "webllm",
+  "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+  "device": "webgpu",
+  "dtype": "q4f16",
+  "fresh": false,
+  "noGpu": true,
+  "flags": [
+    "--disable-gpu"
+  ],
+  "wallMs": 1540,
+  "peakChromeRssMb": 1653,
+  "downloadedMbByHost": {
+    "127.0.0.1:58605": 0,
+    "cdn.jsdelivr.net": 1.7,
+    "huggingface.co": 0,
+    "raw.githubusercontent.com": 5
+  },
+  "at": "2026-09-29T11:38:14.219Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": null,
+      "shaderF16": null
+    },
+    "error": "Unable to find a compatible GPU. This issue might be because your computer doesn't have a GPU, or your system settings are not configured properly. Please check if your device has a GPU properly set up and if your your browser supports WebGPU. You can also consult your browser's compatibility chart to see if it supports WebGPU. For more information about WebGPU support in your browser, visit https://webgpureport.org/",
+    "stack": "Error: Unable to find a compatible GPU. This issue might be because your computer doesn't have a GPU, or your system settings are not configured properly. Please check if your device has a GPU properly set up and if your your browser supports WebGPU. You can also consult your browser's compatibility chart to see if it supports WebGPU. For more information about WebGPU support in your browser, visi",
+    "logTail": []
+  },
+  "problems": []
+}

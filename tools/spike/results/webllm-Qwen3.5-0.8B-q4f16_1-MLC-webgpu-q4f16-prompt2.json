@@ -1,0 +1,181 @@
+{
+  "lib": "webllm",
+  "model": "Qwen3.5-0.8B-q4f16_1-MLC",
+  "device": "webgpu",
+  "dtype": "q4f16",
+  "fresh": false,
+  "noGpu": false,
+  "flags": [
+    "--enable-unsafe-webgpu",
+    "--enable-gpu",
+    "--use-angle=metal",
+    "--ignore-gpu-blocklist"
+  ],
+  "wallMs": 55091,
+  "peakChromeRssMb": 1903,
+  "downloadedMbByHost": {
+    "127.0.0.1:58267": 0,
+    "cdn.jsdelivr.net": 1.7,
+    "huggingface.co": 0,
+    "raw.githubusercontent.com": 5.9,
+    "us.aws.cdn.hf.co": 416.7
+  },
+  "at": "2026-09-29T11:36:37.191Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": "apple metal-3",
+      "shaderF16": true
+    },
+    "loadMs": 45636,
+    "results": [
+      {
+        "text": "<think>\n\n</think>\n\n{\"items\":[{\"type\":\"task\",\"title\":\"Call the dentist to move my appointment\",\"when\":\"tomorrow\"},{\"type\":\"reminder\",\"title\":\"Book the car service\",\"when\":\"Monday at 9\"},{\"type\":\"idea\",\"title\":\"Podcast about old Athens bars\",\"when\":null},{\"type\":\"idea\",\"title\":\"What if the gym app showed a streak calendar\",\"when\":null},{\"type\":\"idea\",\"title\":\"Send the invoice to Maria\",\"when\":\"Friday at 6pm\"}]}",
+        "ttftMs": 1176,
+        "totalMs": 2560,
+        "tokens": 98,
+        "promptTokens": 273,
+        "decodeTps": 71.26236183908883,
+        "prefillTps": 232.3602008684537,
+        "json": {
+          "items": [
+            {
+              "type": "task",
+              "title": "Call the dentist to move my appointment",
+              "when": "tomorrow"
+            },
+            {
+              "type": "reminder",
+              "title": "Book the car service",
+              "when": "Monday at 9"
+            },
+            {
+              "type": "idea",
+              "title": "Podcast about old Athens bars",
+              "when": null
+            },
+            {
+              "type": "idea",
+              "title": "What if the gym app showed a streak calendar",
+              "when": null
+            },
+            {
+              "type": "idea",
+              "title": "Send the invoice to Maria",
+              "when": "Friday at 6pm"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "<think>\n\n</think>\n\n{\"items\":[{\"type\":\"idea\",\"title\":\"Had a rough day at work\",\"when\":null},{\"type\":\"idea\",\"title\":\"Meeting went badly\",\"when\":null},{\"type\":\"idea\",\"title\":\"I felt nobody listened\",\"when\":null},{\"type\":\"idea\",\"title\":\"I'm grateful my sister called\",\"when\":null},{\"type\":\"idea\",\"title\":\"I'm grateful my sister called\",\"when\":null},{\"type\":\"idea\",\"title\":\"Had a rough day at work\",\"when\":null},{\"type\":\"idea\",\"title\":\"Meeting went badly\",\"when\":null},{\"type\":\"idea\",\"title\":\"I felt nobody listened\",\"when\":null},{\"type\":\"idea\",\"title\":\"I'm grateful my sister called\",\"when\":null},{\"type\":\"idea\",\"title\":\"I'm grateful my sister called\",\"when\":null},{\"type\":\"idea\",\"title\":\"Had a rough day at work\",\"when\":null},{\"type\":\"idea\",\"title\":\"Meeting went badly\",\"when\":null},{\"type\":\"idea\",\"title\":\"I felt nobody listened\",\"when\":null},{\"type\":\"idea\",\"title\":\"I'm grateful my sister called\",\"when\":null},{\"type\":\"idea\",\"title\":\"I'm grateful my sister called\",\"when\":null},{\"type\":\"idea\",\"title\":\"Had a rough day at work\",\"when\":null},{\"type\":\"idea\",\"title\":\"Meeting went badly\",\"when\":null},{\"type\":\"idea\",\"title\":\"I felt nobody listened\",\"when\":null},{\"type\":\"idea\",\"title\":\"I'm grateful my sister called\",\"when\":null},{\"type\":\"idea\",\"title\":\"I'm grateful my sister called\",\"when\":null},{\"type\":\"idea\",\"title\":\"Had a rough day at work\",\"when\":null},{\"type\":\"idea\",\"title\":\"Meeting went badly\",\"when\":null},{\"type\":\"idea\",\"title\":\"I felt nobody listened\",\"when\":null},{\"type\":\"idea\",\"title\":\"I'm grateful my sister called\",\"when\":null},{\"type\":\"idea\",\"title\":\"I'm grateful my",
+        "ttftMs": 172,
+        "totalMs": 4353,
+        "tokens": 395,
+        "promptTokens": 241,
+        "decodeTps": 95.1669638126832,
+        "prefillTps": 1401.1627906976746,
+        "json": null,
+        "validJson": false
+      },
+      {
+        "text": "<think>\n\n</think>\n\n{\"items\":[{\"type\":\"idea\",\"title\":\"Small herb garden on the balcony\",\"when\":null},{\"type\":\"idea\",\"title\":\"Basil and mint\",\"when\":null},{\"type\":\"idea\",\"title\":\"Drip system\",\"when\":null}]}",
+        "ttftMs": 173,
+        "totalMs": 673,
+        "tokens": 50,
+        "promptTokens": 244,
+        "decodeTps": 100.34115994590942,
+        "prefillTps": 1410.4046242774568,
+        "json": {
+          "items": [
+            {
+              "type": "idea",
+              "title": "Small herb garden on the balcony",
+              "when": null
+            },
+            {
+              "type": "idea",
+              "title": "Basil and mint",
+              "when": null
+            },
+            {
+              "type": "idea",
+              "title": "Drip system",
+              "when": null
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "<think>\n\n</think>\n\n{\"items\":[{\"type\":\"task\",\"title\":\"Pay the electricity bill\",\"when\":\"5th\"},{\"type\":\"reminder\",\"title\":\"Renew car insurance\",\"when\":\"next week\"},{\"type\":\"idea\",\"title\":\"Podcast about old Athens bars\"}]}",
+        "ttftMs": 167,
+        "totalMs": 651,
+        "tokens": 49,
+        "promptTokens": 233,
+        "decodeTps": 101.63866417567162,
+        "prefillTps": 1394.3746259911231,
+        "json": {
+          "items": [
+            {
+              "type": "task",
+              "title": "Pay the electricity bill",
+              "when": "5th"
+            },
+            {
+              "type": "reminder",
+              "title": "Renew car insurance",
+              "when": "next week"
+            },
+            {
+              "type": "idea",
+              "title": "Podcast about old Athens bars"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "<think>\n\n</think>\n\n{\"items\":[{\"type\":\"idea\",\"title\":\"Go back to the gym\",\"when\":\"October 12th\"},{\"type\":\"reminder\",\"title\":\"Mum's birthday\",\"when\":\"October 12th\"},{\"type\":\"task\",\"title\":\"Email Nick about the flat\",\"when\":null},{\"type\":\"idea\",\"title\":\"Thinking about going back to the gym\",\"when\":null}]}",
+        "ttftMs": 176,
+        "totalMs": 978,
+        "tokens": 77,
+        "promptTokens": 250,
+        "decodeTps": 96.49122807197722,
+        "prefillTps": 1425.3135689670135,
+        "json": {
+          "items": [
+            {
+              "type": "idea",
+              "title": "Go back to the gym",
+              "when": "October 12th"
+            },
+            {
+              "type": "reminder",
+              "title": "Mum's birthday",
+              "when": "October 12th"
+            },
+            {
+              "type": "task",
+              "title": "Email Nick about the flat",
+              "when": null
+            },
+            {
+              "type": "idea",
+              "title": "Thinking about going back to the gym",
+              "when": null
+            }
+          ]
+        },
+        "validJson": true
+      }
+    ],
+    "logTail": [
+      "Loading model from cache[11/11]: 405MB loaded. 100% completed, 41 secs elapsed.",
+      "Loading GPU shader modules[9/9]: 100% completed, 1 secs elapsed.",
+      "Finish loading on WebGPU - apple"
+    ]
+  },
+  "problems": []
+}

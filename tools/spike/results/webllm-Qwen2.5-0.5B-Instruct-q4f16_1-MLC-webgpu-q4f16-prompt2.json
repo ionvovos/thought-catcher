@@ -1,0 +1,159 @@
+{
+  "lib": "webllm",
+  "model": "Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
+  "device": "webgpu",
+  "dtype": "q4f16",
+  "fresh": false,
+  "noGpu": false,
+  "flags": [
+    "--enable-unsafe-webgpu",
+    "--enable-gpu",
+    "--use-angle=metal",
+    "--ignore-gpu-blocklist"
+  ],
+  "wallMs": 30965,
+  "peakChromeRssMb": 1720,
+  "downloadedMbByHost": {
+    "127.0.0.1:58049": 0,
+    "cdn.jsdelivr.net": 1.7,
+    "huggingface.co": 2,
+    "raw.githubusercontent.com": 4.6,
+    "us.aws.cdn.hf.co": 265.3
+  },
+  "at": "2026-09-29T11:32:14.592Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": "apple metal-3",
+      "shaderF16": true
+    },
+    "loadMs": 29105,
+    "results": [
+      {
+        "text": "{\"items\":[{\"type\":\"reminder\",\"title\":\"Buy dog food on the way home\",\"when\":\"Tomorrow at 9 AM\"},{\"type\":\"idea\",\"title\":\"Gym app showed a streak calendar\",\"when\":\"Friday at 6 PM\"}]}",
+        "ttftMs": 179,
+        "totalMs": 469,
+        "tokens": 48,
+        "promptTokens": 264,
+        "decodeTps": 166.84045881385407,
+        "prefillTps": 1486.4864865051945,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "Buy dog food on the way home",
+              "when": "Tomorrow at 9 AM"
+            },
+            {
+              "type": "idea",
+              "title": "Gym app showed a streak calendar",
+              "when": "Friday at 6 PM"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"reminder\",\"title\":\"Meeting went badly\",\"when\":\"Yesterday\"},{\"type\":\"idea\",\"title\":\"Sister's advice\",\"when\":\"Today\"}]}",
+        "ttftMs": 62,
+        "totalMs": 247,
+        "tokens": 33,
+        "promptTokens": 232,
+        "decodeTps": 179.54298150454338,
+        "prefillTps": 3729.9035370221704,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "Meeting went badly",
+              "when": "Yesterday"
+            },
+            {
+              "type": "idea",
+              "title": "Sister's advice",
+              "when": "Today"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"idea\",\"title\":\"Herb garden on balcony for August\"}]}",
+        "ttftMs": 62,
+        "totalMs": 161,
+        "tokens": 18,
+        "promptTokens": 235,
+        "decodeTps": 183.4862385223552,
+        "prefillTps": 3772.0706259580993,
+        "json": {
+          "items": [
+            {
+              "type": "idea",
+              "title": "Herb garden on balcony for August"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"reminder\",\"title\":\"Pay the electricity bill before the 5th\",\"when\":\"before the 5th\"},{\"type\":\"reminder\",\"title\":\"Renew the car insurance next week\",\"when\":\"next week\"}]}",
+        "ttftMs": 56,
+        "totalMs": 312,
+        "tokens": 47,
+        "promptTokens": 224,
+        "decodeTps": 184.31372549558137,
+        "prefillTps": 4014.3369175091234,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "Pay the electricity bill before the 5th",
+              "when": "before the 5th"
+            },
+            {
+              "type": "reminder",
+              "title": "Renew the car insurance next week",
+              "when": "next week"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"reminder\",\"title\":\"Don't forget mum's birthday on October 12th\",\"when\":\"October 12\"},{\"type\":\"idea\",\"title\":\"Go back to the gym\",\"when\":\"Not sure\"},{\"type\":\"task\",\"title\":\"Skip going to the gym\",\"when\":\"Not sure\"}]}",
+        "ttftMs": 63,
+        "totalMs": 427,
+        "tokens": 64,
+        "promptTokens": 241,
+        "decodeTps": 176.5030336524188,
+        "prefillTps": 3849.840255728515,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "Don't forget mum's birthday on October 12th",
+              "when": "October 12"
+            },
+            {
+              "type": "idea",
+              "title": "Go back to the gym",
+              "when": "Not sure"
+            },
+            {
+              "type": "task",
+              "title": "Skip going to the gym",
+              "when": "Not sure"
+            }
+          ]
+        },
+        "validJson": true
+      }
+    ],
+    "logTail": [
+      "Loading model from cache[8/8]: 266MB loaded. 100% completed, 27 secs elapsed.",
+      "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+      "Finish loading on WebGPU - apple"
+    ]
+  },
+  "problems": []
+}

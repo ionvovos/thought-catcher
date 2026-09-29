@@ -1,0 +1,124 @@
+{
+  "lib": "tjs",
+  "model": "onnx-community/Qwen3-0.6B-ONNX",
+  "device": "webgpu",
+  "dtype": "q4f16",
+  "fresh": false,
+  "noGpu": false,
+  "flags": [
+    "--enable-unsafe-webgpu",
+    "--enable-gpu",
+    "--use-angle=metal",
+    "--ignore-gpu-blocklist"
+  ],
+  "wallMs": 62326,
+  "peakChromeRssMb": 3753,
+  "downloadedMbByHost": {
+    "127.0.0.1:58227": 0,
+    "cdn.jsdelivr.net": 5.5,
+    "huggingface.co": 0,
+    "us.aws.cdn.hf.co": 552.4,
+    "": 0
+  },
+  "at": "2026-09-29T11:35:34.673Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": "apple metal-3",
+      "shaderF16": true
+    },
+    "loadMs": 59097,
+    "results": [
+      {
+        "text": "<think>\n\n</think>\n\n{\"items\":[{\"type\":\"task\",\"title\":\"Call dentist to move appointment\",\"when\":\"tomorrow\"},{\"type\":\"task\",\"title\":\"Buy dog food on the way home\",\"when\":\"tomorrow\"},{\"type\":\"idea\",\"title\":\"Gym app streak calendar\",\"when\":\"Friday at 6pm\"}]}",
+        "ttftMs": 713,
+        "totalMs": 1255,
+        "tokens": 65,
+        "decodeTps": 119.8,
+        "json": {
+          "items": [
+            {
+              "type": "task",
+              "title": "Call dentist to move appointment",
+              "when": "tomorrow"
+            },
+            {
+              "type": "task",
+              "title": "Buy dog food on the way home",
+              "when": "tomorrow"
+            },
+            {
+              "type": "idea",
+              "title": "Gym app streak calendar",
+              "when": "Friday at 6pm"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "<think>\n\n</think>\n\n{\"items\":[{\"type\":\"task\",\"title\":\"Had a rough day at work\"},{\"type\":\"task\",\"title\":\"The meeting went badly\"},{\"type\":\"task\",\"title\":\"I felt nobody listened\"},{\"type\":\"reminder\",\"title\":\"My sister called\"},{\"type\":\"idea\",\"title\":\"I'm grateful\"}",
+        "ttftMs": 160,
+        "totalMs": 653,
+        "tokens": 63,
+        "decodeTps": 127.6,
+        "json": null,
+        "validJson": false
+      },
+      {
+        "text": "<think>\n\n</think>\n\n{\"items\":[{\"type\":\"idea\",\"title\":\"A small herb garden on the balcony\",\"when\":null}]}",
+        "ttftMs": 129,
+        "totalMs": 329,
+        "tokens": 27,
+        "decodeTps": 135.4,
+        "json": {
+          "items": [
+            {
+              "type": "idea",
+              "title": "A small herb garden on the balcony",
+              "when": null
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "<think>\n\n</think>\n\n{\"items\":[{\"type\":\"task\",\"title\":\"Pay electricity bill\"},{\"type\":\"task\",\"title\":\"Renew car insurance\"},{\"type\":\"task\",\"title\":\"Book service\"}",
+        "ttftMs": 128,
+        "totalMs": 413,
+        "tokens": 38,
+        "decodeTps": 133.4,
+        "json": null,
+        "validJson": false
+      },
+      {
+        "text": "<think>\n\n</think>\n\n{\"items\":[{\"type\":\"reminder\",\"title\":\"Mum's birthday\",\"date\":\"October 12th\"},{\"type\":\"task\",\"title\":\"Go back to the gym\",\"when\":null}]}",
+        "ttftMs": 125,
+        "totalMs": 476,
+        "tokens": 44,
+        "decodeTps": 125.5,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "Mum's birthday",
+              "date": "October 12th"
+            },
+            {
+              "type": "task",
+              "title": "Go back to the gym",
+              "when": null
+            }
+          ]
+        },
+        "validJson": true
+      }
+    ],
+    "logTail": [
+      "done tokenizer_config.json",
+      "done tokenizer.json",
+      "done onnx/model_q4f16.onnx"
+    ]
+  },
+  "problems": []
+}

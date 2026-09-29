@@ -1,0 +1,154 @@
+{
+  "lib": "webllm",
+  "model": "Llama-3.2-1B-Instruct-q4f16_1-MLC",
+  "device": "webgpu",
+  "dtype": "q4f16",
+  "fresh": false,
+  "noGpu": false,
+  "flags": [
+    "--enable-unsafe-webgpu",
+    "--enable-gpu",
+    "--use-angle=metal",
+    "--ignore-gpu-blocklist"
+  ],
+  "wallMs": 76565,
+  "peakChromeRssMb": 1747,
+  "downloadedMbByHost": {
+    "127.0.0.1:58349": 0,
+    "cdn.jsdelivr.net": 1.7,
+    "huggingface.co": 2.3,
+    "raw.githubusercontent.com": 5.1,
+    "us.aws.cdn.hf.co": 663.4
+  },
+  "at": "2026-09-29T11:38:04.138Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": "apple metal-3",
+      "shaderF16": true
+    },
+    "loadMs": 71588,
+    "results": [
+      {
+        "text": "{\n \"items\": [\n  {\n   \"type\": \"task\",\n   \"title\": \"Call dentist to move appointment\",\n   \"when\": \"tomorrow\"\n  },\n  {\n   \"type\": \"reminder\",\n   \"title\": \"Buy dog food on way home\",\n   \"when\": \"Friday at 6pm\"\n  },\n  {\n   \"type\": \"idea\",\n   \"title\": \"Gym app streak calendar\",\n   \"when\": \"null\"\n  },\n  {\n   \"type\": \"reminder\",\n   \"title\": \"Send invoice to Maria\",\n   \"when\": \"Friday at 6pm\"\n  }\n] }",
+        "ttftMs": 894,
+        "totalMs": 2040,
+        "tokens": 132,
+        "promptTokens": 265,
+        "decodeTps": 116.29955947098392,
+        "prefillTps": 296.7525195968645,
+        "json": {
+          "items": [
+            {
+              "type": "task",
+              "title": "Call dentist to move appointment",
+              "when": "tomorrow"
+            },
+            {
+              "type": "reminder",
+              "title": "Buy dog food on way home",
+              "when": "Friday at 6pm"
+            },
+            {
+              "type": "idea",
+              "title": "Gym app streak calendar",
+              "when": "null"
+            },
+            {
+              "type": "reminder",
+              "title": "Send invoice to Maria",
+              "when": "Friday at 6pm"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"task\",\"title\":\"Call my sister\",\"when\":\"Today at 6pm\"},{\"type\":\"reminder\",\"title\":\"Reflect on the meeting\",\"when\":\"Today at 9pm\"},{\"type\":\"idea\",\"title\":\"Reflect on the meeting and what I can do differently\",\"when\":\"Today at 10pm\"}}",
+        "ttftMs": 141,
+        "totalMs": 626,
+        "tokens": 66,
+        "promptTokens": 233,
+        "decodeTps": 136.9578750792992,
+        "prefillTps": 1656.0056858213557,
+        "json": null,
+        "validJson": false
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"task\",\"title\":\"Start small herb garden on balcony\",\"when\":\"Saturday at 10\"},{\"type\":\"reminder\",\"title\":\"Check on balcony herb garden\",\"when\":\"Saturday at 10\"},{\"type\":\"idea\",\"title\":\"Create a drip irrigation system for herb garden\",\"when\":\"Saturday at 10\"}}",
+        "ttftMs": 142,
+        "totalMs": 622,
+        "tokens": 65,
+        "promptTokens": 236,
+        "decodeTps": 136.72696676097254,
+        "prefillTps": 1663.1430584656982,
+        "json": null,
+        "validJson": false
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"task\",\"title\":\"Pay electricity bill\",\"when\":\"4th of July at 10\"},{\"type\":\"reminder\",\"title\":\"Renew car insurance\",\"when\":\"next week\"},{\"type\":\"idea\",\"title\":\"Podcast about old Athens bars\",\"when\":\"4th of July at 10\"}]}",
+        "ttftMs": 139,
+        "totalMs": 609,
+        "tokens": 63,
+        "promptTokens": 225,
+        "decodeTps": 135.48387096774186,
+        "prefillTps": 1615.21895189373,
+        "json": {
+          "items": [
+            {
+              "type": "task",
+              "title": "Pay electricity bill",
+              "when": "4th of July at 10"
+            },
+            {
+              "type": "reminder",
+              "title": "Renew car insurance",
+              "when": "next week"
+            },
+            {
+              "type": "idea",
+              "title": "Podcast about old Athens bars",
+              "when": "4th of July at 10"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\n \"items\": [\n  {\n   \"type\": \"task\",\n   \"title\": \"Buy Mum a birthday gift\",\n   \"when\": \"October 12th\"\n  },\n  {\n   \"type\": \"reminder\",\n   \"title\": \"Think about going back to the gym\",\n   \"when\": \"null\"\n  },\n  {\n   \"type\": \"idea\",\n   \"title\": \"Go back to the gym\",\n   \"when\": \"null\"\n  }\n] }",
+        "ttftMs": 140,
+        "totalMs": 850,
+        "tokens": 99,
+        "promptTokens": 241,
+        "decodeTps": 140.2067695798235,
+        "prefillTps": 1721.4285714285713,
+        "json": {
+          "items": [
+            {
+              "type": "task",
+              "title": "Buy Mum a birthday gift",
+              "when": "October 12th"
+            },
+            {
+              "type": "reminder",
+              "title": "Think about going back to the gym",
+              "when": "null"
+            },
+            {
+              "type": "idea",
+              "title": "Go back to the gym",
+              "when": "null"
+            }
+          ]
+        },
+        "validJson": true
+      }
+    ],
+    "logTail": [
+      "Loading model from cache[22/22]: 664MB loaded. 100% completed, 69 secs elapsed.",
+      "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+      "Finish loading on WebGPU - apple"
+    ]
+  },
+  "problems": []
+}

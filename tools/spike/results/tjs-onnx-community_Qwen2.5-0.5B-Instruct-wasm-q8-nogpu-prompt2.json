@@ -1,0 +1,69 @@
+{
+  "lib": "tjs",
+  "model": "onnx-community/Qwen2.5-0.5B-Instruct",
+  "device": "wasm",
+  "dtype": "q8",
+  "fresh": false,
+  "noGpu": true,
+  "flags": [
+    "--disable-gpu"
+  ],
+  "wallMs": 64458,
+  "peakChromeRssMb": 4722,
+  "downloadedMbByHost": {
+    "127.0.0.1:58637": 0,
+    "cdn.jsdelivr.net": 5.5,
+    "huggingface.co": 2,
+    "us.aws.cdn.hf.co": 488.6,
+    "": 0
+  },
+  "at": "2026-09-29T11:39:20.550Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": null,
+      "shaderF16": null
+    },
+    "loadMs": 50784,
+    "results": [
+      {
+        "text": "```json\n{\n  \"type\": \"journal\",\n  \"title\": \"A Reminder About My Appointment With The Dentist To Move It Up On The Way Home\"\n}\n```",
+        "ttftMs": 4721,
+        "totalMs": 6664,
+        "tokens": 37,
+        "decodeTps": 19,
+        "json": {
+          "type": "journal",
+          "title": "A Reminder About My Appointment With The Dentist To Move It Up On The Way Home"
+        },
+        "validJson": false
+      },
+      {
+        "text": "{\n  \"items\": [\n    {\n      \"type\": \"reminder\",\n      \"title\": \"Meeting went well\"\n    },\n    {\n      \"type\": \"idea\",\n      \"title\": \"Gratitude for my sister's call\"\n    }\n  ]\n}",
+        "ttftMs": 3874,
+        "totalMs": 6931,
+        "tokens": 54,
+        "decodeTps": 17.7,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "Meeting went well"
+            },
+            {
+              "type": "idea",
+              "title": "Gratitude for my sister's call"
+            }
+          ]
+        },
+        "validJson": true
+      }
+    ],
+    "logTail": [
+      "done generation_config.json",
+      "done tokenizer.json",
+      "done onnx/model_quantized.onnx"
+    ]
+  },
+  "problems": []
+}

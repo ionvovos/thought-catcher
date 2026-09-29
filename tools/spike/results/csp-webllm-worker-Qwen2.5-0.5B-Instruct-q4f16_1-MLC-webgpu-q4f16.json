@@ -1,0 +1,80 @@
+{
+  "lib": "webllm-worker",
+  "model": "Qwen2.5-0.5B-Instruct-q4f16_1-MLC",
+  "device": "webgpu",
+  "dtype": "q4f16",
+  "fresh": false,
+  "noGpu": false,
+  "flags": [
+    "--enable-unsafe-webgpu",
+    "--enable-gpu",
+    "--use-angle=metal",
+    "--ignore-gpu-blocklist"
+  ],
+  "wallMs": 28954,
+  "peakChromeRssMb": 1579,
+  "downloadedMbByHost": {
+    "127.0.0.1:60504": 0,
+    "cdn.jsdelivr.net": 0
+  },
+  "at": "2026-09-29T11:57:56.415Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": "apple metal-3",
+      "shaderF16": true
+    },
+    "loadMs": 27736,
+    "results": [
+      {
+        "text": "```json\n[\n  {\n    \"type\": \"reminder\",\n    \"title\": \"Buy dog food on the way home\",\n    \"text\": \"Also, I had this idea, what if the gym app showed a streak calendar. Remind me on Friday at 6pm to send the invoice to Maria.\",\n    \"when\": \"Friday at 6pm\"\n  }\n]\n```",
+        "ttftMs": 202,
+        "totalMs": 719,
+        "tokens": 79,
+        "promptTokens": 314,
+        "decodeTps": 155.0539744813877,
+        "prefillTps": 1566.8662674767206,
+        "json": {
+          "type": "reminder",
+          "title": "Buy dog food on the way home",
+          "text": "Also, I had this idea, what if the gym app showed a streak calendar. Remind me on Friday at 6pm to send the invoice to Maria.",
+          "when": "Friday at 6pm"
+        },
+        "validJson": false
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"reminder\",\"title\":\"Meeting went badly\",\"text\":\"The meeting went badly\",\"when\":\"Yesterday at 9 PM\"},{\"type\":\"idea\",\"title\":\"Grateful for sister's call\",\"text\":\"My sister called me to help me feel better about the day.\"}]}",
+        "ttftMs": 71,
+        "totalMs": 427,
+        "tokens": 58,
+        "promptTokens": 282,
+        "decodeTps": 165.33637400017355,
+        "prefillTps": 4000.0000000000005,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "Meeting went badly",
+              "text": "The meeting went badly",
+              "when": "Yesterday at 9 PM"
+            },
+            {
+              "type": "idea",
+              "title": "Grateful for sister's call",
+              "text": "My sister called me to help me feel better about the day."
+            }
+          ]
+        },
+        "validJson": true
+      }
+    ],
+    "logTail": [
+      "Loading model from cache[8/8]: 266MB loaded. 100% completed, 26 secs elapsed.",
+      "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+      "Finish loading on WebGPU - apple"
+    ]
+  },
+  "problems": [],
+  "cspViolations": [],
+  "page": "b2-csp.html"
+}

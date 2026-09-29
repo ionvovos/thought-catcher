@@ -1,0 +1,164 @@
+{
+  "lib": "webllm",
+  "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+  "device": "webgpu",
+  "dtype": "q4f16",
+  "fresh": false,
+  "noGpu": false,
+  "flags": [
+    "--enable-unsafe-webgpu",
+    "--enable-gpu",
+    "--use-angle=metal",
+    "--ignore-gpu-blocklist"
+  ],
+  "wallMs": 89392,
+  "peakChromeRssMb": 1737,
+  "downloadedMbByHost": {
+    "127.0.0.1:58767": 0,
+    "cdn.jsdelivr.net": 0,
+    "huggingface.co": 0,
+    "raw.githubusercontent.com": 0,
+    "us.aws.cdn.hf.co": 828.8
+  },
+  "at": "2026-09-29T11:41:09.230Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": "apple metal-3",
+      "shaderF16": true
+    },
+    "loadMs": 82573,
+    "results": [
+      {
+        "text": "```json\n{\n  \"items\": [\n    {\n      \"type\": \"task\",\n      \"title\": \"Call the dentist to move appointment\",\n      \"text\": \"I need to call the dentist to move my appointment\",\n      \"when\": null\n    },\n    {\n      \"type\": \"reminder\",\n      \"title\": \"Buy dog food on the way home\",\n      \"text\": \"Oh, I had this idea. What if the gym app showed a streak calendar.\",\n      \"when\": null\n    },\n    {\n      \"type\": \"idea\",\n      \"title\": \"Gym app with streak calendar\",\n      \"text\": \"Remind me on Friday at 6pm to send the invoice to Maria.\",\n      \"when\": null\n    }\n  ]\n}\n```",
+        "ttftMs": 314,
+        "totalMs": 2581,
+        "tokens": 160,
+        "promptTokens": 314,
+        "decodeTps": 71.11427174486927,
+        "prefillTps": 1002.2342802401956,
+        "json": {
+          "items": [
+            {
+              "type": "task",
+              "title": "Call the dentist to move appointment",
+              "text": "I need to call the dentist to move my appointment",
+              "when": null
+            },
+            {
+              "type": "reminder",
+              "title": "Buy dog food on the way home",
+              "text": "Oh, I had this idea. What if the gym app showed a streak calendar.",
+              "when": null
+            },
+            {
+              "type": "idea",
+              "title": "Gym app with streak calendar",
+              "text": "Remind me on Friday at 6pm to send the invoice to Maria.",
+              "when": null
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"journal\",\"title\":\"Work meeting went badly, feeling nobody listened.\",\"text\":\"Had a rough day at work, the meeting went badly and I felt nobody listened. I'm grateful my sister called though.\",\"when\":null}]}",
+        "ttftMs": 232,
+        "totalMs": 870,
+        "tokens": 50,
+        "promptTokens": 282,
+        "decodeTps": 78.77737513841525,
+        "prefillTps": 1215.5172413793102,
+        "json": {
+          "items": [
+            {
+              "type": "journal",
+              "title": "Work meeting went badly, feeling nobody listened.",
+              "text": "Had a rough day at work, the meeting went badly and I felt nobody listened. I'm grateful my sister called though.",
+              "when": null
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"idea\",\"title\":\"Herb garden on balcony with drip system\",\"text\":\"a small herb garden on the balcony, basil and mint, maybe with a drip system so it survives August.\",\"when\":null}]}",
+        "ttftMs": 232,
+        "totalMs": 836,
+        "tokens": 47,
+        "promptTokens": 285,
+        "decodeTps": 78.1379883619433,
+        "prefillTps": 1230.5699481984047,
+        "json": {
+          "items": [
+            {
+              "type": "idea",
+              "title": "Herb garden on balcony with drip system",
+              "text": "a small herb garden on the balcony, basil and mint, maybe with a drip system so it survives August.",
+              "when": null
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"task\",\"title\":\"Pay the electricity bill before the 5th\",\"text\":\"I need to pay the electricity bill before the 5th\",\"when\":\"the 5th\"},{\"type\":\"task\",\"title\":\"Renew car insurance next week\",\"text\":\"renew car insurance next week\",\"when\":\"next week\"}]}",
+        "ttftMs": 230,
+        "totalMs": 1120,
+        "tokens": 69,
+        "promptTokens": 274,
+        "decodeTps": 78.05429864088926,
+        "prefillTps": 1190.7866145269954,
+        "json": {
+          "items": [
+            {
+              "type": "task",
+              "title": "Pay the electricity bill before the 5th",
+              "text": "I need to pay the electricity bill before the 5th",
+              "when": "the 5th"
+            },
+            {
+              "type": "task",
+              "title": "Renew car insurance next week",
+              "text": "renew car insurance next week",
+              "when": "next week"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"reminder\",\"title\":\"Remember mum's birthday on October 12th\",\"text\":\"Don't forget mum's birthday on October 12th\",\"when\":\"October 12\"},{\"type\":\"idea\",\"title\":\"Think about going back to the gym\",\"text\":\"And I should really think about going back to the gym, I keep skipping it and I feel worse.\",\"when\":null}]}",
+        "ttftMs": 256,
+        "totalMs": 1377,
+        "tokens": 84,
+        "promptTokens": 291,
+        "decodeTps": 75.38364892853552,
+        "prefillTps": 1137.1629542690825,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "Remember mum's birthday on October 12th",
+              "text": "Don't forget mum's birthday on October 12th",
+              "when": "October 12"
+            },
+            {
+              "type": "idea",
+              "title": "Think about going back to the gym",
+              "text": "And I should really think about going back to the gym, I keep skipping it and I feel worse.",
+              "when": null
+            }
+          ]
+        },
+        "validJson": true
+      }
+    ],
+    "logTail": [
+      "Loading model from cache[30/30]: 829MB loaded. 100% completed, 82 secs elapsed.",
+      "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+      "Finish loading on WebGPU - apple"
+    ]
+  },
+  "problems": []
+}

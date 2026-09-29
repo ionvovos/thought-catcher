@@ -1,0 +1,165 @@
+{
+  "lib": "webllm",
+  "model": "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+  "device": "webgpu",
+  "dtype": "q4f16",
+  "fresh": false,
+  "noGpu": false,
+  "flags": [
+    "--enable-unsafe-webgpu",
+    "--enable-gpu",
+    "--use-angle=metal",
+    "--ignore-gpu-blocklist"
+  ],
+  "wallMs": 89992,
+  "peakChromeRssMb": 1821,
+  "downloadedMbByHost": {
+    "127.0.0.1:58087": 0,
+    "cdn.jsdelivr.net": 1.7,
+    "huggingface.co": 2,
+    "raw.githubusercontent.com": 5,
+    "us.aws.cdn.hf.co": 828.8
+  },
+  "at": "2026-09-29T11:33:57.277Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": "apple metal-3",
+      "shaderF16": true
+    },
+    "loadMs": 84423,
+    "results": [
+      {
+        "text": "```json\n{\n  \"items\": [\n    {\n      \"type\": \"task\",\n      \"title\": \"Call the dentist to move appointment\",\n      \"when\": null\n    },\n    {\n      \"type\": \"reminder\",\n      \"title\": \"Buy dog food on the way home\",\n      \"when\": null\n    },\n    {\n      \"type\": \"idea\",\n      \"title\": \"Gym app with streak calendar\",\n      \"when\": null\n    },\n    {\n      \"type\": \"task\",\n      \"title\": \"Send invoice to Maria\",\n      \"when\": \"Friday at 6pm\"\n    }\n  ]\n}\n```",
+        "ttftMs": 745,
+        "totalMs": 2772,
+        "tokens": 133,
+        "promptTokens": 264,
+        "decodeTps": 66.07710651801392,
+        "prefillTps": 355.07733691997305,
+        "json": {
+          "items": [
+            {
+              "type": "task",
+              "title": "Call the dentist to move appointment",
+              "when": null
+            },
+            {
+              "type": "reminder",
+              "title": "Buy dog food on the way home",
+              "when": null
+            },
+            {
+              "type": "idea",
+              "title": "Gym app with streak calendar",
+              "when": null
+            },
+            {
+              "type": "task",
+              "title": "Send invoice to Maria",
+              "when": "Friday at 6pm"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"journal\",\"title\":\"Work meeting went badly, feeling unheard.\",\"when\":null},{\"type\":\"idea\",\"title\":\"Call sister for support and advice.\",\"when\":null}]}",
+        "ttftMs": 204,
+        "totalMs": 667,
+        "tokens": 39,
+        "promptTokens": 232,
+        "decodeTps": 84.48873483440069,
+        "prefillTps": 1139.4891945115273,
+        "json": {
+          "items": [
+            {
+              "type": "journal",
+              "title": "Work meeting went badly, feeling unheard.",
+              "when": null
+            },
+            {
+              "type": "idea",
+              "title": "Call sister for support and advice.",
+              "when": null
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"idea\",\"title\":\"Herb garden on balcony with drip system, basil and mint.\",\"when\":null}]}",
+        "ttftMs": 204,
+        "totalMs": 521,
+        "tokens": 27,
+        "promptTokens": 235,
+        "decodeTps": 85.33501896474418,
+        "prefillTps": 1155.3588987090343,
+        "json": {
+          "items": [
+            {
+              "type": "idea",
+              "title": "Herb garden on balcony with drip system, basil and mint.",
+              "when": null
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"task\",\"title\":\"Pay the electricity bill before the 5th\",\"when\":\"null\"},{\"type\":\"task\",\"title\":\"Renew the car insurance next week\",\"when\":\"next week\"}]}",
+        "ttftMs": 180,
+        "totalMs": 681,
+        "tokens": 43,
+        "promptTokens": 224,
+        "decodeTps": 86.12056879747142,
+        "prefillTps": 1243.753470309717,
+        "json": {
+          "items": [
+            {
+              "type": "task",
+              "title": "Pay the electricity bill before the 5th",
+              "when": "null"
+            },
+            {
+              "type": "task",
+              "title": "Renew the car insurance next week",
+              "when": "next week"
+            }
+          ]
+        },
+        "validJson": true
+      },
+      {
+        "text": "{\"items\":[{\"type\":\"reminder\",\"title\":\"Mum's birthday on October 12th\",\"when\":null},{\"type\":\"idea\",\"title\":\"Going back to the gym\",\"when\":\"right now\"}]}",
+        "ttftMs": 205,
+        "totalMs": 692,
+        "tokens": 42,
+        "promptTokens": 241,
+        "decodeTps": 86.29545921459385,
+        "prefillTps": 1179.0606653706309,
+        "json": {
+          "items": [
+            {
+              "type": "reminder",
+              "title": "Mum's birthday on October 12th",
+              "when": null
+            },
+            {
+              "type": "idea",
+              "title": "Going back to the gym",
+              "when": "right now"
+            }
+          ]
+        },
+        "validJson": true
+      }
+    ],
+    "logTail": [
+      "Loading model from cache[30/30]: 829MB loaded. 100% completed, 82 secs elapsed.",
+      "Loading GPU shader modules[4/4]: 100% completed, 1 secs elapsed.",
+      "Finish loading on WebGPU - apple"
+    ]
+  },
+  "problems": []
+}

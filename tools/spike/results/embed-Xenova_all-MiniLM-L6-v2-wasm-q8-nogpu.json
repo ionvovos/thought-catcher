@@ -1,0 +1,50 @@
+{
+  "lib": "embed",
+  "model": "Xenova/all-MiniLM-L6-v2",
+  "device": "wasm",
+  "dtype": "q8",
+  "fresh": false,
+  "noGpu": true,
+  "flags": [
+    "--disable-gpu"
+  ],
+  "wallMs": 4710,
+  "peakChromeRssMb": 1658,
+  "downloadedMbByHost": {
+    "127.0.0.1:57974": 0,
+    "cdn.jsdelivr.net": 5.5,
+    "huggingface.co": 0.2,
+    "us.aws.cdn.hf.co": 21.9,
+    "": 0
+  },
+  "at": "2026-09-29T11:30:46.341Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": null,
+      "shaderF16": null
+    },
+    "embed": {
+      "loadMs": 4552,
+      "dims": 384,
+      "batch10Ms": 47,
+      "queryMs": 5,
+      "query": "what did I say about exercise?",
+      "top3": [
+        [
+          "go back to the gym, keep skipping it",
+          0.486
+        ],
+        [
+          "gym app streak calendar",
+          0.305
+        ],
+        [
+          "rough day at work",
+          0.208
+        ]
+      ]
+    }
+  },
+  "problems": []
+}

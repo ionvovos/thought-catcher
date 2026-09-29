@@ -1,0 +1,55 @@
+{
+  "lib": "embed",
+  "model": "Xenova/all-MiniLM-L6-v2",
+  "device": "webgpu",
+  "dtype": "q8",
+  "fresh": false,
+  "noGpu": false,
+  "flags": [
+    "--enable-unsafe-webgpu",
+    "--enable-gpu",
+    "--use-angle=metal",
+    "--ignore-gpu-blocklist"
+  ],
+  "wallMs": 5219,
+  "peakChromeRssMb": 2086,
+  "downloadedMbByHost": {
+    "127.0.0.1:59630": 0,
+    "cdn.jsdelivr.net": 5.5,
+    "huggingface.co": 0.2,
+    "us.aws.cdn.hf.co": 21.9,
+    "": 0
+  },
+  "at": "2026-09-29T11:48:50.046Z",
+  "result": {
+    "env": {
+      "gpu": true,
+      "adapter": "apple metal-3",
+      "shaderF16": true
+    },
+    "embed": {
+      "loadMs": 5016,
+      "dims": 384,
+      "batch10Ms": 65,
+      "queryMs": 14,
+      "query": "what did I say about exercise?",
+      "top3": [
+        [
+          "go back to the gym, keep skipping it",
+          0.486
+        ],
+        [
+          "gym app streak calendar",
+          0.305
+        ],
+        [
+          "rough day at work",
+          0.208
+        ]
+      ]
+    }
+  },
+  "problems": [],
+  "cspViolations": [],
+  "page": "b2-csp.html"
+}
