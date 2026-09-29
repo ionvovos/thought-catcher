@@ -53,11 +53,11 @@ test('pure modules avoid the DOM and the clock, and import in Node', async () =>
   }
 });
 
-test('the v2 shell: CSP allows the model worker, no v1 nav, tokens first', () => {
+test('the v2 shell: CSP with same-origin workers, no v1 nav, tokens first', () => {
   const html = read('index.html');
-  assert.match(html, /worker-src 'self' blob: https:\/\/cdn\.jsdelivr\.net/);
+  assert.match(html, /worker-src 'self' blob:;/);
   assert.match(html, /font-src 'self'/);
-  assert.match(html, /script-src 'self' https:\/\/cdn\.jsdelivr\.net 'wasm-unsafe-eval' blob:/);
+  assert.match(html, /script-src 'self' https:\/\/cdn\.jsdelivr\.net\/npm\/@mlc-ai\/web-llm@0\.2\.85\/ .*'wasm-unsafe-eval' blob:/);
   assert.doesNotMatch(html, /app-nav|app-header/);
   assert.match(html, /<meta name="theme-color" media="\(prefers-color-scheme: light\)" content="#F5F5F7">/);
   assert.match(html, /<meta name="theme-color" media="\(prefers-color-scheme: dark\)" content="#0A0A0C">/);
