@@ -2,112 +2,10 @@
 // Run outside the Bash sandbox (Chrome cannot create its profile inside it):  node e2e/smoke.mjs
 // Exit code 0 = every check passed. Environment: CHROME (binary path), SMOKE_ALLOW_PENDING=1 (a view that still shows
 // "coming soon" is reported as PENDING instead of failing; used while the build is in progress).
-import http from 'node:http';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { spawn } from 'node:child_process';
+import { startServer, openChrome, check, pending, finish, sleep, ALLOW_PENDING, isFavicon } from './l4-harness.mjs';
 
-const repo = fileURLToPath(new URL('..', import.meta.url)).replace(/\/$/, '');
-const CHROME = process.env.CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const ALLOW_PENDING = process.env.SMOKE_ALLOW_PENDING === '1';
-const MIME = {
-  '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
-  '.webmanifest': 'application/manifest+json', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
-};
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-// ---- results ----
-const results = [];
-function check(name, ok, detail = '') {
-  results.push({ name, ok, detail });
-  console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? `  (${detail})` : ''}`);
-}
-function pending(name, detail) {
-  results.push({ name, ok: true, pending: true, detail });
-  console.log(`PEND  ${name}  (${detail})`);
-}
-
-// ---- static server ----
-const requests = [];
-const server = http.createServer((req, res) => {
-  const u = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-  const f = path.join(repo, u === '/' ? 'index.html' : u);
-  if (!f.startsWith(repo) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) {
-    requests.push({ url: u, status: 404 });
-    res.writeHead(404); res.end('not found'); return;
-  }
-  requests.push({ url: u, status: 200 });
-  res.writeHead(200, { 'content-type': MIME[path.extname(f)] ?? 'application/octet-stream' });
-  fs.createReadStream(f).pipe(res);
-});
-await new Promise((r) => server.listen(0, '127.0.0.1', r));
-const base = `http://127.0.0.1:${server.address().port}`;
-const origin = new URL(base).host;
-
-// ---- one Chrome page with logging ----
-async function openChrome() {
-  if (!fs.existsSync(CHROME)) throw new Error(`Chrome not found at ${CHROME}; set CHROME`);
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tc-smoke-'));
-  const proc = spawn(CHROME, ['--headless=new', '--disable-gpu', '--remote-debugging-port=0', `--user-data-dir=${dir}`, '--no-first-run', '--no-default-browser-check', 'about:blank'], { stdio: 'ignore' });
-  let port;
-  for (let i = 0; i < 150 && !port; i += 1) {
-    await sleep(100);
-    try { port = fs.readFileSync(path.join(dir, 'DevToolsActivePort'), 'utf8').split('\n')[0]; } catch { /* not ready */ }
-  }
-  if (!port) { proc.kill(); throw new Error('Chrome did not open a DevTools port (run outside the sandbox)'); }
-  const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
-  const ws = new WebSocket(targets.find((t) => t.type === 'page').webSocketDebuggerUrl);
-  await new Promise((r, j) => { ws.onopen = r; ws.onerror = j; });
-
-  let id = 0;
-  const waiting = new Map();
-  const page = { problems: [], hosts: new Set(), urls: [], dir };
-  ws.onmessage = (m) => {
-    const d = JSON.parse(m.data);
-    if (d.id && waiting.has(d.id)) { waiting.get(d.id)(d); waiting.delete(d.id); return; }
-    const p = d.params;
-    if (d.method === 'Runtime.exceptionThrown') page.problems.push(`exception: ${p.exceptionDetails.exception?.description ?? p.exceptionDetails.text}`);
-    else if (d.method === 'Runtime.consoleAPICalled' && ['error', 'warning', 'assert'].includes(p.type)) page.problems.push(`console.${p.type}: ${p.args.map((a) => a.value ?? a.description).join(' ')}`);
-    else if (d.method === 'Log.entryAdded' && ['error', 'warning'].includes(p.entry.level)) page.problems.push(`log.${p.entry.level}: ${p.entry.text} ${p.entry.url ?? ''}`);
-    else if (d.method === 'Network.requestWillBeSent') {
-      const u = p.request.url;
-      page.urls.push(u);
-      if (!/^(data|blob|about):/.test(u)) page.hosts.add(new URL(u).host);
-    }
-  };
-  page.send = (method, params = {}) => new Promise((r) => { const n = ++id; waiting.set(n, r); ws.send(JSON.stringify({ id: n, method, params })); });
-  page.ev = async (expression) => {
-    const r = await page.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
-    if (r.result?.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description ?? 'evaluate failed');
-    return r.result?.result?.value;
-  };
-  page.waitFor = async (expression, ms = 4000) => {
-    const end = Date.now() + ms;
-    while (Date.now() < end) {
-      try { if (await page.ev(expression)) return true; } catch { /* page navigating */ }
-      await sleep(60);
-    }
-    return false;
-  };
-  // Always leave the page first: navigating to the same URL with another hash would only fire hashchange, not a load.
-  page.goto = async (url) => {
-    await page.send('Page.navigate', { url: 'about:blank' });
-    await page.waitFor('location.href === "about:blank"');
-    await page.send('Page.navigate', { url });
-    await page.waitFor(`location.href.startsWith(${JSON.stringify(url.split('#')[0])}) && document.readyState === "complete"`);
-  };
-  page.route = async (hash) => { await page.ev(`location.hash = ${JSON.stringify(hash)}`); await sleep(60); };
-  page.key = async (key, opts = {}) => {
-    const base = { key, code: opts.code ?? (key.length === 1 ? `Key${key.toUpperCase()}` : key), windowsVirtualKeyCode: opts.vk ?? key.toUpperCase().charCodeAt(0) };
-    await page.send('Input.dispatchKeyEvent', { type: opts.text ? 'keyDown' : 'rawKeyDown', ...base, ...(opts.text ? { text: opts.text } : {}) });
-    await page.send('Input.dispatchKeyEvent', { type: 'keyUp', ...base });
-  };
-  page.close = () => { try { ws.close(); } catch { /* closed */ } proc.kill(); };
-  await page.send('Runtime.enable'); await page.send('Log.enable'); await page.send('Network.enable'); await page.send('Page.enable');
-  return page;
-}
+const server = await startServer();
+const { base, origin, requests } = server;
 
 const VIEWS = ['#/capture', '#/inbox', '#/type/idea', '#/type/task', '#/type/journal', '#/type/reminder', '#/review', '#/settings', '#/about'];
 const noHScroll = 'document.documentElement.scrollWidth <= document.documentElement.clientWidth';
@@ -151,14 +49,21 @@ async function pass(label, viewport) {
     await p.ev(`(() => { const f = document.getElementById('thought-text'); f.value = 'what if the app let people share lists'; f.form.querySelector('button[type=submit]').click(); })()`);
     await p.waitFor(`/idea/.test(document.getElementById('capture-status').textContent)`);
 
-    // shortcut R starts recording, or focuses the field when speech is unavailable
+    // shortcut R: the first press asks how voice should work (consent panel); with "type instead" the field takes focus.
     await p.ev('document.activeElement && document.activeElement.blur()');
     await p.key('r', { text: 'r', vk: 82 });
     await sleep(300);
-    const afterR = await p.ev(`({ recording: document.querySelector('.record-btn').classList.contains('is-recording'), fieldFocused: document.activeElement === document.getElementById('thought-text'), status: document.getElementById('capture-status').textContent })`);
-    check(`${label}: R starts recording or focuses the field (speech unavailable)`, afterR.recording || afterR.fieldFocused, JSON.stringify(afterR));
+    const afterR = await p.ev(`({ recording: document.querySelector('.record-btn').classList.contains('is-recording'), fieldFocused: document.activeElement === document.getElementById('thought-text'), consent: !!document.querySelector('.consent'), choices: [...document.querySelectorAll('.consent [data-choice]')].map((b) => b.dataset.choice) })`);
+    check(`${label}: R starts recording, asks for the voice choice, or focuses the field`, afterR.recording || afterR.fieldFocused || afterR.consent, JSON.stringify(afterR));
+    if (afterR.consent) {
+      check(`${label}: voice choice offers typing and names the cost of each engine`, afterR.choices.includes('typing') && /Google or Apple/.test(await p.ev(`document.querySelector('.consent').textContent`)), afterR.choices.join(','));
+      await p.click('.consent [data-choice="typing"]');
+      await sleep(200);
+      check(`${label}: choosing "type instead" closes the panel and focuses the field`, await p.ev(`!document.querySelector('.consent') && document.activeElement === document.getElementById('thought-text')`));
+      check(`${label}: the voice choice is saved`, (await p.ev(`localStorage.getItem('thought-catcher.speech.engine')`)) === '"typing"');
+    }
     await p.key('Escape', { vk: 27, code: 'Escape' });
-    await sleep(300);
+    await sleep(200);
     const afterEsc = await p.ev(`({ recording: document.querySelector('.record-btn').classList.contains('is-recording'), label: document.querySelector('.record-btn').getAttribute('aria-label') })`);
     check(`${label}: Escape leaves recording state`, !afterEsc.recording, JSON.stringify(afterEsc));
     // microphone denied or speech API absent: field stays usable
@@ -244,7 +149,6 @@ async function pass(label, viewport) {
     }
 
     // session-level checks
-    const isFavicon = (x) => /favicon\.ico/.test(x);
     const isPendingView = (x) => ALLOW_PENDING && /\/src\/ui\/views\/(review|settings|about|detail)\.js/.test(x);
     const problems = p.problems.filter((x) => !isFavicon(x) && !isPendingView(x));
     check(`${label}: no exception or console error in the whole session`, problems.length === 0, problems.slice(0, 3).join(' ; '));
@@ -256,7 +160,6 @@ async function pass(label, viewport) {
     requests.length = 0;
   } finally {
     p.close();
-    try { fs.rmSync(p.dir, { recursive: true, force: true }); } catch { /* best effort */ }
   }
 }
 
@@ -266,8 +169,4 @@ try {
 } catch (err) {
   check('smoke run completed', false, err.stack ?? String(err));
 }
-server.close();
-const failed = results.filter((r) => !r.ok);
-const pend = results.filter((r) => r.pending);
-console.log(`\n${results.length - failed.length}/${results.length} checks passed, ${failed.length} failed, ${pend.length} pending`);
-process.exit(failed.length ? 1 : 0);
+finish(server);
