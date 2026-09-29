@@ -69,7 +69,7 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
   const toaster = createToaster(root);
   const speaker = createSpeaker({ onStart: () => dispatch({ type: 'SPEAK_START' }), onEnd: () => dispatch({ type: 'SPEAK_END' }) });
   const composer = createComposer({
-    onSend: (text) => dispatch({ type: 'SEND_TEXT', text }),
+    onSend: (text) => { typing = false; dispatch({ type: 'SEND_TEXT', text }); },
     onVoice: () => { typing = false; dispatch({ type: 'TAP_ORB' }); },
   });
   const stage = el('section', { class: 'stage' });
@@ -230,6 +230,9 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
     return V.peek({ counts: counts(), total: thoughts.length, onOpen: () => nav.go('#/library') });
   }
 
+  // Nodes other code appends to the screen (toast, menus, the library sheet and its scrim) survive a re-render.
+  const overlays = () => root.querySelectorAll(':scope > .toast, :scope > .menu, :scope > .scrim, :scope > .sheet[role="dialog"]');
+
   function render() {
     if (!alive) return;
     syncOrb();
@@ -251,14 +254,14 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
         if (due) parts.push(V.dueCard(due, `Due today, ${whenLabel(due.due_at, now()).replace(/^Today /, '')}`, () => markDone(due)));
         parts.push(...notices, peekNode());
       }
-      root.replaceChildren(...parts, ...root.querySelectorAll('.toast, .menu'));
+      root.replaceChildren(...parts, ...overlays());
       if (pendingChoice && choiceHost) choiceHost.append(pendingChoice);
     } else {
       renderThread();
       orb.el.classList.add('orb--dock');
       parts.push(thread);
       parts.push(typing ? composer.el : dock());
-      root.replaceChildren(...parts, ...root.querySelectorAll('.toast, .menu'));
+      root.replaceChildren(...parts, ...overlays());
     }
   }
 
@@ -440,23 +443,29 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
       if (thinking) thinking.text = r.kind === 'ask' ? 'Looking through your thoughts' : r.kind === 'expand' || r.kind === 'plan' ? 'Working on it' : 'Sorting your thoughts';
       queueMicrotask(() => dispatch({ type: 'INTENT', kind: r.kind, text: r.text ?? text }));
     },
-    async saveRules({ text, source }) {
+    saveRules({ text, source }) {
+      // The rule-sorted items are written before any AI call (AC-X2.5). capture.saved lets the brain's result wait for them.
       capture = { originId: globalThis.crypto.randomUUID(), source, rows: [], edited: new Set(), replaced: false };
-      try {
-        const items = brain.splitRules(text, { source });
-        const rows = items.map((item, i) => buildRow(item, { id: undefined, index: i, count: items.length, source, existing: null }));
-        await store.putMany(rows);
-        capture.rows = rows;
-        lastFiled = rows[0] ?? lastFiled;
-        await loadThoughts();
-      } catch (err) {
-        capture.failed = err;
-      }
+      const mine = capture;
+      mine.saved = (async () => {
+        try {
+          const items = brain.splitRules(text, { source });
+          const rows = items.map((item, i) => buildRow(item, { id: undefined, index: i, count: items.length, source, existing: null }));
+          await store.putMany(rows);
+          mine.rows = rows;
+          lastFiled = rows[0] ?? lastFiled;
+          await loadThoughts();
+        } catch (err) {
+          mine.failed = err;
+        }
+      })();
+      return mine.saved;
     },
     async brainSplit({ text, source }) {
       const mine = ++brainToken;
       try {
         const items = await brain.split(text, { source });
+        await capture?.saved;
         if (mine !== brainToken) return;
         if (capture?.failed) { dispatch({ type: 'BRAIN_FAILED', error: { code: 'save-failed', message: capture.failed.message } }); return; }
         dispatch({ type: 'BRAIN_DONE', items });
