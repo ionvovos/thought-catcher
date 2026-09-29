@@ -4,7 +4,8 @@ import { TYPES, LIMITS, contentWords } from '../core/model.js';
 import { AiError } from '../core/ai/http.js';
 
 const bad = (why) => new AiError('malformed', `The AI reply was not usable: ${why}.`);
-const oneLine = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
+// Only strings and numbers are text; an object (even one with its own toString) is empty, never coerced (review F7).
+const oneLine = (s) => (typeof s === 'string' || typeof s === 'number' ? String(s) : '').replace(/\s+/g, ' ').trim();
 const wordsOf = (s) => oneLine(s).split(' ').filter(Boolean);
 
 function cleanTitle(v) {
