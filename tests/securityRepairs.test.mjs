@@ -56,3 +56,13 @@ test('F8: a provider body that echoes the key is masked in the message that is k
   const anthropic = async () => ({ ok: false, status: 500, text: async () => `oops ${key}` });
   await assert.rejects(postJson(anthropic, 'https://x.test/v1', { headers: { 'x-api-key': key }, body: {}, timeoutMs: 1000 }), (err) => !err.message.includes(key));
 });
+
+test('build gate G1: the embedding model and the speech model are fetched at a pinned revision, not main', async () => {
+  const { WHISPER_REVISION } = await import('../src/speech/whisper.js');
+  assert.match(WHISPER_REVISION, /^[0-9a-f]{40}$/);
+  const worker = readFileSync(fileURLToPath(new URL('../src/brain/embed.worker.js', import.meta.url)), 'utf8');
+  assert.match(worker, /const REVISION = '751bff37182d3f1213fa05d7196b954e230abad9'/);
+  assert.match(worker, /revision: REVISION/);
+  const whisper = readFileSync(fileURLToPath(new URL('../src/speech/whisper.js', import.meta.url)), 'utf8');
+  assert.match(whisper, /revision: WHISPER_REVISION/);
+});

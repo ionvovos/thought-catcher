@@ -2,6 +2,8 @@
 // Messages in: { id, type: 'load' } and { id, type: 'embed', texts }. Out: { id, type: 'progress'|'loaded'|'result'|'error', ... }.
 const LIB_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0';
 const MODEL = 'Xenova/all-MiniLM-L6-v2';
+// Pinned to the commit Hugging Face served on the day of the build gate (G1), not to `main`.
+const REVISION = '751bff37182d3f1213fa05d7196b954e230abad9';
 let extractor = null;
 const files = new Map();
 const EXPECTED_BYTES = 27000000; // the model, tokenizer and config together: progress never reads 99% before the big file has started
@@ -22,6 +24,7 @@ self.onmessage = async ({ data }) => {
     if (type === 'load') {
       const lib = await import(LIB_URL);
       extractor = await lib.pipeline('feature-extraction', MODEL, {
+        revision: REVISION,
         device: 'wasm',
         dtype: 'q8',
         progress_callback: (p) => post({ id, type: 'progress', pct: progressOf(p) }),

@@ -4,6 +4,8 @@ import { SpeechError } from './select.js';
 
 export const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0';
 export const WHISPER_MODEL = 'onnx-community/whisper-tiny';
+// Pinned to a commit, not to `main` (build gate G1).
+export const WHISPER_REVISION = 'ff4177021cc41f7db950912b73ea4fdf7d01d8e7';
 const SAMPLE_RATE = 16000;
 const MIN_SECONDS = 0.4;
 const SILENCE_RMS = 0.004; // below this the recording is silence; Whisper would invent words for it
@@ -15,7 +17,7 @@ async function defaultLoadPipeline(onProgress) {
   let adapter = null;
   try { adapter = await globalThis.navigator?.gpu?.requestAdapter(); } catch { /* no usable GPU */ }
   return pipeline('automatic-speech-recognition', WHISPER_MODEL, {
-    device: adapter ? 'webgpu' : 'wasm', dtype: 'q8', progress_callback: onProgress,
+    revision: WHISPER_REVISION, device: adapter ? 'webgpu' : 'wasm', dtype: 'q8', progress_callback: onProgress,
   });
 }
 
