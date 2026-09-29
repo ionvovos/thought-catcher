@@ -254,9 +254,12 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
         const inHome = [];
         if (reviewNode) inHome.push(reviewNode);
         inHome.push(stage);
-        const due = dueToday();
+        // The due strip is not shown while the review card is open: the card already lists that reminder (build gate G6).
+        const due = reviewNode ? null : dueToday();
         if (due) inHome.push(V.dueCard(due, `Due today, ${whenLabel(due.due_at, now()).replace(/^Today /, '')}`, () => markDone(due)));
         inHome.push(...stageNotices());
+        // Three or more blocks on a short screen: a smaller orb keeps the notice actions above the peek (build gate G7).
+        home.classList.toggle('home--crowded', inHome.length >= 3);
         home.replaceChildren(...inHome);
         parts.push(home, peekNode());
       }
