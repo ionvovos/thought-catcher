@@ -27,6 +27,8 @@ test('manifest: required fields for install (AC-M1.2, AC-Q.6)', () => {
   assert.equal(manifest.id, './');
   assert.match(manifest.background_color, /^#[0-9a-f]{6}$/i);
   assert.match(manifest.theme_color, /^#[0-9a-f]{6}$/i);
+  assert.equal(manifest.background_color, manifest.theme_color, 'design.md 4: one value for both');
+  assert.deepEqual(manifest.shortcuts.map((x) => x.name), ['Speak a thought', 'Type a thought']);
   const sizes = manifest.icons.map((i) => i.sizes);
   assert.ok(sizes.includes('192x192') && sizes.includes('512x512'));
   assert.ok(manifest.icons.some((i) => i.purpose === 'maskable'));
@@ -44,7 +46,7 @@ test('manifest: every icon path is relative, exists, is a PNG of the declared si
   }
   const apple = fs.readFileSync(path.join(root, 'icons/apple-touch-icon-180.png'));
   assert.equal(apple.readUInt32BE(16), 180);
-  assert.equal(apple[25], 6, 'RGBA');
+  assert.equal(apple[25], 2, 'opaque RGB: iOS fills transparent pixels with black');
 });
 
 test('.nojekyll exists and is empty', () => {
@@ -60,7 +62,7 @@ test('sw.js: precache list has only existing relative files and covers every fil
   }
   const loaded = [...walk('src'), ...walk('css'), ...walk('icons')].map((f) => `./${f}`);
   const missing = loaded.filter((f) => !shell.includes(f));
-  assert.deepEqual(missing, [], `add to SHELL in sw.js: ${missing.join(', ')}`);
+  assert.deepEqual(missing, [], `run: node tools/sync-precache.mjs   (missing: ${missing.join(', ')})`);
   for (const f of ['./', './index.html', './manifest.webmanifest']) assert.ok(shell.includes(f), f);
   assert.equal(new Set(shell).size, shell.length, 'no duplicates');
 });
@@ -119,13 +121,13 @@ test('sw install: caches every shell file, then skipWaiting', async () => {
   const { done } = fire(listeners, 'install');
   await done;
   assert.equal(log.skipWaiting, 1);
-  assert.equal(stores.get('tc-v2').size, shell.length);
+  assert.equal(stores.get('tc-v3').size, shell.length);
 });
 
-test('sw activate: deletes old shell caches but keeps the current, tc-cdn and transformers-cache', async () => {
-  const { listeners, stores, log } = loadSw({ cachesInit: { 'tc-v0': {}, 'tc-v1': {}, 'tc-v2': {}, 'tc-cdn': {}, 'transformers-cache': {}, other: {} } });
+test('sw activate: deletes only old tc-* shell caches; the model caches and tc-cdn stay', async () => {
+  const { listeners, stores, log } = loadSw({ cachesInit: { 'tc-v0': {}, 'tc-v1': {}, 'tc-v2': {}, 'tc-v3': {}, 'tc-cdn': {}, 'transformers-cache': {}, 'webllm/model': {}, 'webllm/wasm': {}, 'webllm/config': {}, other: {} } });
   await fire(listeners, 'activate').done;
-  assert.deepEqual([...stores.keys()].sort(), ['tc-cdn', 'tc-v2', 'transformers-cache']);
+  assert.deepEqual([...stores.keys()].sort(), ['other', 'tc-cdn', 'tc-v3', 'transformers-cache', 'webllm/config', 'webllm/model', 'webllm/wasm']);
   assert.equal(log.claim, 1);
 });
 
@@ -137,6 +139,7 @@ test('sw fetch: not intercepted for non-GET, AI providers and other hosts', () =
     { method: 'GET', url: 'https://api.openai.com/v1/chat/completions', mode: 'cors' },
     { method: 'GET', url: 'http://localhost:11434/v1/models', mode: 'cors' },
     { method: 'GET', url: 'https://huggingface.co/onnx-community/whisper-tiny/resolve/main/x.onnx', mode: 'cors' },
+    { method: 'GET', url: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/x.wasm', mode: 'cors' },
   ];
   for (const request of cases) {
     const { event } = fire(listeners, 'fetch', { request });

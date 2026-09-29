@@ -1,89 +1,144 @@
-// Entry point: open the store, build the shared context, start the router.
+// Entry: open the store (which runs the v1 migration), create the brain, apply settings, run the first-run gate, mount the
+// assistant and start the router. The shell builds `ctx` once and hands it to every screen (architecture section 5).
 import { createIdbStore } from './storage/idb.js';
 import { createMemoryStore } from './storage/memory.js';
+import { settingsApi } from './storage/settings.js';
+import { createBrain } from './brain/index.js';
 import { createWebSpeechEngine } from './speech/webspeech.js';
 import { createWhisperEngine } from './speech/whisper.js';
-import { FEATURES } from './features.js';
-import { startRouter } from './ui/router.js';
-import { createAiFlow } from './ui/aiFlow.js';
-import { getSettings } from './storage/settings.js';
 import { resolveStale } from './core/clarify.js';
-import { reviewOnOpen, showReviewCount, watchNewDay } from './core/reviewOnOpen.js';
+import { startRouter, createNav } from './ui/router.js';
+import { createAssistant } from './ui/conversation/screen.js';
+import { createToaster } from './ui/components/toast.js';
+import { openSheet } from './ui/components/sheet.js';
+import { el } from './ui/dom.js';
 
-const banner = document.getElementById('banner');
-function showBanner(message) {
-  banner.textContent = message;
-  banner.hidden = false;
+const rootEl = document.getElementById('root');
+const appSlot = document.getElementById('app');
+const pageSlot = document.getElementById('page');
+
+// S3's screens are loaded on demand from their folders; a missing module gives a plain note instead of a crash.
+async function load(path) {
+  try { return await import(path); } catch (err) { if (!/Failed to fetch|Cannot find|Failed to load|404|error loading/i.test(String(err?.message))) console.error(err); return null; }
+}
+
+function applyAppearance(settings) {
+  const s = settings.getSettings();
+  const html = document.documentElement;
+  if (s.theme === 'light' || s.theme === 'dark') html.dataset.theme = s.theme; else delete html.dataset.theme;
+}
+
+function fail(message) {
+  appSlot.replaceChildren(el('p', { class: 'empty', role: 'alert' }, message));
 }
 
 async function main() {
+  const settings = settingsApi;
+  applyAppearance(settings);
+  window.addEventListener('storage', () => applyAppearance(settings));
+
+  const params = new URLSearchParams(window.location.search);
+  const now = () => new Date();
+  const nav = createNav();
+
+  const fixtureName = params.get('fixture');
+  if (fixtureName) {
+    const fx = await import('./dev/fixtures.js');
+    await load('./dev/fixtures-s3.js');
+    pageSlot.hidden = true;
+    await fx.runFixture(fixtureName, appSlot);
+    document.body.dataset.fixture = fixtureName;
+    return;
+  }
+
   let store;
+  let storeNote = null;
   try {
     store = await createIdbStore(globalThis.indexedDB);
   } catch {
     store = createMemoryStore();
-    showBanner('Storage is not available in this browser mode. Thoughts will be lost when you close this tab.');
+    storeNote = 'Storage is not available in this browser mode. Thoughts will be lost when you close this tab.';
   }
 
-  const engines = [createWebSpeechEngine(window)];
-  if (FEATURES.onDeviceSpeech) engines.unshift(createWhisperEngine({ win: window }));
-  const speech = { engine: getSettings()['speech.engine'], failed: new Set() };
-  const now = () => new Date();
+  const brain = createBrain({ store, settings, now });
+  const toaster = createToaster(rootEl);
+  const ctx = { store, brain, settings, now, nav, toast: (text, opts) => toaster.toast(text, opts), status: () => brain.getStatus() };
 
   // A question left open when the app was closed is never asked again (AC-M4.8).
   try {
     const stale = resolveStale(await store.getAll(), now());
     if (stale.length) await store.putMany(stale);
-  } catch (err) {
-    console.error(err);
+  } catch (err) { console.error(err); }
+
+  const [library, detail, ask, review, onboarding, settingsUi, about] = await Promise.all([
+    load('./ui/library/index.js'), load('./ui/detail/index.js'), load('./ui/ask/index.js'), load('./ui/review/index.js'),
+    load('./ui/onboarding/index.js'), load('./ui/settings/index.js'), load('./ui/about/index.js'),
+  ]);
+  const s3 = {
+    renderAnswer: ask?.renderAnswer ?? detail?.renderAnswer,
+    renderReviewCard: review?.renderReviewCard,
+    offerModel: onboarding?.offerModel ?? settingsUi?.offerModel ?? review?.offerModel ?? detail?.offerModel,
+  };
+
+  const engines = [createWebSpeechEngine(window), createWhisperEngine({ win: window })];
+  const speech = { engine: settings.getSettings()['speech.engine'], failed: new Set() };
+
+  const assistant = createAssistant(ctx, { engines, speech, s3 });
+  appSlot.replaceChildren(assistant.el);
+  if (storeNote) ctx.toast(storeNote);
+
+  // The library sheet over the assistant (A6). Opening pushes #/library; Back or the close button pops it.
+  let sheet = null;
+  let mounted = null;
+  const libraryHost = {
+    open() {
+      if (sheet) return;
+      sheet = openSheet({ host: assistant.el, title: 'Library', onClose: () => nav.close('#/') });
+      if (library?.mountLibrary) {
+        try { mounted = library.mountLibrary(sheet.body, ctx); } catch (err) { console.error(err); }
+      } else {
+        sheet.body.append(el('p', { class: 'empty' }, 'The library is coming soon.'));
+      }
+      store.getAll().then((all) => sheet?.setCount(all.length)).catch(() => {});
+    },
+    close() {
+      if (!sheet) return;
+      try { mounted?.destroy?.(); } catch (err) { console.error(err); }
+      mounted = null;
+      sheet.destroy();
+      sheet = null;
+    },
+  };
+
+  const missing = (name) => (root) => root.append(el('p', { class: 'empty' }, `${name} is coming soon.`));
+  const pages = {
+    thought: (root, c, p) => (detail?.renderThought ? detail.renderThought(p.id, root, c) : missing('This thought view')(root)),
+    settings: (root, c, p) => (settingsUi?.renderSettings ? settingsUi.renderSettings(root, c, p) : missing('Settings')(root)),
+    about: (root, c) => (about?.renderAbout ? about.renderAbout(root, c) : missing('About')(root)),
+  };
+
+  const launch = params.get('type') === '1' ? 'type' : params.get('record') === '1' ? 'record' : null;
+  const begin = () => {
+    startRouter({ pageRoot: pageSlot, ctx, pages, library: libraryHost });
+    if (launch) assistant.focusForLaunch(launch);
+  };
+
+  // First run: onboarding before the assistant, only when S3's screen exists. Nothing is downloaded or asked before it ends.
+  if (!settings.getSettings()['onboarding.done'] && onboarding?.showOnboarding) {
+    pageSlot.hidden = false;
+    onboarding.showOnboarding(pageSlot, ctx, {
+      onDone: () => { settings.setSettings({ 'onboarding.done': true }); pageSlot.hidden = true; pageSlot.replaceChildren(); begin(); },
+    });
+  } else {
+    begin();
   }
-
-  const q = new URLSearchParams(window.location.search);
-  // record=1 (the manifest shortcut "Record a thought") focuses the record button and says to tap it: browsers only open
-  // the microphone after a tap.
-  let initialFocus = q.get('type') === '1' ? 'text' : q.get('record') === '1' ? 'record-hint' : q.get('capture') === '1' ? 'record' : null;
-
-  let reviewCount = 0;
-  const ctx = {
-    store,
-    engines,
-    speech,
-    now,
-    navigate: (hash) => { window.location.hash = hash; },
-    showBanner,
-    getReviewCount: () => reviewCount,
-    consumeInitialFocus: () => { const f = initialFocus; initialFocus = null; return f; },
-  };
-
-  ctx.ai = createAiFlow({ store, now, engines, speech });
-  ctx.afterSave = ctx.ai.afterSave;
-
-  const nav = document.querySelector('.app-nav');
-
-  // Review check (M7). A home-screen launch (?capture=1) stays on capture: the count shows in the navigation and
-  // on the capture screen instead of taking over the screen.
-  const runReview = async (interrupt) => {
-    try {
-      const r = await reviewOnOpen({ store, getSettings, now, navigate: ctx.navigate, interrupt });
-      reviewCount = r.count;
-      showReviewCount(nav, r.count);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-  const launchedToCapture = initialFocus !== null;
-  // The review check reads the store before the first screen, so an auto-shown review replaces capture at once.
-  await runReview(!launchedToCapture);
-
-  startRouter({ root: document.getElementById('app'), nav, ctx });
-  watchNewDay(document, now, () => runReview(true));
 }
 
 main().catch((err) => {
   console.error(err);
-  showBanner(`Thought Catcher could not start: ${err.message}`);
+  fail(`Thought Catcher could not start: ${err.message}`);
 });
 
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !new URLSearchParams(window.location.search).has('fixture')) {
   window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
 }

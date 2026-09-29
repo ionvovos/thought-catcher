@@ -1,0 +1,29 @@
+/* Assistant screen: stage, greeting, transcript, due card, library peek. */
+/* ---------- Assistant stage (idle, listening) ---------- */
+.stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-6); padding: 0 var(--gutter); text-align: center; min-height: 0; }
+.greeting { font: var(--fw-semibold) var(--fs-title2)/var(--lh-title2) var(--font-display); letter-spacing: var(--tracking-snug); margin: 0; }
+.hint { text-wrap: balance; margin: 0; color: var(--c-text-2); font-size: var(--fs-subhead); line-height: var(--lh-subhead); }
+.hint strong { color: var(--c-text); font-weight: var(--fw-semibold); }
+.suggest { display: flex; flex-direction: column; gap: var(--sp-2); width: 100%; max-width: 340px; }
+.suggest__item { display: flex; align-items: center; gap: var(--sp-3); min-height: var(--tap); padding: 10px 14px; border-radius: var(--r-md);
+  background: var(--c-surface); box-shadow: var(--e-1); font-size: var(--fs-subhead); line-height: var(--lh-subhead); color: var(--c-text-2); text-align: left; }
+.suggest__item .i { color: var(--c-accent-text); }
+.row-actions { display: flex; gap: var(--sp-2); justify-content: center; }
+
+.transcript { text-wrap: pretty; font: var(--fw-medium) var(--fs-title2)/var(--lh-title2) var(--font-display); letter-spacing: var(--tracking-snug); margin: 0; max-width: 340px; }
+.transcript .old { color: var(--c-text-3); }
+.transcript .caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -3px; background: var(--c-accent); border-radius: 1px; animation: caret 1s steps(2) infinite; animation-play-state: var(--orb-play); }
+@keyframes caret { 50% { opacity: 0; } }
+/* ---------- Due card on idle (X8) ---------- */
+.due { display: flex; align-items: center; gap: var(--sp-3); margin: 0 var(--gutter) var(--sp-3); padding: 10px 8px 10px 12px; border-radius: var(--r-lg); background: var(--c-surface); box-shadow: var(--e-1); }
+.due__text { flex: 1; min-width: 0; }
+.due__label { font-size: var(--fs-caption); line-height: var(--lh-caption); font-weight: var(--fw-semibold); color: var(--c-reminder); text-transform: uppercase; letter-spacing: .04em; }
+.due__title { font-size: var(--fs-subhead); line-height: var(--lh-subhead); font-weight: var(--fw-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.peek { display: flex; align-items: center; gap: var(--sp-3); padding: 2px var(--sp-2) 6px var(--gutter); min-height: 52px; }
+.peek__title { font-weight: var(--fw-semibold); font-size: var(--fs-body); }
+.peek__sub { font-size: var(--fs-footnote); line-height: var(--lh-footnote); color: var(--c-text-2); }
+.peek__text { flex: 1; min-width: 0; }
+.typedots { display: flex; gap: 10px; font-size: var(--fs-footnote); font-weight: var(--fw-semibold); color: var(--c-text-2); }
+.typedots span { display: inline-flex; align-items: center; gap: 4px; }
+.typedots span::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--td); }
+.sheet--peek { position: relative; z-index: 2; padding-bottom: var(--safe-bottom); }

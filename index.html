@@ -3,33 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; img-src 'self' data: blob:; style-src 'self'; media-src 'self' blob:; base-uri 'self'; object-src 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval' blob:; worker-src 'self' blob: https://cdn.jsdelivr.net; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; img-src 'self' data: blob:; style-src 'self'; font-src 'self'; media-src 'self' blob:; base-uri 'self'; object-src 'none'; form-action 'self'">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#1d4ed8">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F5F5F7">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0A0A0C">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./icons/icon-192.png">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon-180.png">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Thoughts">
-  <meta name="description" content="Catch a thought by voice or typing. Sorted for you. Your data stays on your device.">
+  <meta name="description" content="Say a thought. It is sorted for you, and it stays on your phone.">
   <title>Thought Catcher</title>
+  <link rel="stylesheet" href="./css/tokens.css">
   <link rel="stylesheet" href="./css/app.css">
+  <link rel="stylesheet" href="./css/shell.css">
+  <link rel="stylesheet" href="./css/orb.css">
+  <link rel="stylesheet" href="./css/conversation.css">
+  <link rel="stylesheet" href="./css/components.css">
   <script type="module" src="./src/app.js"></script>
 </head>
 <body>
-  <header class="app-header">
-    <h1 class="app-title">Thought Catcher</h1>
-    <nav class="app-nav" aria-label="Main">
-      <a href="#/capture" data-route="capture">Capture</a>
-      <a href="#/inbox" data-route="inbox">Inbox</a>
-      <a href="#/review" data-route="review">Review</a>
-      <a href="#/settings" data-route="settings">Settings</a>
-      <a href="#/about" data-route="about">About</a>
-    </nav>
-  </header>
-  <div id="banner" class="banner" role="status" hidden></div>
-  <main id="app" class="app-main" tabindex="-1"></main>
-  <noscript><p class="banner">Thought Catcher needs JavaScript to run.</p></noscript>
+  <div id="root" class="root">
+    <div id="app" class="app-slot"></div>
+    <div id="page" class="page-slot app" hidden></div>
+  </div>
+  <noscript><p class="empty">Thought Catcher needs JavaScript to run.</p></noscript>
 </body>
 </html>

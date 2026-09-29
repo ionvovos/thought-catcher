@@ -53,9 +53,24 @@ test('pure modules avoid the DOM and the clock, and import in Node', async () =>
   }
 });
 
-test('record button is at least 96px', () => {
-  const css = read('css/app.css');
-  const rule = css.match(/\.record-btn\s*\{[^}]*\}/)[0];
-  assert.match(rule, /min-width:\s*(9[6-9]|\d{3,})px/);
-  assert.match(rule, /min-height:\s*(9[6-9]|\d{3,})px/);
+test('the v2 shell: CSP allows the model worker, no v1 nav, tokens first', () => {
+  const html = read('index.html');
+  assert.match(html, /worker-src 'self' blob: https:\/\/cdn\.jsdelivr\.net/);
+  assert.match(html, /font-src 'self'/);
+  assert.match(html, /script-src 'self' https:\/\/cdn\.jsdelivr\.net 'wasm-unsafe-eval' blob:/);
+  assert.doesNotMatch(html, /app-nav|app-header/);
+  assert.match(html, /<meta name="theme-color" media="\(prefers-color-scheme: light\)" content="#F5F5F7">/);
+  assert.match(html, /<meta name="theme-color" media="\(prefers-color-scheme: dark\)" content="#0A0A0C">/);
+});
+
+test('the orb is at least 64px docked and 184px on the stage (design.md 2.1)', () => {
+  const css = read('css/orb.css');
+  assert.match(css, /\.orb \{[^}]*--size: 184px/);
+  assert.match(css, /\.orb--dock \{ --size: 64px/);
+});
+
+test('retired v1 UI files are gone', () => {
+  for (const f of ['src/ui/views/capture.js', 'src/ui/aiFlow.js', 'src/ui/voice.js', 'src/ui/consent.js', 'src/features.js']) {
+    assert.throws(() => read(f), f);
+  }
 });

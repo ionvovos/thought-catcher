@@ -1,0 +1,320 @@
+/*
+ * Thought Catcher v2 design tokens.
+ * Source of truth: ais-os projects/thought-catcher/docs/design.md (section 1).
+ * The app copies this file unchanged. Theme: follows the system; the app may pin it with
+ * <html data-theme="light|dark">. Motion: follows prefers-reduced-motion; the app may pin it
+ * with <html data-motion="reduce">.
+ * Colours use light-dark() (Safari 17.5+, Chrome 123+) with an @supports fallback block for older browsers.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---------- Colour: neutrals ---------- */
+  --c-bg:            light-dark(#F5F5F7, #0A0A0C);   /* app background */
+  --c-surface:       light-dark(#FFFFFF, #151518);   /* cards, sheets, bubbles (assistant) */
+  --c-surface-2:     light-dark(#EFEFF2, #1E1E22);   /* inset fields, chips, pressed */
+  --c-surface-3:     light-dark(#E6E6EB, #28282E);   /* hover / selected rows */
+  --c-raised:        light-dark(#FFFFFF, #202025);   /* cards inside a sheet */
+  --c-seg-on:        light-dark(#FFFFFF, #3A3A42);   /* selected segment */
+  --c-sheet:         light-dark(rgba(255,255,255,.92), rgba(24,24,28,.92)); /* translucent sheet */
+  --c-scrim:         light-dark(rgba(10,10,20,.28), rgba(0,0,0,.56));
+  --c-separator:     light-dark(rgba(60,60,67,.14), rgba(235,235,245,.10));
+  --c-border:        light-dark(rgba(60,60,67,.12), rgba(235,235,245,.08));
+
+  --c-text:          light-dark(#111114, #F4F4F6);   /* 17.3:1 / 18.0:1 on bg */
+  --c-text-2:        light-dark(#5C5C66, #A1A1AA);   /* 6.1:1 / 7.1:1 */
+  --c-text-3:        light-dark(#6B6B75, #8E8E98);   /* 4.8:1 / 5.6:1, still AA */
+  --c-text-inverse:  light-dark(#FFFFFF, #0A0A0C);
+
+  /* ---------- Colour: the one accent (iris) ---------- */
+  --c-accent:        #5B5BD6;                          /* fills; white text on it 5.4:1 */
+  --c-accent-press:  #4A4AC4;                          /* white on it 6.9:1 */
+  --c-accent-text:   light-dark(#4F4FCF, #9B9AFB);    /* accent-coloured text/links: 5.8:1 / 7.9:1 */
+  --c-accent-soft:   light-dark(rgba(91,91,214,.12), rgba(155,154,251,.16));
+  --c-on-accent:     #FFFFFF;
+  --c-focus:         light-dark(#5B5BD6, #9B9AFB);
+
+  /* ---------- Colour: status ---------- */
+  --c-danger:        light-dark(#B91C1C, #F87171);
+  --c-danger-soft:   light-dark(#FEE2E2, rgba(248,113,113,.14));
+  --c-success:       light-dark(#15803D, #4ADE80);
+  --c-warning:       light-dark(#A15C07, #FBBF24);
+  --c-warning-soft:  light-dark(#FEF3C7, rgba(251,191,36,.14));
+
+  /* ---------- Colour: thought types (fg = text/icon, bg = tint, dot = solid mark) ---------- */
+  --c-idea:          light-dark(#A15C07, #FBBF24);
+  --c-idea-bg:       light-dark(#FEF3C7, rgba(251,191,36,.14));
+  --c-idea-dot:      #F59E0B;
+  --c-task:          light-dark(#15803D, #4ADE80);
+  --c-task-bg:       light-dark(#DCFCE7, rgba(74,222,128,.13));
+  --c-task-dot:      #22C55E;
+  --c-journal:       light-dark(#0369A1, #38BDF8);
+  --c-journal-bg:    light-dark(#E0F2FE, rgba(56,189,248,.14));
+  --c-journal-dot:   #0EA5E9;
+  --c-reminder:      light-dark(#BE185D, #F472B6);
+  --c-reminder-bg:   light-dark(#FCE7F3, rgba(244,114,182,.14));
+  --c-reminder-dot:  #EC4899;
+
+  /* ---------- Orb palette (decorative, never carries text) ---------- */
+  --orb-base:        light-dark(#E9E8FF, #17163A);
+  --orb-1:           #7C7CFF;
+  --orb-2:           #FF7AB6;
+  --orb-3:           #52D6FF;
+  --orb-4:           #FFC46B;
+  --orb-glow:        light-dark(rgba(91,91,214,.28), rgba(124,124,255,.40));
+
+  /* ---------- Colour: effects (only used inside shadows, gradients and the toast) ---------- */
+  --c-app-glow:       light-dark(rgba(124,124,255,.10), rgba(124,124,255,.12));   /* app background glow */
+  --c-success-ring:   light-dark(rgba(21,128,61,.14), rgba(74,222,128,.16));   /* halo around the ready dot */
+  --c-toast:          light-dark(#1C1C21, #F4F4F6);   /* toast background (inverted) */
+  --c-on-toast:       light-dark(#FFFFFF, #111114);   /* toast text: 17.0:1 / 17.2:1 */
+  --c-toast-action:   light-dark(#B4B3FF, #4F4FCF);   /* toast action: 8.8:1 / 5.7:1 */
+  --accent-shadow:    light-dark(rgba(91,91,214,.28), rgba(0,0,0,.4));   /* primary button shadow */
+  --shadow-strong:    light-dark(rgba(17,17,40,.18), rgba(0,0,0,.7));   /* toast and popover shadow */
+  --orb-edge:         light-dark(#D9D8FF, #232150);   /* orb core rim colour */
+  --orb-rim:          light-dark(rgba(255,255,255,.6), rgba(255,255,255,.12));   /* orb inner highlight line */
+  --orb-shade:        light-dark(rgba(60,40,160,.20), rgba(0,0,0,.45));   /* orb lower shade */
+  --orb-ring:         light-dark(rgba(91,91,214,.55), rgba(155,154,251,.6));   /* listening rings */
+  --orb-level-1:      light-dark(rgba(91,91,214,.16), rgba(155,154,251,.20));   /* voice level, inner band */
+  --orb-level-2:      light-dark(rgba(91,91,214,.07), rgba(155,154,251,.08));   /* voice level, outer band */
+  --c-kbd:            light-dark(#D1D3D9, #2B2B30);   /* on-screen keyboard in mockups only */
+
+  /* ---------- Colour: fixed values used on coloured fills (same in both themes) ---------- */
+  --c-on-color:      #FFFFFF;                          /* glyphs on colour tiles, switch thumb, checked box */
+  --c-thumb-shadow:  rgba(0,0,0,.2);
+  --c-mask:          #000000;                          /* mask-image opacity only, never painted */
+  --orb-gloss:       rgba(255,255,255,.85);
+  --orb-gloss-soft:  rgba(255,255,255,.22);
+  --orb-gloss-none:  rgba(255,255,255,0);
+  --orb-mini-rim:    rgba(255,255,255,.4);
+  --c-sheen:         rgba(255,255,255,.45);            /* progress bar sheen */
+  --c-art-rim:       rgba(255,255,255,.35);            /* onboarding art top edge */
+
+  /* ---------- Typography (system stack only; the app is offline) ---------- */
+  --font-sans: -apple-system, "SF Pro Text", "SF Pro", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, "SF Pro Display", "SF Pro", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --fs-caption: 12px;   --lh-caption: 16px;
+  --fs-footnote: 13px;  --lh-footnote: 18px;
+  --fs-subhead: 15px;   --lh-subhead: 20px;
+  --fs-body: 17px;      --lh-body: 24px;
+  --fs-title3: 20px;    --lh-title3: 25px;
+  --fs-title2: 22px;    --lh-title2: 28px;
+  --fs-title1: 28px;    --lh-title1: 34px;
+  --fs-large: 34px;     --lh-large: 40px;
+  --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600; --fw-bold: 700;
+  --tracking-tight: -0.022em;  /* title1, large */
+  --tracking-snug: -0.012em;   /* title2, title3 */
+
+  /* ---------- Spacing (4 px grid) ---------- */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px;
+  --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
+  --gutter: 16px;                 /* screen side padding */
+  --tap: 44px;                    /* minimum touch target */
+
+  /* ---------- Safe areas ---------- */
+  --safe-top: max(env(safe-area-inset-top, 0px), 12px);
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* ---------- Radius ---------- */
+  --r-xs: 6px; --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 28px; --r-full: 999px;
+
+  /* ---------- Elevation ---------- */
+  --shadow-color: light-dark(rgba(17,17,40,.08), rgba(0,0,0,.5));
+  --e-1: 0 1px 2px var(--shadow-color), 0 0 0 .5px var(--c-border);
+  --e-2: 0 2px 6px var(--shadow-color), 0 8px 24px var(--shadow-color), 0 0 0 .5px var(--c-border);
+  --e-3: 0 -1px 0 var(--c-border), 0 -8px 40px var(--shadow-color);   /* bottom sheet */
+  --e-4: 0 12px 40px var(--shadow-strong), 0 0 0 .5px var(--c-border); /* toast, popover */
+  --blur: saturate(180%) blur(24px);
+
+  /* ---------- Motion ---------- */
+  --d-instant: 90ms;    /* press feedback */
+  --d-fast: 160ms;      /* chips, toggles, fades */
+  --d-base: 240ms;      /* message appear, card changes */
+  --d-slow: 380ms;      /* sheet open, screen change */
+  --d-orb-breathe: 4.2s;
+  --d-orb-swirl: 14s;
+  --d-orb-ring: 1.8s;
+  --ease-standard: cubic-bezier(.2, .8, .2, 1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-in: cubic-bezier(.4, 0, 1, 1);
+  --ease-spring: cubic-bezier(.34, 1.4, .64, 1);   /* card filing, chip pop */
+  --motion-distance: 1;                            /* multiply translate distances by this */
+  --orb-play: running;                             /* animation-play-state for every orb loop */
+}
+
+/* Fallback for browsers without light-dark() (Safari < 17.5, Chrome < 123). These are the phones most
+   likely to land in the rules-only mode, so they must still get the full palette. Values mirror :root. */
+@supports not (color: light-dark(#000, #fff)) {
+  :root {
+    --c-bg: #F5F5F7;
+    --c-surface: #FFFFFF;
+    --c-surface-2: #EFEFF2;
+    --c-surface-3: #E6E6EB;
+    --c-raised: #FFFFFF;
+    --c-seg-on: #FFFFFF;
+    --c-sheet: rgba(255,255,255,.92);
+    --c-scrim: rgba(10,10,20,.28);
+    --c-separator: rgba(60,60,67,.14);
+    --c-border: rgba(60,60,67,.12);
+    --c-text: #111114;
+    --c-text-2: #5C5C66;
+    --c-text-3: #6B6B75;
+    --c-text-inverse: #FFFFFF;
+    --c-accent-text: #4F4FCF;
+    --c-accent-soft: rgba(91,91,214,.12);
+    --c-focus: #5B5BD6;
+    --c-danger: #B91C1C;
+    --c-danger-soft: #FEE2E2;
+    --c-success: #15803D;
+    --c-warning: #A15C07;
+    --c-warning-soft: #FEF3C7;
+    --c-idea: #A15C07;
+    --c-idea-bg: #FEF3C7;
+    --c-task: #15803D;
+    --c-task-bg: #DCFCE7;
+    --c-journal: #0369A1;
+    --c-journal-bg: #E0F2FE;
+    --c-reminder: #BE185D;
+    --c-reminder-bg: #FCE7F3;
+    --orb-base: #E9E8FF;
+    --orb-glow: rgba(91,91,214,.28);
+    --c-app-glow: rgba(124,124,255,.10);
+    --c-success-ring: rgba(21,128,61,.14);
+    --c-toast: #1C1C21;
+    --c-on-toast: #FFFFFF;
+    --c-toast-action: #B4B3FF;
+    --accent-shadow: rgba(91,91,214,.28);
+    --shadow-strong: rgba(17,17,40,.18);
+    --orb-edge: #D9D8FF;
+    --orb-rim: rgba(255,255,255,.6);
+    --orb-shade: rgba(60,40,160,.20);
+    --orb-ring: rgba(91,91,214,.55);
+    --orb-level-1: rgba(91,91,214,.16);
+    --orb-level-2: rgba(91,91,214,.07);
+    --c-kbd: #D1D3D9;
+    --shadow-color: rgba(17,17,40,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --c-bg: #0A0A0C;
+      --c-surface: #151518;
+      --c-surface-2: #1E1E22;
+      --c-surface-3: #28282E;
+      --c-raised: #202025;
+      --c-seg-on: #3A3A42;
+      --c-sheet: rgba(24,24,28,.92);
+      --c-scrim: rgba(0,0,0,.56);
+      --c-separator: rgba(235,235,245,.10);
+      --c-border: rgba(235,235,245,.08);
+      --c-text: #F4F4F6;
+      --c-text-2: #A1A1AA;
+      --c-text-3: #8E8E98;
+      --c-text-inverse: #0A0A0C;
+      --c-accent-text: #9B9AFB;
+      --c-accent-soft: rgba(155,154,251,.16);
+      --c-focus: #9B9AFB;
+      --c-danger: #F87171;
+      --c-danger-soft: rgba(248,113,113,.14);
+      --c-success: #4ADE80;
+      --c-warning: #FBBF24;
+      --c-warning-soft: rgba(251,191,36,.14);
+      --c-idea: #FBBF24;
+      --c-idea-bg: rgba(251,191,36,.14);
+      --c-task: #4ADE80;
+      --c-task-bg: rgba(74,222,128,.13);
+      --c-journal: #38BDF8;
+      --c-journal-bg: rgba(56,189,248,.14);
+      --c-reminder: #F472B6;
+      --c-reminder-bg: rgba(244,114,182,.14);
+      --orb-base: #17163A;
+      --orb-glow: rgba(124,124,255,.40);
+      --c-app-glow: rgba(124,124,255,.12);
+      --c-success-ring: rgba(74,222,128,.16);
+      --c-toast: #F4F4F6;
+      --c-on-toast: #111114;
+      --c-toast-action: #4F4FCF;
+      --accent-shadow: rgba(0,0,0,.4);
+      --shadow-strong: rgba(0,0,0,.7);
+      --orb-edge: #232150;
+      --orb-rim: rgba(255,255,255,.12);
+      --orb-shade: rgba(0,0,0,.45);
+      --orb-ring: rgba(155,154,251,.6);
+      --orb-level-1: rgba(155,154,251,.20);
+      --orb-level-2: rgba(155,154,251,.08);
+      --c-kbd: #2B2B30;
+      --shadow-color: rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --c-bg: #0A0A0C;
+    --c-surface: #151518;
+    --c-surface-2: #1E1E22;
+    --c-surface-3: #28282E;
+    --c-raised: #202025;
+    --c-seg-on: #3A3A42;
+    --c-sheet: rgba(24,24,28,.92);
+    --c-scrim: rgba(0,0,0,.56);
+    --c-separator: rgba(235,235,245,.10);
+    --c-border: rgba(235,235,245,.08);
+    --c-text: #F4F4F6;
+    --c-text-2: #A1A1AA;
+    --c-text-3: #8E8E98;
+    --c-text-inverse: #0A0A0C;
+    --c-accent-text: #9B9AFB;
+    --c-accent-soft: rgba(155,154,251,.16);
+    --c-focus: #9B9AFB;
+    --c-danger: #F87171;
+    --c-danger-soft: rgba(248,113,113,.14);
+    --c-success: #4ADE80;
+    --c-warning: #FBBF24;
+    --c-warning-soft: rgba(251,191,36,.14);
+    --c-idea: #FBBF24;
+    --c-idea-bg: rgba(251,191,36,.14);
+    --c-task: #4ADE80;
+    --c-task-bg: rgba(74,222,128,.13);
+    --c-journal: #38BDF8;
+    --c-journal-bg: rgba(56,189,248,.14);
+    --c-reminder: #F472B6;
+    --c-reminder-bg: rgba(244,114,182,.14);
+    --orb-base: #17163A;
+    --orb-glow: rgba(124,124,255,.40);
+    --c-app-glow: rgba(124,124,255,.12);
+    --c-success-ring: rgba(74,222,128,.16);
+    --c-toast: #F4F4F6;
+    --c-on-toast: #111114;
+    --c-toast-action: #4F4FCF;
+    --accent-shadow: rgba(0,0,0,.4);
+    --shadow-strong: rgba(0,0,0,.7);
+    --orb-edge: #232150;
+    --orb-rim: rgba(255,255,255,.12);
+    --orb-shade: rgba(0,0,0,.45);
+    --orb-ring: rgba(155,154,251,.6);
+    --orb-level-1: rgba(155,154,251,.20);
+    --orb-level-2: rgba(155,154,251,.08);
+    --c-kbd: #2B2B30;
+    --shadow-color: rgba(0,0,0,.5);
+  }
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
+
+/* D3: reduced motion. Transitions become short cross-fades; nothing moves or loops.
+   The orb stays a still gradient; listening shows the level as a static ring width. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) {
+    --d-instant: 1ms; --d-fast: 1ms; --d-base: 100ms; --d-slow: 100ms;
+    --ease-spring: linear; --motion-distance: 0;
+    --orb-play: paused;
+  }
+}
+:root[data-motion="reduce"] {
+  --d-instant: 1ms; --d-fast: 1ms; --d-base: 100ms; --d-slow: 100ms;
+  --ease-spring: linear; --motion-distance: 0;
+  --orb-play: paused;
+}
