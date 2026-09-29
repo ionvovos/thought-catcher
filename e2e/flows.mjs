@@ -33,6 +33,20 @@ const MOCK = `(() => {
   };
 })();`;
 
+const SPEECH = `(() => {
+  const S = window.__speech = { mode: 'text', transcript: 'buy oat milk tomorrow', starts: 0 };
+  class FakeRecognition {
+    start() {
+      S.starts += 1;
+      if (S.mode === 'denied') { setTimeout(() => { this.onerror?.({ error: 'not-allowed' }); this.onend?.(); }, 30); return; }
+      if (S.mode === 'text') setTimeout(() => this.onresult?.({ results: [[{ transcript: S.transcript }]] }), 60);
+    }
+    stop() { setTimeout(() => this.onend?.(), 20); }
+  }
+  window.webkitSpeechRecognition = FakeRecognition;
+  window.SpeechRecognition = FakeRecognition;
+})();`;
+
 const mock = (p, patch) => p.ev(`Object.assign(window.__mock, ${JSON.stringify(patch)})`);
 const calls = (p, kind) => p.ev(`window.__mock.calls.filter((c) => ${kind ? `c.kind === ${JSON.stringify(kind)}` : 'true'}).length`);
 const hasKey = (p) => p.ev(`localStorage.getItem('thought-catcher.ai-key')`);
@@ -62,6 +76,7 @@ const p = await openChrome();
 try {
   await p.viewport({ width: 1280, height: 800 });
   await p.addInit(MOCK);
+  await p.addInit(SPEECH);
   await p.goto(`${base}/?capture=1`);
   await p.waitFor(`!!document.querySelector('.record-btn')`);
   // choose "type instead" once so the voice panel does not get in the way
@@ -505,6 +520,122 @@ try {
     for (const x of small) { const k = x.replace(/ [^ ]+ \d+x\d+$/, '').replace(/^(#\/[a-z/]+) (\w+):.*/, '$1 $2'); groups[k] = (groups[k] ?? 0) + 1; }
     check('AC-Q.5 (H part): interactive controls are at least 44 CSS px in both directions on a phone', small.length === 0, `${small.length} too small: ${Object.entries(groups).map(([k, n]) => `${k} x${n}`).join(', ')}; ${[...new Set(small)].slice(0, 6).join(' ; ')}`);
     await p.viewport({ width: 1280, height: 800 });
+  });
+
+
+  // ---------- F14: voice with a fake browser speech engine ----------
+  await section('voice', async () => {
+    await p.ev(`localStorage.setItem('thought-catcher.speech.engine', '"browser"'); localStorage.removeItem('thought-catcher.ai-key')`);
+    await p.goto(`${base}/?capture=1`);
+    await p.waitFor(`!!document.querySelector('.record-btn')`);
+    await p.click('.record-btn');
+    await sleep(200);
+    const rec = await p.ev(`({ pressed: document.querySelector('.record-btn').getAttribute('aria-pressed'), cls: document.querySelector('.record-btn').classList.contains('is-recording'), label: document.querySelector('.record-btn').getAttribute('aria-label') })`);
+    check('AC-M2.3: while recording the button shows a distinct state', rec.pressed === 'true' && rec.cls && /Stop/.test(rec.label), JSON.stringify(rec));
+    await p.click('.record-btn');
+    await p.waitFor(`document.getElementById('thought-text').value !== ''`);
+    check('AC-M2.3: a second press stops recording', await p.ev(`document.querySelector('.record-btn').getAttribute('aria-pressed') === 'false'`));
+    check('AC-M2.2: the transcript is put in the text field for review, not saved yet', (await p.ev(`document.getElementById('thought-text').value`)) === 'buy oat milk tomorrow' && !(await p.idbAll()).some((t) => /oat milk/.test(t.text)));
+    await p.ev(`document.getElementById('thought-text').focus()`);
+    await p.key('End', { vk: 35, code: 'End' });
+    await p.send('Input.insertText', { text: ' and honey' });
+    await p.key('Enter', { text: '\r', vk: 13, code: 'Enter' });
+    await p.waitFor(`(async () => (await (await import('/src/storage/idb.js')).createIdbStore(indexedDB).then((st) => st.getAll())).some((t) => /honey/.test(t.text)))()`);
+    const voiceRow = (await p.idbAll()).find((t) => /honey/.test(t.text));
+    check('AC-M2.2: the user can edit the transcript and saving stores the edited text, source voice', !!voiceRow && voiceRow.text === 'buy oat milk tomorrow and honey' && voiceRow.source === 'voice', JSON.stringify(voiceRow && [voiceRow.text, voiceRow.source]));
+
+    await p.ev(`window.__speech.mode = 'silent'`);
+    await p.click('.record-btn'); await sleep(150); await p.click('.record-btn');
+    check('AC-M2.3: stopping with no speech leaves the field empty and shows "nothing heard"', await p.waitFor(`document.getElementById('capture-status').textContent === 'nothing heard'`) && (await p.ev(`document.getElementById('thought-text').value`)) === '');
+
+    await p.ev(`window.__speech.mode = 'denied'`);
+    await p.click('.record-btn');
+    check('AC-M1.5: with microphone permission denied the button shows a message', await p.waitFor(`/Microphone blocked/.test(document.getElementById('capture-status').textContent)`), await p.text('#capture-status'));
+    await p.type('#thought-text', 'typed anyway');
+    check('AC-M1.5: the text field stays usable after a denied microphone', (await p.ev(`document.getElementById('thought-text').value`)) === 'typed anyway');
+    await p.ev(`document.getElementById('thought-text').value = ''; `);
+    await p.goto(`${base}/?capture=1`);
+    await p.waitFor(`!!document.querySelector('.record-btn')`);
+    await p.ev(`delete window.webkitSpeechRecognition; delete window.SpeechRecognition`);
+    await p.click('.record-btn');
+    check('AC-M1.5: with the speech API absent the button shows a message', await p.waitFor(`/not available|Type your thought/.test(document.getElementById('capture-status').textContent)`), await p.text('#capture-status'));
+    check('AC-M1.5: with the speech API absent the text field takes focus', await p.ev(`document.activeElement === document.getElementById('thought-text')`));
+
+    // voice answer to a clarifying question (AC-M4.5)
+    await p.ev(`localStorage.setItem('thought-catcher.ai-key', ${JSON.stringify(KEY)}); localStorage.setItem('thought-catcher.ai.provider', '"anthropic"')`);
+    await p.goto(`${base}/?capture=1`);
+    await p.waitFor(`!!document.querySelector('.record-btn')`);
+    await mock(p, { mode: 'ok', delay: 0, sortReply: { type: 'reminder', alt_type: null, confidence: 0.9, title: 'Call the vet', tags: ['vet'], due_at: null } });
+    await p.ev(`window.__speech.mode = 'text'; window.__speech.transcript = 'tomorrow at 9am'`);
+    await capture(p, 'call the vet for the dog');
+    await p.waitFor(`!!document.getElementById('clarify-answer') && !document.querySelector('.clarify').hidden`);
+    await clickButton(p, '/Speak/');
+    await sleep(250);
+    await clickButton(p, '/^Stop$/');
+    await p.waitFor(`document.getElementById('clarify-answer').value !== ''`);
+    const stillPending = (await p.idbAll()).find((t) => t.text === 'call the vet for the dog');
+    check('AC-M4.5: a spoken answer goes into the answer field before it is submitted', (await p.ev(`document.getElementById('clarify-answer').value`)) === 'tomorrow at 9am' && stillPending.clarify.state === 'pending', stillPending.clarify.state);
+    await mock(p, { sortReply: null });
+  });
+
+  // ---------- F15: views, counts, empty states, store parity ----------
+  await section('views and stores', async () => {
+    await p.ev(`localStorage.setItem('thought-catcher.speech.engine', '"typing"')`);
+    await p.goto(`${base}/#/inbox`);
+    await p.waitFor(`!!document.querySelector('.list-box')`);
+    // mixed data
+    await p.ev(`(async () => {
+      const { newThought } = await import('/src/core/model.js'); const { sortByRules } = await import('/src/core/sorter.js'); const { createIdbStore } = await import('/src/storage/idb.js');
+      const store = await createIdbStore(indexedDB); await store.clear(); const now = new Date();
+      const texts = ['buy milk tomorrow', 'send the invoice to Anna', 'finish the quarterly report', 'what if we sold candles online', 'imagine a library in a train station', 'today was tiring but good', 'remind me to call mum at 6pm', 'remember to lock the door at 10pm', 'remind me to water the plants at 7pm'];
+      await store.putMany(texts.map((text, i) => newThought({ text, sortResult: sortByRules(text, now), now: new Date(now.getTime() - i * 1000), id: 'v' + i })));
+    })()`);
+    const want = { task: 3, idea: 2, journal: 1, reminder: 3 };
+    for (const [type, n] of Object.entries(want)) {
+      await p.route(`#/type/${type}`);
+      await p.waitFor(`document.querySelectorAll('.thought-item').length > 0`);
+      const v = await p.ev(`({ rows: document.querySelectorAll('.thought-item').length, badges: [...new Set([...document.querySelectorAll('.thought-item .badge')].map((b) => b.textContent.toLowerCase()))], count: document.querySelector('.count').textContent })`);
+      check(`AC-M5.2: ${type} view shows only ${type} and the count matches`, v.rows === n && v.badges.length === 1 && v.badges[0] === type && v.count.startsWith(`${n} `), JSON.stringify(v));
+    }
+    await p.route('#/inbox');
+    await p.waitFor(`document.querySelectorAll('.thought-item').length === 9`);
+    check('AC-M5.1: the inbox lists all thoughts with title, badge, tags area and date', await p.ev(`[...document.querySelectorAll('.thought-item')].every((li) => li.querySelector('.thought-title') && li.querySelector('.badge') && li.querySelector('time'))`));
+    await p.ev(`(async () => { const { createIdbStore } = await import('/src/storage/idb.js'); await (await createIdbStore(indexedDB)).clear(); })()`);
+    for (const h of ['#/inbox', '#/type/idea', '#/type/task', '#/type/journal', '#/type/reminder']) {
+      await p.route('#/capture'); await p.route(h); await sleep(150);
+      check(`AC-M5.7: ${h} with zero thoughts shows an empty state that points to capture`, await p.waitFor(`/^No /.test(document.querySelector('.empty')?.textContent ?? '') && !!document.querySelector('.list-box a[href="#/capture"]')`), await p.ev(`document.querySelector('.empty')?.textContent ?? ''`));
+    }
+
+    // interface parity: the same operations on the memory store and the IndexedDB store give the same answers
+    const parity = await p.ev(`(async () => {
+      const { createIdbStore } = await import('/src/storage/idb.js'); const { createMemoryStore } = await import('/src/storage/memory.js');
+      const { newThought } = await import('/src/core/model.js'); const { sortByRules } = await import('/src/core/sorter.js');
+      const now = new Date(2026, 8, 29, 10, 0, 0);
+      const mk = (text, id) => newThought({ text, sortResult: sortByRules(text, now), now, id });
+      const idb = await createIdbStore(indexedDB); await idb.clear();
+      const mem = createMemoryStore();
+      const names = ['getAll', 'get', 'put', 'putMany', 'delete', 'clear', 'getSetting', 'setSetting'];
+      const iface = names.map((n) => [n, typeof idb[n], typeof mem[n]]).filter(([, a, b]) => a !== 'function' || b !== 'function');
+      const run = async (s) => {
+        const out = [];
+        const sortById = (a) => a.slice().sort((x, y) => x.id.localeCompare(y.id));
+        await s.put(mk('buy milk', 'a')); await s.putMany([mk('what if we sold candles', 'b'), mk('today was tiring', 'c')]);
+        out.push(sortById(await s.getAll()).map((t) => t.id));
+        out.push((await s.get('b'))?.text); out.push(await s.get('zzz'));
+        await s.put({ ...(await s.get('a')), title: 'Edited' }); out.push((await s.get('a')).title);
+        await s.delete('b'); out.push(sortById(await s.getAll()).map((t) => t.id));
+        out.push(await s.getSetting('k', 'fallback')); await s.setSetting('k', { n: 1 }); out.push(await s.getSetting('k', 'fallback'));
+        await s.clear(); out.push((await s.getAll()).length); out.push(await s.getSetting('k', 'fallback'));
+        return JSON.stringify(out);
+      };
+      const a = await run(mem); const b = await run(idb);
+      await idb.clear();
+      const stores = await new Promise((res) => { const r = indexedDB.open('thought-catcher'); r.onsuccess = () => { const names = [...r.result.objectStoreNames]; r.result.close(); res(names); }; });
+      return { iface, same: a === b, a, b, stores };
+    })()`);
+    check('AC-M9.1 / storage parity: the IndexedDB store has the same interface as the memory store', parity.iface.length === 0, JSON.stringify(parity.iface));
+    check('AC-M9.1 / storage parity: the same operations give the same results on both stores', parity.same, parity.same ? '' : `${parity.a} vs ${parity.b}`);
+    check('AC-M2.6: the database holds only thoughts and settings stores, no audio store', parity.stores.slice().sort().join() === 'settings,thoughts', parity.stores.join());
   });
 
   // ---------- session ----------
