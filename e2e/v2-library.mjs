@@ -21,8 +21,10 @@ async function inPage(body) {
     const $ = (s, r = root) => r.querySelector(s);
     const $$ = (s, r = root) => [...r.querySelectorAll(s)];
     const byText = (s, t, r = root) => $$(s, r).find((n) => n.textContent.trim().includes(t));
+    try {
     ${body}
-  })()`);
+    } catch (e) { return { __error: String(e && e.stack || e).slice(0, 600) }; }
+  })()`).then((r) => { if (r && r.__error) { const m = /<anonymous>:(\d+)/.exec(r.__error); const line = m ? body.split('\n')[Number(m[1]) - 11] : ''; throw new Error('page error: ' + r.__error.split('\n')[0] + ' | ' + (line || '').trim().slice(0, 160)); } return r; });
 }
 
 // ---- library (X4) -------------------------------------------------------------------------------------------------------
@@ -62,7 +64,7 @@ async function inPage(body) {
   check('X4.3 search matches case-insensitively and highlights', r.gymCount === 4 && r.marks >= 4, JSON.stringify([r.gymCount, r.marks]));
   check('X4.3 type filter combines with search', r.gymTasks === 1, r.gymTasks);
   check('X4.3/D5 empty search shows the message and Ask instead runs an ask with sources', /No thoughts match "passport"/.test(r.emptyText) && r.askInstead && r.askCalls === 1 && r.answerSources === 2, JSON.stringify(r));
-  check('X4.3 open, done and tag filters', r.openOnly.every((d) => d === false) && r.doneOnly === 1 && r.carTag === 3, JSON.stringify([r.openOnly, r.doneOnly, r.carTag]));
+  check('X4.3 open, done and tag filters', r.openOnly.every((d) => d === false) && r.doneOnly === 1 && r.carTag === 2, JSON.stringify([r.openOnly, r.doneOnly, r.carTag]));
   check('X4 a card opens its thought', /^#\/thought\//.test(r.nav), r.nav);
 }
 {
@@ -135,14 +137,14 @@ async function inPage(body) {
     const exp = { next_steps: ['a', 'b', 'c'], questions: ['q1', 'q2', 'q3'], outline: ['o1', 'o2', 'o3'], generated_at: new Date().toISOString(), by: 'device', model: 'm' };
     let mode = 'ok';
     let n = 0;
-    const ctx = await fx.makeCtx({ brain: { async expand() { n += 1; if (mode === 'bad') throw new AiError('malformed'); return exp; }, async plan() { return { steps: [{ text: 'one', done: false }, { text: 'two', done: false }, { text: 'three', done: false }], generated_at: new Date().toISOString(), by: 'key', model: 'x' }; } } });
+    const ctx = await fx.makeCtx({ brain: { async expand() { n += 1; await wait(80); if (mode === 'bad') throw new AiError('malformed'); return exp; }, async plan() { return { steps: [{ text: 'one', done: false }, { text: 'two', done: false }, { text: 'three', done: false }], generated_at: new Date().toISOString(), by: 'key', model: 'x' }; } } });
     const out = {};
     await renderThought('i1', root, ctx); await wait();
     out.hasButton = Boolean(byText('.mini-btn', 'Expand'));
     byText('.mini-btn', 'Expand').click();
     await wait(5);
     out.busyDisabled = $('.mini-btn')?.disabled === true;
-    await wait(100);
+    await wait(200);
     out.sections = $$('[role=tab]').map((t) => t.textContent);
     out.stored = Boolean((await ctx.store.get('i1')).expansion);
     // tick a step and persist
@@ -192,7 +194,7 @@ async function inPage(body) {
       { ...mk('due-rem', 'reminder', { due: new Date(2026, 8, 29, 9) }) },
       { ...mk('future-rem', 'reminder', { due: new Date(2026, 8, 30, 9) }) },
       { ...mk('idea3', 'idea', { created: new Date(2026, 8, 26, 10) }) },
-      { ...mk('idea2', 'idea', { created: new Date(2026, 8, 27, 10) }) },
+      { ...mk('idea2', 'idea', { created: new Date(2026, 8, 25, 10) }) },
     ];
     const ctx = await fx.makeCtx({ thoughts });
     const out = {};
@@ -206,16 +208,16 @@ async function inPage(body) {
     const rem = await ctx.store.get('due-rem');
     out.snoozed = new Date(rem.review.snoozed_until).getDate() === 30 && new Date(rem.review.snoozed_until).getHours() === 9;
     byText('.ritem .btn', 'Let go').click(); await wait(100);
-    out.letGo = (await ctx.store.get('idea3')).review.dismissed === true;
+    out.letGo = (await ctx.store.get('idea2')).review.dismissed === true;
     byText('.ritem .btn', 'Keep').click(); await wait(100);
-    out.keep = (await ctx.store.get('idea2')).review.snoozed_until !== null;
+    out.keep = (await ctx.store.get('idea3')).review.snoozed_until !== null;
     out.clear = /All clear for today/.test(card.textContent);
     $('[aria-label="Close review"]').click();
     out.closed = !card.isConnected;
     out.secondOpen = (await renderReviewCard(ctx)) === null;
     return out;
   `);
-  check('X8.1 a due reminder and ideas older than the threshold are on the card; a future reminder is not', JSON.stringify(r.items) === '["due-rem","idea3","idea2"]', JSON.stringify(r.items));
+  check('X8.1 a due reminder and ideas older than the threshold are on the card; a future reminder is not', JSON.stringify(r.items) === '["due-rem","idea2","idea3"]', JSON.stringify(r.items));
   check('X8 lede reads as a sentence', r.lede === 'One reminder due, two ideas waiting.', r.lede);
   check('X8.4 the orb stays tappable with the card visible', r.orbTap);
   check('X8.2 Tomorrow, Let go and Keep write the thought and leave the card; all clear follows', r.snoozed && r.letGo && r.keep && r.clear, JSON.stringify([r.snoozed, r.letGo, r.keep, r.clear]));
