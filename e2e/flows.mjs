@@ -638,6 +638,49 @@ try {
     check('AC-M2.6: the database holds only thoughts and settings stores, no audio store', parity.stores.slice().sort().join() === 'settings,thoughts', parity.stores.join());
   });
 
+
+  // ---------- F16: robustness ----------
+  await section('robustness', async () => {
+    await p.ev(`localStorage.removeItem('thought-catcher.ai-key'); localStorage.setItem('thought-catcher.speech.engine', '"typing"')`);
+    await p.goto(`${base}/?capture=1`);
+    await p.waitFor(`!!document.getElementById('thought-text')`);
+    await p.ev(`(async () => { const { createIdbStore } = await import('/src/storage/idb.js'); await (await createIdbStore(indexedDB)).clear(); })()`);
+
+    // markup in a thought is shown as text, never as elements
+    const xss = '<img src=x onerror="window.__xss=1"> <b id="injected">bold</b> buy milk';
+    await capture(p, xss);
+    await p.route('#/inbox'); await p.waitFor(`document.querySelectorAll('.thought-item').length === 1`);
+    const inboxSafe = await p.ev(`({ xss: window.__xss === undefined, img: !document.querySelector('#app img'), injected: !document.getElementById('injected'), shown: document.getElementById('app').innerText.includes('<img') })`);
+    check('security: markup in a thought is rendered as text in the inbox', inboxSafe.xss && inboxSafe.img && inboxSafe.injected && inboxSafe.shown, JSON.stringify(inboxSafe));
+    await openDetail(p, 'img');
+    const detailSafe = await p.ev(`({ xss: window.__xss === undefined, img: !document.querySelector('#app img'), injected: !document.getElementById('injected'), field: document.getElementById('f-text').value.includes('<img') })`);
+    check('security: markup in a thought is rendered as text in the detail view', detailSafe.xss && detailSafe.img && detailSafe.injected && detailSafe.field, JSON.stringify(detailSafe));
+
+    // one Save pressed twice in the same instant stores one thought
+    await p.route('#/capture'); await p.waitFor(`!!document.getElementById('thought-text')`);
+    await p.ev(`(async () => { const f = document.getElementById('thought-text'); f.value = 'double tap save'; f.form.requestSubmit(); f.form.requestSubmit(); })()`);
+    await sleep(600);
+    const dupes = (await p.idbAll()).filter((t) => t.text === 'double tap save').length;
+    check('a double tap on Save stores the thought once', dupes === 1, `${dupes} stored`);
+
+    // very long input
+    const long = 'x'.repeat(240);
+    await capture(p, long);
+    await capture(p, `${'word '.repeat(400)}end`);
+    const rows = await p.idbAll();
+    check('AC-M3.1: a 2000-character thought gets a title of at most 60 characters', rows.every((t) => t.title.length <= 60 && t.title.length >= 1), rows.map((t) => t.title.length).join());
+    for (const w of [360, 1280]) {
+      await p.viewport({ width: w, height: 740, mobile: w < 500 });
+      const bad = [];
+      for (const h of ['#/inbox', '#/type/task', '#/type/journal']) { await p.route('#/capture'); await p.route(h); await sleep(200); if (!(await p.ev(`document.documentElement.scrollWidth <= document.documentElement.clientWidth`))) bad.push(h); }
+      await openDetail(p, 'xxxxx');
+      if (!(await p.ev(`document.documentElement.scrollWidth <= document.documentElement.clientWidth`))) bad.push('detail');
+      check(`AC-Q.4: an unbroken 240-character word causes no horizontal scroll at ${w}px`, bad.length === 0, bad.join());
+    }
+    await p.viewport({ width: 1280, height: 800 });
+    await p.ev(`(async () => { const { createIdbStore } = await import('/src/storage/idb.js'); await (await createIdbStore(indexedDB)).clear(); })()`);
+  });
+
   // ---------- session ----------
   const problems = p.problems.filter((x) => !isFavicon(x));
   check('no exception or console error across all flows', problems.length === 0, problems.slice(0, 3).join(' ; '));
