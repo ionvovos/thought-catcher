@@ -1,6 +1,6 @@
 // Validators for model and provider output (AC-B1.4: nothing malformed is ever stored). Pure.
 // Each takes a parsed JSON object and returns a clean value or throws AiError('malformed').
-import { TYPES, LIMITS } from '../core/model.js';
+import { TYPES, LIMITS, contentWords } from '../core/model.js';
 import { AiError } from '../core/ai/http.js';
 
 const bad = (why) => new AiError('malformed', `The AI reply was not usable: ${why}.`);
@@ -53,9 +53,13 @@ export function validateExpansionV2(obj) {
   return { next_steps: list(obj.next_steps, 'next_steps', 3, 5), questions: list(obj.questions, 'questions', 3, 5), outline: list(obj.outline, 'outline', 3, 7) };
 }
 
+// A small model sometimes writes each step as { action, description }; the action is the step.
+const stepText = (s) => (typeof s === 'string' ? s : s && typeof s === 'object' ? (s.text ?? s.step ?? s.action ?? s.title ?? s.description) : null);
+
 export function validatePlan(obj) {
   if (!obj || typeof obj !== 'object') throw bad('no object');
-  return { steps: list(obj.steps, 'steps', 3, 8).map((text) => ({ text, done: false })) };
+  const steps = Array.isArray(obj.steps) ? obj.steps.map(stepText) : obj.steps;
+  return { steps: list(steps, 'steps', 3, 8).map((text) => ({ text, done: false })) };
 }
 
 // Answer text at most 40 words; longer is cut at the 40th word with a full stop rather than rejected.
@@ -80,4 +84,16 @@ export function validateWording(obj) {
 export function optionalReply(obj) {
   const words = wordsOf(obj?.reply);
   return words.length >= 1 && words.length <= 40 ? words.join(' ') : null;
+}
+
+// Guards an on-device answer against invention: most of its content words must come from the cited thoughts, the
+// question or the words a summary needs ("said", "found"). The 1.5B model has parroted prompt examples as answers.
+const SUMMARY_WORDS = new Set(['said', 'noted', 'mentioned', 'wrote', 'saved', 'found', 'thoughts', 'thought', 'ideas', 'tasks', 'reminder', 'reminders', 'about', 'also', 'both', 'these', 'those', 'that', 'there', 'thing', 'things', 'says', 'says']);
+const stem = (w) => w.replace(/(?:ing|ed|es|s)$/, '');
+export function answerGrounded(answer, question, thoughts) {
+  const words = contentWords(answer).filter((w) => !SUMMARY_WORDS.has(w));
+  if (!words.length) return true;
+  const source = new Set([...contentWords(question), ...thoughts.flatMap((t) => contentWords(`${t.title ?? ''} ${t.text ?? ''}`))].map(stem));
+  const found = words.filter((w) => source.has(stem(w))).length;
+  return found / words.length >= 0.6;
 }

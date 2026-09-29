@@ -170,6 +170,24 @@ async function migrationChecks() {
     const retry = await c.ev(`(async () => { const { createIdbStore } = await import('/src/storage/idb.js'); const s = await createIdbStore(indexedDB); return { m: s.migration, n: (await s.getAll()).length }; })()`);
     check('X10.2 the next launch migrates the same database', retry.m.state === 'migrated' && retry.n === 6, JSON.stringify(retry));
 
+    // embedding rows live in the same database: stored as Float32Array, removed with their thought, emptied by clear()
+    const emb = await c.ev(`(async () => {
+      const { createIdbStore } = await import('/src/storage/idb.js');
+      const s = await createIdbStore(indexedDB);
+      const events = []; const off = s.onChange((e) => events.push(e.kind + ':' + e.ids.join('+')));
+      await s.putEmbedding({ id: 't1', model: 'm', hash: 'h', vec: Float32Array.from([0.5, 0.25]) });
+      await s.putEmbedding({ id: 't2', model: 'm', hash: 'h', vec: Float32Array.from([1, 0]) });
+      const row = await s.getEmbedding('t1');
+      await s.delete('t1');
+      const afterDelete = (await s.getAllEmbeddings()).map((r) => r.id);
+      await s.deleteMany(['t2']);
+      await s.putMany([{ id: 'x', text: 'x' }]);
+      await s.clear();
+      off();
+      return { isF32: row.vec instanceof Float32Array, len: row.vec.length, afterDelete, afterClear: (await s.getAllEmbeddings()).length, events };
+    })()`);
+    check('embedding rows: Float32Array round trip, removed with their thought, emptied by clear(); onChange fires after each write', emb.isF32 && emb.len === 2 && JSON.stringify(emb.afterDelete) === '["t2"]' && emb.afterClear === 0 && emb.events.join(',') === 'delete:t1,delete:t2,put:x,clear:', JSON.stringify(emb));
+
     // a brand new profile
     await c.ev(`new Promise((res) => { const d = indexedDB.deleteDatabase('thought-catcher'); d.onsuccess = d.onerror = d.onblocked = () => res(); })`);
     const fresh = await c.ev(`(async () => { const { createIdbStore } = await import('/src/storage/idb.js'); const s = await createIdbStore(indexedDB); await s.put({ id: 'a', text: 'a', origin: { id: 'o', index: 1, count: 2 } }); await s.put({ id: 'b', text: 'b', origin: { id: 'o', index: 0, count: 2 } }); return { m: s.migration, byOrigin: (await s.getByOrigin('o')).map((t) => t.id) }; })()`);
@@ -325,6 +343,24 @@ async function realModelChecks() {
         runs.push({ n: r.n, types: r.types, raw: raw.slice(before), got: items.map((i) => [i.type, i.by, i.confidence, i.title, i.due_at && i.due_at.slice(0, 16), i.question && i.question.case]), ms: Math.round(performance.now() - s) });
       }
   `;
+  const otherCalls = `
+      const timed = async (fn) => { const s = performance.now(); try { const v = await fn(); return { ok: true, v, ms: Math.round(performance.now() - s) }; } catch (e) { return { ok: false, err: (e.kind ?? '') + ' ' + e.message, ms: Math.round(performance.now() - s) }; } };
+      const { newThought } = await import('/src/core/model.js');
+      const mk = (id, type, text) => newThought({ text, id, now: NOW, sortResult: { type, title: text.slice(0, 50), tags: [], confidence: 0.9, alt_type: null, due_at: null } });
+      const idea = mk('i1', 'idea', 'a gym app that shows a streak calendar and rewards a full week');
+      const task = mk('t1', 'task', 'pay the electricity bill before the 5th');
+      const other = {};
+      other.classify = await Promise.all(['what if we made a shared shopping list for the flat', 'remind me tomorrow at 9 to send the invoice to Maria', 'felt really tired today but the walk helped', 'buy dog food'].map((t) => timed(() => brain.classify(t).then((i) => [i.type, i.by, i.confidence, i.title, i.due_at && i.due_at.slice(0, 16)]))));
+      other.expand = await timed(() => brain.expand(idea));
+      other.plan = await timed(() => brain.plan(task));
+      const store = createMemoryStore();
+      const brain2 = createBrain({ store, settings: createSettingsApi(localStorage), now: () => NOW, llm: host });
+      await brain2.ready;
+      await store.putMany([mk('a', 'journal', 'go back to the gym, I keep skipping it and I feel worse'), mk('b', 'idea', 'gym app streak calendar'), mk('c', 'task', 'pay the electricity bill before the 5th')]);
+      await brain2.prepare({ embed: true });
+      other.ask = await timed(() => brain2.ask('what did I say about the gym?'));
+      other.askNone = await timed(() => brain2.ask('what did I say about my holiday in Japan?'));
+  `;
   // launch 1: consent, download, load, ten rambles
   const c = await launch({ gpu: true, profile: MODEL_PROFILE, port: MODEL_PORT });
   try {
@@ -339,7 +375,8 @@ async function realModelChecks() {
       const loadMs = Math.round(performance.now() - t0);
       const status = brain.getStatus();
       ${runRambles}
-      return { first, loadMs, status, states: [...new Set(states)], runs };
+      ${otherCalls}
+      return { first, loadMs, status, states: [...new Set(states)], runs, other };
     })()`.replace('await c.__noop;', ''), 900000);
     const wasCached = out.first.llm.state !== 'not-downloaded';
     check('B2 real model: capability ok, prepare downloads (first launch) and reaches ready', out.status.llm.state === 'ready' && (out.states.includes('downloading') || out.states.includes('loading')), `first ${out.first.llm.state}; load ${Math.round(out.loadMs / 1000)} s; states ${out.states.join(',')}${wasCached ? ' (profile already cached)' : ''}`);
@@ -352,6 +389,12 @@ async function realModelChecks() {
       console.log(`  ${bad ? 'MISS' : 'ok  '} #${i + 1} ${r.ms} ms want ${r.n} ${r.types.join('/')} got ${JSON.stringify(r.got)}`);
       if (bad || process.argv.includes('--raw')) console.log(`        raw: ${r.raw.join(' || ').replace(/\s+/g, ' ').slice(0, 900)}`);
     });
+    const o = out.other;
+    const line = (name, r) => console.log(`  ${name}: ${r.ok ? JSON.stringify(r.v).slice(0, 700) : `ERROR ${r.err}`} (${r.ms} ms)`);
+    o.classify.forEach((r, i) => line(`classify ${i + 1}`, r));
+    line('expand', o.expand); line('plan', o.plan); line('ask', o.ask); line('ask (nothing)', o.askNone);
+    check('B2 real model: classify, expand and plan return valid results', o.classify.every((r) => r.ok) && o.expand.ok && o.plan.ok, `classify ${o.classify.filter((r) => r.ok).length}/4, expand ${o.expand.ok}, plan ${o.plan.ok}`);
+    check('B2/X5 real model + real embeddings: ask cites the gym thoughts with a model-written answer; a question with no match cites nothing', o.ask.ok && o.ask.v.mode === 'meaning' && o.ask.v.sources.length >= 1 && o.ask.v.by === 'device' && o.askNone.ok && o.askNone.v.sources.length === 0, o.ask.ok ? `by ${o.ask.v.by}, ${o.ask.v.sources.length} sources` : o.ask.err);
     check('real-model flow: no console error', c.problems.length === 0, c.problems.join(' | '));
   } finally { await c.close(); }
 
@@ -375,11 +418,34 @@ async function realModelChecks() {
   } finally { await d.close(); }
 }
 
+
+// Prints raw model replies for prompt work (cached model profile). `--real-model --only=rawprompts`.
+async function rawPrompts() {
+  const c = await launch({ gpu: true, profile: MODEL_PROFILE, port: MODEL_PORT });
+  try {
+    await c.load('/LICENSE');
+    const out = await c.ev(`(async () => {
+      const { createDeviceHost } = await import('/src/brain/device.js');
+      const P = await import('/src/brain/prompts.js');
+      const host = createDeviceHost();
+      await host.load({});
+      const run = async (p, max = 400) => host.generate(P.asMessages(p), { maxTokens: max, timeoutMs: 40000 });
+      const tasks = ['pay the electricity bill before the 5th', 'book flights to Berlin for March', 'renew my passport', 'clean the flat before the guests arrive on Saturday'];
+      const res = { plan: [], classify: [] };
+      for (const t of tasks) res.plan.push(await run(P.planPrompt({ text: t, title: t }), 600));
+      for (const t of ['felt really tired today but the walk helped', 'buy dog food', 'what if we made a shared shopping list']) res.classify.push(await run(P.classifyPrompt(t), 200));
+      return res;
+    })()`, 600000);
+    console.log(JSON.stringify(out, null, 1));
+  } finally { await c.close(); }
+}
+
 const only = process.argv.find((a) => a.startsWith('--only='))?.split('=')[1];
 const steps = { migration: migrationChecks, gpu: noWebGpuChecks, embed: embeddingChecks };
 if (only === 'probe') await probeScores();
 else for (const [name, fn] of Object.entries(steps)) if (!only || only === name) await fn();
-if (realModel && (!only || only === 'model')) await realModelChecks();
+if (realModel && only === 'rawprompts') await rawPrompts();
+else if (realModel && (!only || only === 'model')) await realModelChecks();
 const failed = results.filter((r) => !r.ok);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
 process.exit(failed.length ? 1 : 0);

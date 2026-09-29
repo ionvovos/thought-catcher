@@ -700,3 +700,40 @@ test('a self-consistent model split that covers the note is used as it is, even 
   const items = await brain.split(note);
   assert.deepEqual(items.map((i) => [i.type, i.by]), [['task', 'device'], ['journal', 'device']]);
 });
+
+test('a strong unopposed rule cue beats a model that crosses between doing and thinking; task/reminder stays with the model', () => {
+  const buy = refineItem({ type: 'idea', title: 'Buy dog food', text: 'buy dog food on the way home', when: null }, NOW, 'device');
+  assert.equal(buy.type, 'task');
+  assert.equal(buy.confidence, 0.9);
+  const renew = refineItem({ type: 'reminder', title: 'Renew car insurance', text: 'renew car insurance next week', when: 'next week' }, NOW, 'device');
+  assert.equal(renew.type, 'reminder', 'task versus reminder is left to the question');
+  assert.equal(renew.confidence, 0.6);
+  assert.ok(renew.due_at, 'a reminder keeps its parsed date');
+  const couch = refineItem({ type: 'task', title: 'New couch', text: 'we should buy a new couch', when: null }, NOW, 'device');
+  assert.equal(couch.type, 'task', 'a weak rule cue does not override the model');
+});
+
+test('a model title that shares no word with its text is replaced by the rule title', () => {
+  const item = refineItem({ type: 'journal', title: 'How to stay energized throughout the day', text: 'felt really tired today but the walk helped', when: null }, NOW, 'device');
+  assert.match(item.title, /tired/i);
+});
+
+test('plan accepts steps written as { action, description } objects and cuts to 8', async () => {
+  const llm = stubLlm(json({ steps: Array.from({ length: 10 }, (_, i) => ({ action: `Step ${i + 1}`, description: 'detail' })) }));
+  const { brain } = mkBrain({ llm });
+  const plan = await brain.plan(stored('t', 'task', 'clean the flat'));
+  assert.equal(plan.steps.length, 8);
+  assert.equal(plan.steps[0].text, 'Step 1');
+});
+
+test('an on-device answer that is not based on the cited thoughts is replaced by the template (the 1.5B model parroted an example)', async () => {
+  const llm = stubLlm(json({ answer: 'You said the boiler needs a service before winter. You also noted to ask the landlord about it.' }));
+  const { brain } = await withCorpus({ llm });
+  const a = await brain.ask('what did I say about the gym?');
+  assert.equal(a.by, 'rules');
+  assert.match(a.answer, /^I found (one thought|\d+ thoughts) about that\.$/);
+  assert.ok(a.sources.length >= 1, 'the sources are still cited');
+  const grounded = stubLlm(json({ answer: 'You keep skipping the gym and feel worse, and you had an idea for a gym streak calendar.' }));
+  const ok = await withCorpus({ llm: grounded });
+  assert.equal((await ok.brain.ask('what did I say about the gym?')).by, 'device');
+});

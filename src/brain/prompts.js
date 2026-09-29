@@ -18,21 +18,24 @@ Rules: one item per separate thought; never invent items; title is at most 8 wor
 export const CLASSIFY_SYSTEM = `You sort one short personal note.
 ${TYPES_LINE}
 ${JSON_ONLY} ${DATA_NOTE}
-Example note: "remind me Monday at 9 to book the car service"
-Example reply: {"type":"reminder","title":"Book the car service","when":"Monday at 9"}
+Examples:
+note: "renew the parking permit at city hall" reply: {"type":"task","title":"Renew the parking permit","when":null}
+note: "remind me Monday at 9 to book the car service" reply: {"type":"reminder","title":"Book the car service","when":"Monday at 9"}
+note: "what if the tram had a night line" reply: {"type":"idea","title":"Night line for the tram","when":null}
+note: "the concert last night was better than I expected" reply: {"type":"journal","title":"Concert better than expected","when":null}
 Rules: title is at most 8 words from the note; when is the date or time words copied from the note, or null.`;
 
 export const EXPAND_SYSTEM = `You help develop one idea from a personal note. ${DATA_NOTE}
 Fields: "next_steps" (3 to 5 short concrete steps), "questions" (3 to 5 questions the person should answer), "outline" (3 to 7 short lines of a one-page outline). ${JSON_ONLY}
-Example reply: {"next_steps":["Sketch the main screen","List what it must do","Show it to one friend"],"questions":["Who is it for?","What already exists?","What would make it useful daily?"],"outline":["Problem","Audience","Main idea","First version"]}`;
+Example reply for the idea "a shared bench library on the street": {"next_steps":["Ask two neighbours if they would use it","Sketch a weatherproof box","Find a spot that is allowed"],"questions":["Who looks after it?","What if books go missing?","Does the street need permission?"],"outline":["Problem","Who it is for","How it works","First small trial"]}`;
 
 export const PLAN_SYSTEM = `You break one task from a personal note into a short checklist. ${DATA_NOTE}
 Field: "steps" (3 to 8 short concrete steps, in the order to do them). ${JSON_ONLY}
-Example reply: {"steps":["Find the electricity bill","Check the amount and due date","Pay it online","Save the receipt"]}`;
+Example reply for the task "book a table for Saturday": {"steps":["Pick a restaurant","Check its opening hours","Call to reserve a table","Add it to the calendar"]}`;
 
+// No worked example here on purpose: the 1.5B model copied the sentences of an example into the answer (real run, 2026-09-29).
 export const ANSWER_SYSTEM = `You answer a question using only the saved thoughts listed below. ${DATA_NOTE}
-Field: "answer" (at most 40 words, plain sentences, no invented facts; if the thoughts do not answer it, say so). ${JSON_ONLY}
-Example reply: {"answer":"You said you keep skipping the gym and feel worse for it. You also had an idea for a streak calendar in the gym app."}`;
+Field: "answer" (at most 40 words, plain sentences, using only facts stated in the thoughts; if the thoughts do not answer the question, say so). ${JSON_ONLY}`;
 
 // Own-key providers (strong models) also word the confirmation; the on-device prompt stays the spike-tested v3.
 export const SPLIT_REPLY_NOTE = 'Also add a top-level field "reply": one short friendly sentence (at most 30 words) that says what you filed, without repeating the note word for word.';

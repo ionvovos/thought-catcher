@@ -13,7 +13,7 @@ import { embedText, embedHash, topK, ASK_MIN, RELATED_MIN, relatedByWords, topic
 import { extractJson } from '../core/ai/adapter.js';
 import { AiError, describeAiError } from '../core/ai/http.js';
 import { splitPrompt, classifyPrompt, expandPrompt, planPrompt, answerPrompt, asMessages } from './prompts.js';
-import { validateSplit, validateClassify, validateExpansionV2, validatePlan, validateAnswer } from './validate.js';
+import { validateSplit, validateClassify, validateExpansionV2, validatePlan, validateAnswer, answerGrounded } from './validate.js';
 
 export const LLM_MODEL = 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC';
 export const LLM_BYTES = 870000000;
@@ -66,21 +66,28 @@ export function refineItem(mi, now, by) {
   const cue = REMINDER_CUE.test(text);
   const timed = scanWhen(text).hasClock && APPOINTMENT_VERBS.has(first);
   if (cue || timed) type = 'reminder';
+  let confidence;
+  let alt = null;
+  const family = (t) => (t === 'task' || t === 'reminder' ? 'do' : 'think');
+  if (rules.confidence === 0) confidence = 0.8; // the rules found no cue at all: no opinion, so no disagreement
+  else if (rules.type === type) confidence = 0.9;
+  else if (family(rules.type) !== family(type) && rules.confidence >= 0.9 && rules.scores[rules.type] >= 2) {
+    // a strong, unopposed rule cue (a leading task verb, a reminder phrase, "what if") beats a model that crosses
+    // between doing and thinking; real 1.5B replies filed "buy dog food" as an idea. Task/reminder and idea/journal
+    // disagreements stay with the model and go to the one question.
+    type = rules.type;
+    confidence = 0.9;
+  } else { confidence = 0.6; alt = rules.type; }
   let due = null;
   if (type === 'reminder' || type === 'task') {
     due = (mi.when ? parseWhen(mi.when, now).due_at : null) ?? parseWhen(text, now).due_at ?? null;
   }
-  let confidence;
-  let alt = null;
-  if (rules.confidence === 0) confidence = 0.8; // the rules found no cue at all: no opinion, so no disagreement
-  else if (rules.type === type) confidence = 0.9;
-  else { confidence = 0.6; alt = rules.type; }
   return {
     text,
     type,
     alt_type: alt,
     confidence,
-    title: mi.title || makeTitle(text),
+    title: mi.title && aligned({ title: mi.title, text }) ? mi.title : makeTitle(text),
     tags: normalizeTags(rules.tags),
     due_at: due,
     by,
@@ -541,7 +548,11 @@ export function createBrainCore(deps) {
       let by = 'rules';
       const r = await runAi('answer', {
         key: (p) => p.answer(q, cited),
-        device: () => deviceJson('answer', answerPrompt(q, cited), 200, validateAnswer),
+        device: () => deviceJson('answer', answerPrompt(q, cited), 200, (obj) => {
+          const text = validateAnswer(obj);
+          if (!answerGrounded(text, q, cited)) throw new AiError('malformed', 'The answer was not based on your thoughts.');
+          return text;
+        }),
       });
       if (r.by) { text = r.value; by = r.by; }
       return { answer: limitWords(text, 40), sources: hits, mode, by };
