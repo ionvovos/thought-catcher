@@ -4,6 +4,7 @@ const LIB_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0';
 const MODEL = 'Xenova/all-MiniLM-L6-v2';
 let extractor = null;
 const files = new Map();
+const EXPECTED_BYTES = 27000000; // the model, tokenizer and config together: progress never reads 99% before the big file has started
 
 const post = (m) => self.postMessage(m);
 
@@ -12,7 +13,7 @@ function progressOf(p) {
   let loaded = 0;
   let total = 0;
   for (const f of files.values()) { loaded += f.loaded; total += f.total; }
-  return total ? Math.min(99, Math.round((loaded / total) * 100)) : 0;
+  return total ? Math.min(99, Math.round((loaded / Math.max(total, EXPECTED_BYTES)) * 100)) : 0;
 }
 
 self.onmessage = async ({ data }) => {
