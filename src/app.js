@@ -1,6 +1,6 @@
 // Entry: open the store (which runs the v1 migration), create the brain, apply settings, run the first-run gate, mount the
 // assistant and start the router. The shell builds `ctx` once and hands it to every screen (architecture section 5).
-import { createIdbStore } from './storage/idb.js';
+import { openIdbStore } from './storage/idb.js';
 import { createMemoryStore } from './storage/memory.js';
 import { settingsApi } from './storage/settings.js';
 import { createBrain } from './brain/index.js';
@@ -22,10 +22,13 @@ async function load(path) {
   try { return await import(path); } catch (err) { if (!/Failed to fetch|Cannot find|Failed to load|404|error loading/i.test(String(err?.message))) console.error(err); return null; }
 }
 
+// S3's applyTheme (Settings, Appearance) when it is there; otherwise the same two lines.
+let themeFn = null;
 function applyAppearance(settings) {
-  const s = settings.getSettings();
+  const theme = settings.getSettings().theme;
+  if (themeFn) { themeFn(theme); return; }
   const html = document.documentElement;
-  if (s.theme === 'light' || s.theme === 'dark') html.dataset.theme = s.theme; else delete html.dataset.theme;
+  if (theme === 'light' || theme === 'dark') html.dataset.theme = theme; else delete html.dataset.theme;
 }
 
 function fail(message) {
@@ -34,6 +37,8 @@ function fail(message) {
 
 async function main() {
   const settings = settingsApi;
+  const settingsUi = await load('./ui/settings/index.js');
+  themeFn = settingsUi?.applyTheme ?? null;
   applyAppearance(settings);
   window.addEventListener('storage', () => applyAppearance(settings));
 
@@ -51,11 +56,12 @@ async function main() {
     return;
   }
 
-  let store;
+  // openIdbStore returns at once; a capture made while the v1 migration runs is queued, not lost (G27). Only when storage
+  // itself is unavailable (ready rejects) does the app fall back to a memory store and say so.
+  let store = openIdbStore(globalThis.indexedDB);
   let storeNote = null;
-  try {
-    store = await createIdbStore(globalThis.indexedDB);
-  } catch {
+  const opened = await Promise.race([store.ready.then(() => true, () => false), new Promise((r) => { setTimeout(() => r(true), 2000); })]);
+  if (!opened) {
     store = createMemoryStore();
     storeNote = 'Storage is not available in this browser mode. Thoughts will be lost when you close this tab.';
   }
@@ -65,14 +71,17 @@ async function main() {
   const ctx = { store, brain, settings, now, nav, toast: (text, opts) => toaster.toast(text, opts), status: () => brain.getStatus() };
 
   // A question left open when the app was closed is never asked again (AC-M4.8).
-  try {
-    const stale = resolveStale(await store.getAll(), now());
-    if (stale.length) await store.putMany(stale);
-  } catch (err) { console.error(err); }
+  // Not awaited: during a migration getAll waits for the store, and the assistant must be on screen meanwhile.
+  (async () => {
+    try {
+      const stale = resolveStale(await store.getAll(), now());
+      if (stale.length) await store.putMany(stale);
+    } catch (err) { console.error(err); }
+  })();
 
-  const [library, detail, ask, review, onboarding, settingsUi, about] = await Promise.all([
+  const [library, detail, ask, review, onboarding, about] = await Promise.all([
     load('./ui/library/index.js'), load('./ui/detail/index.js'), load('./ui/ask/index.js'), load('./ui/review/index.js'),
-    load('./ui/onboarding/index.js'), load('./ui/settings/index.js'), load('./ui/about/index.js'),
+    load('./ui/onboarding/index.js'), load('./ui/about/index.js'),
   ]);
   const s3 = {
     renderAnswer: ask?.renderAnswer ?? detail?.renderAnswer,
@@ -94,6 +103,14 @@ async function main() {
     open() {
       if (sheet) return;
       sheet = openSheet({ host: assistant.el, title: 'Library', onClose: () => nav.close('#/') });
+      // S3's library asks for the full detent when its search field is focused, and hands a question to the conversation.
+      sheet.el.addEventListener('sheet-detent', (e) => { if (e.detail === 'full' || e.detail === 'half') sheet.setDetent(e.detail); });
+      sheet.el.addEventListener('tc-ask', (e) => {
+        e.preventDefault();
+        const text = e.detail?.text;
+        nav.close('#/');
+        if (text) setTimeout(() => assistant.sendText(text), 0);
+      });
       if (library?.mountLibrary) {
         try { mounted = library.mountLibrary(sheet.body, ctx); } catch (err) { console.error(err); }
       } else {

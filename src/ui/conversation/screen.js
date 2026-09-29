@@ -117,16 +117,17 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
       ]);
     }
     return el('header', { class: 'topbar' }, [
-      snapshot?.migrationRun ? migrationPill(snapshot.migrationRun) : StatusPill(status, { onClick: () => openFromPill(pillFor(status).opens) }),
+      snapshot?.migrationRun ? migrationPill(snapshot.migrationRun) : store.migration?.state === 'migrating' ? migrationPill() : StatusPill(status, { onClick: () => openFromPill(pillFor(status).opens) }),
       IconButton({ name: 'settings', label: 'Settings', onClick: () => nav.go('#/settings') }),
     ]);
   }
 
   // "Moving 38 of 52" while the v1 upgrade runs (design.md 3, migration-running). The upgrade blocks the page, so only a fixture shows it.
-  function migrationPill({ done, total }) {
+  function migrationPill({ done = null, total = null } = {}) {
     const ring = el('span', { class: 'pill__ring' });
-    ring.style.setProperty('--p', String(Math.round((done / total) * 100)));
-    return el('button', { type: 'button', class: 'pill', 'aria-label': `Moving your thoughts, ${done} of ${total}` }, [ring, `Moving ${done} of ${total}`]);
+    const known = Number.isFinite(done) && Number.isFinite(total) && total > 0;
+    ring.style.setProperty('--p', String(known ? Math.round((done / total) * 100) : 40));
+    return el('button', { type: 'button', class: 'pill', 'aria-label': known ? `Moving your thoughts, ${done} of ${total}` : 'Moving your thoughts to the new version' }, [ring, known ? `Moving ${done} of ${total}` : 'Moving your thoughts']);
   }
 
   function offlineStrip() {
@@ -244,12 +245,13 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
     if (stageMode || listening) {
       orb.el.classList.remove('orb--dock');
       const choiceHost = renderStage();
+      stage.classList.toggle('stage--below', Boolean(reviewNode) && !listening);
+      if (reviewNode && !listening) parts.push(reviewNode);
       parts.push(stage);
       if (listening) {
         parts.push(dock());
       } else {
         const notices = stageNotices();
-        if (reviewNode) parts.push(reviewNode);
         const due = dueToday();
         if (due) parts.push(V.dueCard(due, `Due today, ${whenLabel(due.due_at, now()).replace(/^Today /, '')}`, () => markDone(due)));
         parts.push(...notices, peekNode());
@@ -716,6 +718,10 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
     if (alive) render();
   }
 
+  // S3's review card closes itself and says so; the assistant must not put it back on the next render.
+  root.addEventListener('review-closed', () => { reviewNode = null; render(); });
+  Promise.resolve(store.ready).then(() => { if (alive) { loadThoughts(); render(); } }, () => {});
+
   if (!fixture) {
     brain.addEventListener('status', onStatus);
     document.addEventListener('keydown', onKey);
@@ -730,6 +736,8 @@ export function createAssistant(ctx, deps = {}, snapshot = null) {
   return {
     el: root,
     dispatch,
+    // A question asked from the library goes through the same path as a typed message (intent decides).
+    sendText(text) { typing = false; dispatch({ type: 'SEND_TEXT', text }); },
     getState: () => st,
     refreshReview,
     focusForLaunch(kind) {
