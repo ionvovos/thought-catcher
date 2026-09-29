@@ -4,10 +4,10 @@ import { cosine, dot, normalize, topK, fnv1a, embedHash, relatedByWords, topicsF
 
 const v = (...a) => normalize(Float32Array.from(a));
 
-test('constants are the architecture values', () => {
-  assert.equal(ASK_MIN, 0.30);
-  assert.equal(RELATED_MIN, 0.35);
-  assert.equal(TOPIC_LINK, 0.45);
+test('constants are the values tuned against the real model on the fixtures (see the note in vector.js)', () => {
+  assert.equal(ASK_MIN, 0.27);
+  assert.equal(RELATED_MIN, 0.30);
+  assert.equal(TOPIC_LINK, 0.40);
 });
 
 test('cosine, dot and normalize', () => {

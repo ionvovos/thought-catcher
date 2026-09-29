@@ -544,7 +544,8 @@ export function createBrainCore(deps) {
       .then(() => llm.load({
         onProgress: (pct) => {
           if (gen !== loadGen) return;
-          const p = Math.max(0, Math.min(100, Math.round(pct)));
+          const p = Math.max(llmState.pct ?? 0, Math.min(100, Math.round(pct)));
+          if (p === llmState.pct) return;
           setLlm(firstTime ? { state: 'downloading', pct: p, bytes: LLM_BYTES } : { state: 'loading', pct: p });
         },
       }))
@@ -577,7 +578,8 @@ export function createBrainCore(deps) {
       .then(() => embedder.load({
         onProgress: (pct) => {
           if (gen !== embedGen) return;
-          const p = Math.max(0, Math.min(100, Math.round(pct)));
+          const p = Math.max(embedState.pct ?? 0, Math.min(100, Math.round(pct)));
+          if (p === embedState.pct) return;
           setEmbed(firstTime ? { state: 'downloading', pct: p, bytes: EMBED_BYTES } : { state: 'loading', pct: p });
         },
       }))

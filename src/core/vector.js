@@ -1,11 +1,15 @@
 // Vector maths and the relatedness constants for ask, related and topics (architecture 2.5). Pure.
-// The constants are tuned only against the AC-X5.1 / AC-X6.1 / AC-X6.2 fixtures (tests/fixtures/corpus.js).
+// The constants are tuned only against the AC-X5.1 / AC-X6.1 / AC-X6.2 fixtures (tests/fixtures/corpus.js) with the real
+// MiniLM model (`node e2e/v2-brain.mjs --only=probe` prints the raw scores). Measured on 2026-09-29: an unrelated question
+// scored at most 0.298 against the corpus and a relevant thought at least 0.313 (ask); the weakest true related pair was
+// 0.324 and the strongest unrelated pair 0.288 (related); in-topic ideas linked at 0.314-0.778 and the strongest
+// cross-topic pair was 0.356 (topics, single-link at 0.40 keeps the three groups apart).
 import { contentWords } from './model.js';
 
 export const DIMS = 384;
-export const ASK_MIN = 0.30;
-export const RELATED_MIN = 0.35;
-export const TOPIC_LINK = 0.45;
+export const ASK_MIN = 0.27;
+export const RELATED_MIN = 0.30;
+export const TOPIC_LINK = 0.40;
 export const TOPIC_MIN_SIZE = 3;
 export const WORDS_MIN = 0.2; // Jaccard floor for the no-embeddings fallback
 
