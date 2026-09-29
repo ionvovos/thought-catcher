@@ -6,6 +6,8 @@ const NUM = '(\\d+|a|an|one|two|three|four|five|six|seven|eight|nine|ten)';
 
 const RE_AMPM = /\b(1[0-2]|0?[1-9])(?::([0-5]\d))?\s*(am|pm)\b/;
 const RE_24H = /\b([01]?\d|2[0-3]):([0-5]\d)\b/;
+// "at 7" and "at 7:30" with no am/pm: which half of the day is not stated.
+const RE_AT_HOUR = /\bat (1[0-2]|[1-9])(?::([0-5]\d))?\b/;
 const RE_NOON = /\b(noon|midnight)\b/;
 const RE_REL_TIME = new RegExp(`\\bin ${NUM} (minutes?|mins?|hours?|hrs?)\\b`);
 const RE_REL_DAY = new RegExp(`\\bin ${NUM} (days?|weeks?)\\b`);
@@ -27,6 +29,8 @@ function clock(text) {
     if (m[3] === 'pm') h += 12;
     return { h, min: Number(m[2] ?? 0) };
   }
+  m = text.match(RE_AT_HOUR);
+  if (m) return { h: Number(m[1]), min: Number(m[2] ?? 0), ambiguous: true };
   m = text.match(RE_24H);
   if (m) return { h: Number(m[1]), min: Number(m[2]) };
   m = text.match(RE_NOON);
@@ -62,6 +66,25 @@ export function scanWhen(text) {
   };
 }
 
+// The hours an unmarked hour can mean today: 7 is 07:00 or 19:00. pmOnly for "tonight" and "this evening".
+function todayCandidates(c, pmOnly) {
+  const am = c.h % 12;
+  const pm = am + 12;
+  if (!c.ambiguous) return [c.h];
+  return pmOnly ? (c.h === 12 ? [] : [pm]) : [am, pm];
+}
+
+// The first of `hours` today that is still ahead of now, or null (a past time is not scheduled for tomorrow).
+function firstAhead(hours, min, now) {
+  for (const h of hours) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, min, 0, 0);
+    if (d.getTime() > now.getTime()) return d;
+  }
+  return null;
+}
+
+const NONE = { due_at: null, kind: null };
+
 export function parseWhen(text, now) {
   if (!(now instanceof Date) || Number.isNaN(now.getTime())) throw new TypeError('now must be a valid Date');
   const t = norm(text);
@@ -69,24 +92,30 @@ export function parseWhen(text, now) {
   if (rel !== null) return { due_at: new Date(now.getTime() + rel).toISOString(), kind: 'clock' };
   const c = clock(t);
   const days = dateOffsetDays(t, now);
-  if (days === null && RE_YESTERDAY.test(t)) return { due_at: null, kind: null }; // a past day is not a due time
+  if (days === null && RE_YESTERDAY.test(t)) return NONE; // a past day is not a due time
   if (days === null) {
     const today = t.match(RE_TODAY);
     if (today && (c || DEFAULT_HOUR[today[1]] !== undefined)) {
-      const h = c ? c.h : DEFAULT_HOUR[today[1]];
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, c ? c.min : 0, 0, 0);
-      // a time that has already passed today is not scheduled for tomorrow: the app asks when instead
-      return d.getTime() > now.getTime() ? { due_at: d.toISOString(), kind: 'clock' } : { due_at: null, kind: null };
+      const evening = today[1] !== 'today';
+      const d = c
+        ? firstAhead(todayCandidates(c, evening), c.min, now)
+        : firstAhead([DEFAULT_HOUR[today[1]]], 0, now);
+      return d ? { due_at: d.toISOString(), kind: 'clock' } : NONE;
     }
   }
   if (days !== null) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days, c ? c.h : 9, c ? c.min : 0, 0, 0);
-    return { due_at: d.toISOString(), kind: c ? 'clock' : 'date' };
+    const fixed = c && !c.ambiguous ? c : null; // "tomorrow at 7" does not say which 7: keep the date, not a guessed hour
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days, fixed ? fixed.h : 9, fixed ? fixed.min : 0, 0, 0);
+    return { due_at: d.toISOString(), kind: fixed ? 'clock' : 'date' };
   }
   if (c) {
+    if (c.ambiguous) {
+      const d = firstAhead(todayCandidates(c, false), c.min, now);
+      return d ? { due_at: d.toISOString(), kind: 'clock' } : NONE;
+    }
     let d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), c.h, c.min, 0, 0);
     if (d.getTime() <= now.getTime()) d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, c.h, c.min, 0, 0);
     return { due_at: d.toISOString(), kind: 'clock' };
   }
-  return { due_at: null, kind: null };
+  return NONE;
 }

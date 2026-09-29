@@ -155,11 +155,15 @@ export default async function renderCapture(root, ctx) {
 
   const due = ctx.getReviewCount?.() ?? 0;
   const nudge = due > 0 ? el('p', { class: 'review-nudge' }, el('a', { href: '#/review', class: 'btn' }, `${due} to review`)) : null;
-  root.append(el('h2', {}, 'Catch a thought'), nudge, recordBtn, consentHost, note, status, progress, interim, form, clarifyBox, hint);
+  root.append(...[el('h2', {}, 'Catch a thought'), nudge, recordBtn, consentHost, note, status, progress, interim, form, clarifyBox, hint].filter(Boolean));
   refreshEngine();
   const focus = ctx.consumeInitialFocus?.();
-  if (focus === 'record') recordBtn.focus();
-  else if (focus === 'text') field.focus();
+  if (focus === 'text') {
+    field.focus();
+  } else if (focus === 'record' || focus === 'record-hint') {
+    recordBtn.focus();
+    if (focus === 'record-hint' && !recordBtn.classList.contains('is-unavailable')) setStatus('Tap the button to record.');
+  }
 
   return () => {
     alive = false;

@@ -2,7 +2,7 @@
 import { el } from '../dom.js';
 import * as store from '../../storage/settings.js';
 import {
-  createProvider, configFromSettings, describeAiError, AiError, ANTHROPIC_DEFAULT_MODEL, OPENAI_DEFAULT_BASE_URL,
+  resolveProvider, configFromSettings, keyBinding, providerLabel, describeAiError, ANTHROPIC_DEFAULT_MODEL, OPENAI_DEFAULT_BASE_URL,
 } from '../../core/ai/adapter.js';
 import {
   buildExport, exportFileName, parseImport, mergeImport, importSummary,
@@ -55,20 +55,28 @@ export default async function renderSettings(root, ctx) {
 
   function refreshAi() {
     const p = provider.value;
-    const has = store.hasKey();
+    const binding = keyBinding(formSettings());
+    const has = Boolean(binding) && store.hasKeyFor(binding);
+    const other = Boolean(binding) && store.keyIsForOther(binding);
     baseField.hidden = p !== 'openai';
     keyInput.disabled = p === 'none';
     model.disabled = p === 'none';
     testBtn.disabled = p === 'none';
     model.placeholder = p === 'anthropic' ? ANTHROPIC_DEFAULT_MODEL : 'Model name, for example llama3';
     keyInput.placeholder = has ? 'Saved on this device. Type to replace it.' : 'Paste your key';
-    keyHint.textContent = has
-      ? 'A key is saved on this device. It is sent only to the provider you chose above. Use a key with a spending limit.'
-      : (p === 'openai' ? 'A key is optional for a model on your own computer. Use a key with a spending limit for online providers.'
-        : 'Not saved yet. The key stays on this device and is sent only to the provider you chose above. Use a key with a spending limit.');
-    removeKeyBtn.hidden = !has;
+    if (has) {
+      keyHint.textContent = 'A key is saved on this device for this provider. It is sent only to this provider\'s address. Use a key with a spending limit.';
+    } else if (other) {
+      keyHint.textContent = `The saved key was entered for a different provider or address and is not used here. Enter a key for ${providerLabel(p)}. Saving with this provider removes the old key.`;
+    } else if (p === 'openai') {
+      keyHint.textContent = 'A key is optional for a model on your own computer. Use a key with a spending limit for online providers.';
+    } else {
+      keyHint.textContent = 'Not saved yet. The key stays on this device and is sent only to the provider you chose above. Use a key with a spending limit.';
+    }
+    removeKeyBtn.hidden = !store.hasKey();
   }
   provider.addEventListener('change', () => { aiStatus.textContent = ''; refreshAi(); });
+  baseUrl.addEventListener('input', refreshAi);
 
   function formSettings() {
     const p = provider.value;
@@ -97,11 +105,20 @@ export default async function renderSettings(root, ctx) {
     e.preventDefault();
     const s = formSettings();
     store.setSettings(s);
+    const binding = keyBinding(s);
     const typed = keyInput.value.trim();
-    if (typed) { store.setKey(typed); keyInput.value = ''; }
+    let note = '';
+    if (typed) {
+      store.setKey(typed, binding);
+      keyInput.value = '';
+    } else if (binding && store.reconcileKey(binding) === 'removed') {
+      // A key saved for another provider or address is never sent here: it was removed; ask for a new one.
+      note = ` Enter a key for ${providerLabel(s['ai.provider'])}. The key saved for another provider was removed.`;
+    }
     refreshAi();
-    const key = store.getKey();
-    aiStatus.textContent = s['ai.provider'] === 'none' || configFromSettings({ ...store.getSettings() }, key)
+    const key = binding ? store.getKeyFor(binding) : null;
+    if (note) aiStatus.textContent = `Saved.${note}`;
+    else aiStatus.textContent = s['ai.provider'] === 'none' || configFromSettings({ ...store.getSettings() }, key)
       ? 'Saved on this device.'
       : `Saved, but AI stays off. ${whatIsMissing(s, key)}`;
   });
@@ -115,19 +132,24 @@ export default async function renderSettings(root, ctx) {
 
   testBtn.addEventListener('click', async () => {
     const s = formSettings();
-    const key = keyInput.value.trim() || store.getKey();
-    const cfg = configFromSettings(s, key);
-    if (!cfg) { aiStatus.textContent = whatIsMissing(s, key); return; }
+    const binding = keyBinding(s);
+    const typed = keyInput.value.trim();
+    // Only a key typed just now, or one saved for exactly this provider and address, is ever sent.
+    const p = resolveProvider(s, store, { fetch: globalThis.fetch.bind(globalThis), now: ctx.now, typedKey: typed });
+    if (!p) {
+      aiStatus.textContent = !typed && binding && store.keyIsForOther(binding)
+        ? `Enter a key for ${providerLabel(s['ai.provider'])}.`
+        : whatIsMissing(s, typed || (binding ? store.getKeyFor(binding) : null));
+      return;
+    }
     if (globalThis.navigator?.onLine === false) { aiStatus.textContent = 'You are offline.'; return; }
     testBtn.disabled = true;
     aiStatus.textContent = 'Testing…';
     try {
-      const p = createProvider(cfg, { fetch: globalThis.fetch.bind(globalThis), now: ctx.now, getKey: () => key });
       await p.test();
       aiStatus.textContent = 'Connection works.';
     } catch (err) {
-      const detail = err instanceof AiError && err.kind === 'auth' && err.message && err.message !== 'Key rejected.' ? ` (${err.message})` : '';
-      aiStatus.textContent = `${describeAiError(err)}${detail}`;
+      aiStatus.textContent = describeAiError(err);
     } finally {
       testBtn.disabled = false;
     }

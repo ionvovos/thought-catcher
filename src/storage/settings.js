@@ -3,6 +3,8 @@
 
 export const PREFIX = 'thought-catcher.';
 export const KEY_ENTRY = `${PREFIX}ai-key`;
+// Which provider and host the key was entered for, as JSON {provider, host}. A key is only ever handed out for that pair.
+export const BINDING_ENTRY = `${PREFIX}ai-key-binding`;
 
 export const DEFAULTS = Object.freeze({
   'ai.provider': 'none',
@@ -72,17 +74,53 @@ export function createSettingsApi(storage) {
       const v = read(KEY_ENTRY);
       return v ? v : null;
     },
-    setKey(k) {
+    // binding: { provider, host } for the provider the key is being saved for. Without a binding the key is stored
+    // unbound and getKeyFor never hands it out.
+    setKey(k, binding) {
       const v = String(k ?? '').trim();
-      if (!v) { remove(KEY_ENTRY); return; }
+      if (!v) { remove(KEY_ENTRY); remove(BINDING_ENTRY); return; }
       write(KEY_ENTRY, v);
+      if (binding?.provider && binding?.host) write(BINDING_ENTRY, JSON.stringify({ provider: binding.provider, host: binding.host }));
+      else remove(BINDING_ENTRY);
     },
-    removeKey() { remove(KEY_ENTRY); },
+    getKeyBinding() {
+      const raw = read(BINDING_ENTRY);
+      if (!raw) return null;
+      try {
+        const b = JSON.parse(raw);
+        return b && typeof b.provider === 'string' && typeof b.host === 'string' ? { provider: b.provider, host: b.host } : null;
+      } catch {
+        return null;
+      }
+    },
+    // The only way the app reads a key to send it: returns the key when it was entered for this provider and host,
+    // otherwise null. An unbound key (no binding stored) is never returned.
+    getKeyFor(binding) {
+      const key = this.getKey();
+      const stored = this.getKeyBinding();
+      if (!key || !binding || !stored) return null;
+      return stored.provider === binding.provider && stored.host === binding.host ? key : null;
+    },
+    hasKeyFor(binding) { return this.getKeyFor(binding) !== null; },
+    // True when a key is saved but was entered for a different provider or host than `binding`.
+    keyIsForOther(binding) {
+      return Boolean(this.getKey()) && !this.hasKeyFor(binding);
+    },
+    // Save-time rule: a saved key that was entered for another provider or address is removed, never carried over.
+    // Returns 'none' (no key), 'kept' (the key belongs to this binding) or 'removed'.
+    reconcileKey(binding) {
+      if (!this.getKey()) return 'none';
+      if (this.hasKeyFor(binding)) return 'kept';
+      this.removeKey();
+      return 'removed';
+    },
     hasKey() { return Boolean(this.getKey()); },
+    removeKey() { remove(KEY_ENTRY); remove(BINDING_ENTRY); },
     // Removes every entry this app wrote, key included (delete all data).
     clearAll() {
       for (const k of Object.keys(DEFAULTS)) remove(PREFIX + k);
       remove(KEY_ENTRY);
+      remove(BINDING_ENTRY);
     },
   };
 }
@@ -103,7 +141,12 @@ const api = createSettingsApi({
 export const getSettings = () => api.getSettings();
 export const setSettings = (patch) => api.setSettings(patch);
 export const getKey = () => api.getKey();
-export const setKey = (k) => api.setKey(k);
+export const setKey = (k, binding) => api.setKey(k, binding);
+export const getKeyBinding = () => api.getKeyBinding();
+export const getKeyFor = (binding) => api.getKeyFor(binding);
+export const hasKeyFor = (binding) => api.hasKeyFor(binding);
+export const keyIsForOther = (binding) => api.keyIsForOther(binding);
+export const reconcileKey = (binding) => api.reconcileKey(binding);
 export const removeKey = () => api.removeKey();
 export const hasKey = () => api.hasKey();
 export const clearAll = () => api.clearAll();

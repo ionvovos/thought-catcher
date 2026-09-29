@@ -1,7 +1,7 @@
 // Browser glue for the AI features: background sort, the one clarifying question, expand, re-sort.
 // Every pure decision lives in src/core; this file only connects them to the store, the settings and the page.
-import { getSettings, getKey } from '../storage/settings.js';
-import { createProvider, configFromSettings } from '../core/ai/adapter.js';
+import { getSettings, getKeyFor } from '../storage/settings.js';
+import { resolveProvider } from '../core/ai/adapter.js';
 import { describeAiError } from '../core/ai/http.js';
 import { detectAmbiguity } from '../core/ambiguity.js';
 import { startClarify, markUnavailable, skipClarify, applyAnswer } from '../core/clarify.js';
@@ -17,10 +17,11 @@ export function createAiFlow({ store, now, engines, speech, fetchFn = (...a) => 
 
   // { state: 'nokey' | 'offline' | 'ready', provider? } read fresh on every call, so a key added later works at once.
   function status() {
-    const config = configFromSettings(getSettings(), getKey());
-    if (!config) return { state: 'nokey' };
+    const settings = getSettings();
+    const provider = resolveProvider(settings, { getKeyFor }, { fetch: fetchFn, now });
+    if (!provider) return { state: 'nokey' };
     if (globalThis.navigator?.onLine === false) return { state: 'offline' };
-    return { state: 'ready', provider: createProvider(config, { fetch: fetchFn, now, getKey }) };
+    return { state: 'ready', provider };
   }
 
   function reportError(err, setStatus) {

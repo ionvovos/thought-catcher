@@ -115,11 +115,13 @@ test('malformed replies throw AiError malformed', async () => {
   }
 });
 
-test('401 and 403 are auth; 429 is rate; 500 is provider with its message', async () => {
+test('401 and 403 are auth with only "Key rejected."; 429 is rate; 500 is provider with its message', async () => {
   const cases = [[401, 'auth'], [403, 'auth'], [429, 'rate'], [500, 'provider']];
   for (const [status, kind] of cases) {
     const { fetch } = recorder(() => reply(status, { error: { message: `boom ${status}` } }));
-    await assert.rejects(mk({ provider: 'anthropic' }, fetch).sort('x'), (e) => e.kind === kind && e.status === status && e.message.includes(`boom ${status}`));
+    // an auth error never carries the provider's text (some providers repeat part of the key); the others keep it
+    await assert.rejects(mk({ provider: 'anthropic' }, fetch).sort('x'), (e) => e.kind === kind && e.status === status
+      && (kind === 'auth' ? e.message === 'Key rejected.' : e.message.includes(`boom ${status}`)));
   }
   assert.equal(describeAiError(new AiError('auth', 'x')), 'Key rejected.');
   assert.equal(describeAiError(new AiError('provider', 'model not found')), 'model not found');

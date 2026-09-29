@@ -39,7 +39,9 @@ async function main() {
   }
 
   const q = new URLSearchParams(window.location.search);
-  let initialFocus = q.get('type') === '1' ? 'text' : q.get('capture') === '1' ? 'record' : null;
+  // record=1 (the manifest shortcut "Record a thought") focuses the record button and says to tap it: browsers only open
+  // the microphone after a tap.
+  let initialFocus = q.get('type') === '1' ? 'text' : q.get('record') === '1' ? 'record-hint' : q.get('capture') === '1' ? 'record' : null;
 
   let reviewCount = 0;
   const ctx = {

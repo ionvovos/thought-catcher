@@ -2,7 +2,7 @@
 
 import { TYPES, LIMITS, normalizeTags } from '../model.js';
 import { AiError, describeAiError } from './http.js';
-import { createAnthropic, ANTHROPIC_DEFAULT_MODEL } from './anthropic.js';
+import { createAnthropic, ANTHROPIC_DEFAULT_MODEL, ANTHROPIC_URL } from './anthropic.js';
 import { createOpenAi, OPENAI_DEFAULT_BASE_URL } from './openai.js';
 
 export { AiError, describeAiError, ANTHROPIC_DEFAULT_MODEL, OPENAI_DEFAULT_BASE_URL };
@@ -189,6 +189,33 @@ export function configFromSettings(settings, key) {
     return { provider, model, baseUrl };
   }
   return null;
+}
+
+// The provider and host a key belongs to: what the key is bound to when saved, and what it is compared with before any
+// request. settings is the flat object from getSettings(). Returns { provider, host } or null when no provider is chosen.
+export function keyBinding(settings) {
+  const provider = settings?.['ai.provider'];
+  try {
+    if (provider === 'anthropic') return { provider, host: new URL(ANTHROPIC_URL).host };
+    if (provider === 'openai') return { provider, host: new URL(settings['ai.base_url'] || OPENAI_DEFAULT_BASE_URL).host };
+  } catch { /* an unparseable base URL has no host to bind to */ }
+  return null;
+}
+
+export function providerLabel(provider) {
+  return provider === 'anthropic' ? 'Anthropic' : provider === 'openai' ? 'the OpenAI-compatible address' : 'this provider';
+}
+
+// Builds the provider for the current settings. keys: { getKeyFor(binding) }, the only way a stored key is read.
+// The key is looked up again at every request and only returned for the provider and host it was saved for, so a key
+// saved for one provider is never sent to another. typedKey (optional) is a key the person has just typed for these
+// settings, used by Test connection before it is saved. Returns null when the settings do not allow a request.
+export function resolveProvider(settings, keys, { fetch, now, typedKey = '' } = {}) {
+  const binding = keyBinding(settings);
+  if (!binding) return null;
+  const getKey = () => (typedKey ? typedKey : keys.getKeyFor(binding));
+  const config = configFromSettings(settings, getKey());
+  return config ? createProvider(config, { fetch, now, getKey }) : null;
 }
 
 export function isAiConfigured(settings, key) {

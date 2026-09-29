@@ -35,6 +35,7 @@ await b.ev(`(() => {
   localStorage.setItem('thought-catcher.ai.base_url', JSON.stringify(location.origin + '/v1'));
   localStorage.setItem('thought-catcher.ai.model', JSON.stringify('mock'));
   localStorage.setItem('thought-catcher.ai-key', 'sk-test-KEY-123');
+  localStorage.setItem('thought-catcher.ai-key-binding', JSON.stringify({ provider: 'openai', host: location.host }));
 })()`);
 await b.load(`${b.base}/#/capture`);
 

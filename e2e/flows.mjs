@@ -298,7 +298,7 @@ try {
       await p.ev(`(() => { const h = document.querySelector('.hint[role=status]'); })()`);
     }
     // put the key back for later sections
-    await p.ev(`localStorage.setItem('thought-catcher.ai-key', ${JSON.stringify(KEY)}); localStorage.setItem('thought-catcher.ai.provider', '"anthropic"'); localStorage.setItem('thought-catcher.speech.engine', '"typing"')`);
+    await p.ev(`localStorage.setItem('thought-catcher.ai-key', ${JSON.stringify(KEY)}); localStorage.setItem('thought-catcher.ai-key-binding', '{"provider":"anthropic","host":"api.anthropic.com"}'); localStorage.setItem('thought-catcher.ai.provider', '"anthropic"'); localStorage.setItem('thought-catcher.speech.engine', '"typing"')`);
   });
 
   // ---------- F8: key removal ----------
@@ -315,7 +315,7 @@ try {
     await sleep(500);
     const t = (await p.idbAll()).find((x) => x.text === 'buy bread again');
     check('AC-M8.3: after removal a sort uses the rule path and makes no provider call', !!t && t.sort.by === 'rules' && (await calls(p)) === 0);
-    await p.ev(`localStorage.setItem('thought-catcher.ai-key', ${JSON.stringify(KEY)})`);
+    await p.ev(`localStorage.setItem('thought-catcher.ai-key', ${JSON.stringify(KEY)}); localStorage.setItem('thought-catcher.ai-key-binding', '{"provider":"anthropic","host":"api.anthropic.com"}')`);
   });
 
   // ---------- F9: detail edit, delete, done ----------
@@ -562,7 +562,7 @@ try {
     check('AC-M1.5: with the speech API absent the text field takes focus', await p.ev(`document.activeElement === document.getElementById('thought-text')`));
 
     // voice answer to a clarifying question (AC-M4.5)
-    await p.ev(`localStorage.setItem('thought-catcher.ai-key', ${JSON.stringify(KEY)}); localStorage.setItem('thought-catcher.ai.provider', '"anthropic"')`);
+    await p.ev(`localStorage.setItem('thought-catcher.ai-key', ${JSON.stringify(KEY)}); localStorage.setItem('thought-catcher.ai-key-binding', '{"provider":"anthropic","host":"api.anthropic.com"}'); localStorage.setItem('thought-catcher.ai.provider', '"anthropic"')`);
     await p.goto(`${base}/?capture=1`);
     await p.waitFor(`!!document.querySelector('.record-btn')`);
     await mock(p, { mode: 'ok', delay: 0, sortReply: { type: 'reminder', alt_type: null, confidence: 0.9, title: 'Call the vet', tags: ['vet'], due_at: null } });

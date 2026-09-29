@@ -54,3 +54,18 @@ test('tonight, this evening and today at ... resolve to today; a past time or ye
   assert.deepEqual(parseWhen('yesterday I said remind me tomorrow at 9am', NOW), { due_at: local(8, 30, 9), kind: 'clock' });
   assert.deepEqual(parseWhen('today was good', NOW), { due_at: null, kind: null });
 });
+
+test('G4: an hour with no am/pm is the next such hour today; tonight means pm; nothing left today gives no time', () => {
+  // NOW is Tuesday 10:00
+  assert.deepEqual(parseWhen('call at 7', NOW), { due_at: local(8, 29, 19), kind: 'clock' });       // 07:00 has passed, 19:00 has not
+  assert.deepEqual(parseWhen('remind me tonight at 7', NOW), { due_at: local(8, 29, 19), kind: 'clock' });
+  assert.deepEqual(parseWhen('today at 11', NOW), { due_at: local(8, 29, 11), kind: 'clock' });    // 11:00 is still ahead
+  assert.deepEqual(parseWhen('at 7:30', NOW), { due_at: local(8, 29, 19, 30), kind: 'clock' });
+  assert.deepEqual(parseWhen('tonight at 9', NOW), { due_at: local(8, 29, 21), kind: 'clock' });
+  assert.deepEqual(parseWhen('at 18:00', NOW), { due_at: local(8, 29, 18), kind: 'clock' });      // 24-hour form is unambiguous
+  const late = new Date(2026, 8, 29, 22, 30, 0);
+  assert.deepEqual(parseWhen('at 7', late), { due_at: null, kind: null });                        // both 7s have passed today
+  assert.deepEqual(parseWhen('tonight at 7', late), { due_at: null, kind: null });
+  assert.deepEqual(parseWhen('tomorrow at 7', NOW), { due_at: local(8, 30, 9), kind: 'date' });   // which 7 is not stated: keep the date only
+  assert.equal(scanWhen('call the dentist at 7').hasClock, true);
+});

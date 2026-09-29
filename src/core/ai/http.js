@@ -48,7 +48,8 @@ export async function postJson(fetchFn, url, { headers, body, timeoutMs }) {
       throw new AiError('network', 'The connection dropped while reading the reply.');
     }
     if (res.status === 401 || res.status === 403) {
-      throw new AiError('auth', providerMessage(text) || 'Key rejected.', { status: res.status });
+      // never echo the provider's text here: some providers repeat part of the key in a 401
+      throw new AiError('auth', 'Key rejected.', { status: res.status });
     }
     if (res.status === 429) {
       throw new AiError('rate', providerMessage(text) || 'Rate limit reached.', { status: 429 });

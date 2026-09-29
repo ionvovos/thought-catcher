@@ -69,9 +69,30 @@ await b.ev(`localStorage.removeItem('thought-catcher.review.last_shown_date')`);
 await b.load(`${b.base}/`);
 out.plainOpenHash = await b.ev(`location.hash`);
 out.plainOpenText = (await b.ev(`${q('.app-main')}.innerText`)).slice(0, 60).replace(/\n/g, ' | ');
+// G5: the manifest shortcut "Record a thought" (?capture=1&record=1) focuses the record button and says to tap it
+await b.load(`${b.base}/?capture=1&record=1`);
+await b.until(`Boolean(document.getElementById('capture-status'))`);
+out.recordShortcut = await b.ev(`({ focused: document.activeElement === ${q('.record-btn')}, status: document.getElementById('capture-status').textContent })`);
+// G1: a key saved for Anthropic is removed when the person switches provider and saves without typing a new key
+await b.ev(`localStorage.setItem('thought-catcher.ai-key', 'sk-ant-SWITCH-TEST'); localStorage.setItem('thought-catcher.ai-key-binding', JSON.stringify({ provider: 'anthropic', host: 'api.anthropic.com' })); localStorage.setItem('thought-catcher.ai.provider', JSON.stringify('anthropic'))`);
+await b.ev(`localStorage.setItem('thought-catcher.review.last_shown_date', JSON.stringify(new Date().toLocaleDateString('en-CA')))`); // keep the daily review out of the way
+await b.load(`${b.base}/#/settings`, 900);
+out.hintSameProvider = await b.ev(`document.getElementById('s-key-hint').textContent.slice(0, 60)`);
+await b.ev(`(() => { const p = document.getElementById('s-provider'); p.value = 'openai'; p.dispatchEvent(new Event('change')); })()`);
+out.hintAfterSwitch = await b.ev(`document.getElementById('s-key-hint').textContent.slice(0, 90)`);
+await b.ev(`(() => { document.getElementById('s-model').value = 'm'; document.getElementById('s-base').value = 'https://openrouter.ai/api/v1'; document.getElementById('s-provider').form.requestSubmit(); })()`);
+await sleep(300);
+out.afterSave = await b.ev(`({ key: localStorage.getItem('thought-catcher.ai-key'), binding: localStorage.getItem('thought-catcher.ai-key-binding'), status: document.getElementById('s-ai-status').textContent })`);
+// the words "null" and "undefined" must never appear as page text on any screen
+const leaks = [];
+for (const h of ['#/capture', '#/inbox', '#/type/idea', '#/type/task', '#/review', '#/settings', '#/about']) {
+  await b.ev(`location.hash = '${h}'`); await sleep(400);
+  if (await b.ev(`/\\b(null|undefined)\\b/.test(${q('.app-main')}.innerText)`)) leaks.push(h);
+}
+out.nullTextOn = leaks;
 console.log(JSON.stringify(out, null, 2));
 console.log('PROBLEMS', JSON.stringify(b.problems, null, 2));
 console.log('NON-LOCAL', JSON.stringify(b.network.filter((u) => !u.startsWith(b.base) && !/^(data|blob):/.test(u))));
 console.log('404s', JSON.stringify(b.requests.filter((r) => r.status === 404).map((r) => r.url)));
 await b.close();
-process.exit(b.problems.length ? 1 : 0);
+process.exit(b.problems.length || leaks.length ? 1 : 0);

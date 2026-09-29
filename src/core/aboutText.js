@@ -50,7 +50,7 @@ export function aboutSections(features = { onDeviceSpeech: false }) {
       heading: 'AI (optional)',
       paragraphs: [
         'Sorting by simple rules works with nothing set up. For better sorting, the one clarifying question and Expand on ideas, you can add your own key from an AI provider: a password that lets this app use your account with them.',
-        'The key stays on this device and is sent only to the provider you pick. Anyone using your key spends your money, so choose a key with a spending limit. When AI is on, the text of your thoughts is sent to that provider.',
+        'The key stays on this device and is sent only to the provider and address you saved it for. If you change the provider or the address, the app never sends the old key there: it removes it and asks for a new one. Anyone using your key spends your money, so choose a key with a spending limit. When AI is on, the text of your thoughts is sent to that provider.',
         'You can also point the app at a model running on your own computer. That needs the model program to accept requests from this page; Settings explains how.',
       ],
     },
