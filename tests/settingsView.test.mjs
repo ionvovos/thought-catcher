@@ -61,7 +61,7 @@ test('footer and labels', () => {
   assert.equal(daysLabel(3), '3 days');
 });
 
-test('AC-X9.4: voices are English only, local first, de-duplicated, capped, with a plain subtitle', () => {
+test('AC-X9.4 and review F3: voices are English, on-phone only, de-duplicated, capped, with a plain subtitle', () => {
   const voices = [
     { name: 'Zoe', lang: 'en-GB', localService: false },
     { name: 'Daniel', lang: 'en-GB', localService: true },
@@ -70,9 +70,9 @@ test('AC-X9.4: voices are English only, local first, de-duplicated, capped, with
     { name: 'Samantha', lang: 'en-US', localService: true },
   ];
   const rows = voiceRows(voices);
-  assert.deepEqual(rows.map((r) => r.name), ['Daniel', 'Samantha', 'Zoe']);
+  assert.deepEqual(rows.map((r) => r.name), ['Daniel', 'Samantha']);
   assert.equal(rows[0].sub, 'System voice, English (UK)');
-  assert.equal(voiceRows(voices, 2).length, 2);
+  assert.equal(voiceRows(voices, 1).length, 1);
   assert.deepEqual(voiceRows(undefined), []);
   assert.equal(voiceSub('en_US'), 'System voice, English (US)');
   assert.equal(voiceSub(''), 'System voice');

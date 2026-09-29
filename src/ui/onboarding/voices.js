@@ -11,13 +11,14 @@ export function voiceSub(lang) {
   return `System voice, ${name}${where ? ` (${where})` : ''}`;
 }
 
-// English voices first (the app is English only), local ones before network ones, then by name. At most `max` rows.
+// English voices only (the app is English only), and only voices that run on the phone: a network voice would send the
+// reply text, which contains the filed title, to its maker (security review F3). By name, at most `max` rows.
 export function voiceRows(voices, max = 12) {
   const list = Array.from(voices ?? []).filter((v) => v && v.name);
-  const en = list.filter((v) => /^en([-_]|$)/i.test(v.lang ?? ''));
+  const en = list.filter((v) => v.localService === true && /^en([-_]|$)/i.test(v.lang ?? ''));
   const seen = new Set();
   return en
-    .sort((a, b) => Number(Boolean(b.localService)) - Number(Boolean(a.localService)) || a.name.localeCompare(b.name))
+    .sort((a, b) => a.name.localeCompare(b.name))
     .filter((v) => (seen.has(v.name) ? false : seen.add(v.name)))
     .slice(0, max)
     .map((v) => ({ name: v.name, lang: v.lang, sub: voiceSub(v.lang), voice: v }));
