@@ -1,0 +1,68 @@
+/* Library sheet content (X4) and the Ask answer card (X5). Ported from design/components.css; tokens only. */
+.lib { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.lib__list { flex: 1; min-height: 0; overflow-y: auto; }
+.lib__answer { margin-bottom: var(--sp-3); }
+
+/* Search field */
+.search { display: flex; align-items: center; gap: 8px; min-height: var(--tap); padding: 0 6px 0 12px; border-radius: var(--r-md); background: var(--c-surface-2); color: var(--c-text-3); flex: 1; min-width: 0; }
+.search input { flex: 1; min-width: 0; align-self: stretch; min-height: var(--tap); border: 0; background: transparent; outline: none; -webkit-appearance: none; appearance: none; font-size: var(--fs-body); color: var(--c-text); padding: 0; }
+.search input::placeholder { color: var(--c-text-3); }
+.search:focus-within { box-shadow: 0 0 0 3px var(--c-focus); }
+.search .clear { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; position: relative; }
+.search .clear[hidden] { display: none; }
+.search .clear::after { content: ""; position: absolute; inset: -6px; }
+.search .clear span { width: 18px; height: 18px; border-radius: 50%; background: var(--c-text-3); color: var(--c-surface); display: grid; place-items: center; }
+.search .clear .i { width: 12px; height: 12px; stroke-width: 3; }
+.searchrow { display: flex; align-items: center; gap: var(--sp-1); padding: 0 var(--gutter) var(--sp-3); }
+.searchrow .btn[hidden], .sheet__head[hidden] { display: none; }
+.sheet__head + .searchrow { padding-top: 0; }
+.lib > .searchrow:first-child { padding-top: 6px; }
+
+/* Filter chips (the chip itself is a shared component) */
+.chips { display: flex; gap: var(--sp-2); overflow-x: auto; padding: 0 var(--gutter) var(--sp-3); scroll-padding: var(--gutter);
+  -webkit-mask: linear-gradient(to right, var(--c-mask) calc(100% - 28px), transparent); mask: linear-gradient(to right, var(--c-mask) calc(100% - 28px), transparent); }
+.chips[hidden] { display: none; }
+.chips--tags { padding-top: 0; }
+.chip--tag { background: transparent; box-shadow: inset 0 0 0 1px var(--c-separator); }
+.chip--tag[aria-pressed="true"] { box-shadow: none; }
+
+/* Groups and thought cards */
+.group-h { display: flex; align-items: center; gap: 8px; margin: var(--sp-4) 0 var(--sp-2); font-size: var(--fs-footnote); line-height: var(--lh-footnote); font-weight: var(--fw-semibold); color: var(--c-text-2); text-transform: uppercase; letter-spacing: .04em; }
+.group-h:first-child { margin-top: var(--sp-1); }
+.group-h .i { width: 16px; height: 16px; stroke-width: 2; color: var(--tc); }
+.group-h .n { color: var(--c-text-3); }
+.cards { display: flex; flex-direction: column; gap: var(--sp-2); }
+.tcard { display: grid; grid-template-columns: 34px 1fr auto; gap: 2px 12px; align-items: start; padding: 12px 14px; border-radius: var(--r-md); background: var(--c-surface); box-shadow: var(--e-1);
+  text-align: left; width: 100%; min-height: var(--tap); transition: transform var(--d-instant) var(--ease-standard); }
+.tcard:active { transform: scale(.985); }
+.sheet .tcard { background: var(--c-raised); }
+.tcard__title { font-size: var(--fs-subhead); line-height: var(--lh-subhead); font-weight: var(--fw-semibold); margin: 0; overflow-wrap: anywhere; }
+.tcard__snip { grid-column: 2 / 4; font-size: var(--fs-footnote); line-height: var(--lh-footnote); color: var(--c-text-2); margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.tcard__when { font-size: var(--fs-caption); line-height: var(--lh-subhead); color: var(--c-text-3); font-weight: var(--fw-medium); white-space: nowrap; }
+.tcard__when--due { color: var(--c-reminder); font-weight: var(--fw-semibold); }
+.tcard .ticon { grid-row: 1 / 3; }
+.tcard--done .tcard__title { color: var(--c-text-3); text-decoration: line-through; text-decoration-color: var(--c-text-3); }
+.tags { grid-column: 2 / 4; display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+.tag { font-size: var(--fs-caption); line-height: 20px; padding: 0 7px; border-radius: var(--r-xs); background: var(--c-surface-2); color: var(--c-text-2); font-weight: var(--fw-medium); overflow-wrap: anywhere; }
+.results-h { font-size: var(--fs-footnote); color: var(--c-text-3); font-weight: var(--fw-medium); margin: 0 0 var(--sp-2); }
+.lib .empty .btn { margin-top: var(--sp-2); }
+
+/* Topic card (X6) */
+.topic { display: flex; align-items: center; gap: var(--sp-3); width: 100%; min-height: var(--tap); padding: 12px 14px; border-radius: var(--r-md); background: var(--c-accent-soft); color: var(--c-accent-text); margin-bottom: var(--sp-2); text-align: left; }
+.topic strong { color: var(--c-text); font-size: var(--fs-subhead); }
+.topic strong, .topic span { display: block; }
+.topic span { font-size: var(--fs-footnote); line-height: var(--lh-footnote); color: var(--c-text-2); }
+
+/* Ask answer (X5) */
+.cite { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px; background: var(--c-accent-soft); color: var(--c-accent-text); font-size: var(--fs-caption); font-weight: var(--fw-bold); vertical-align: 2px; margin: 0 1px; }
+.answer__text { margin: 0; font-size: var(--fs-body); line-height: var(--lh-body); overflow-wrap: anywhere; }
+.sources { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-3); }
+.src { display: grid; grid-template-columns: 22px 34px 1fr; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); background: var(--c-surface); box-shadow: var(--e-1); text-align: left; width: 100%; min-height: 56px; }
+.src .cite { margin: 0; }
+.src__title { font-size: var(--fs-subhead); line-height: var(--lh-subhead); font-weight: var(--fw-semibold); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.src__when { font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--c-text-3); display: block; }
+.src > span:last-child { min-width: 0; }
+.provenance { display: flex; align-items: center; gap: 6px; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--c-text-3); margin-top: var(--sp-3); }
+.provenance .i { width: 13px; height: 13px; stroke-width: 2; }
+.answer__acts { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-3); }
