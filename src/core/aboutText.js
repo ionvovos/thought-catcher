@@ -66,8 +66,8 @@ export function aboutSections(features = { onDeviceSpeech: true }) {
       paragraphs: ['These are all the addresses this app contacts. None of them receives your thoughts, except your own AI provider when you add a key.'],
       hosts: [
         { name: 'This app', host: 'ionvovos.github.io', why: 'Always. Serves the app itself.' },
-        { name: 'jsDelivr', host: 'cdn.jsdelivr.net', why: 'After you agree: the assistant and speech programs, downloaded once.' },
-        { name: 'Hugging Face', host: 'huggingface.co and its file servers', why: 'After you agree: the search and speech models, downloaded once.' },
+        { name: 'jsDelivr', host: 'cdn.jsdelivr.net', why: 'After you agree: the assistant, search and speech programs, downloaded once.' },
+        { name: 'Hugging Face', host: 'huggingface.co and its file servers', why: 'After you agree: the assistant, search and speech models, downloaded once.' },
         { name: 'GitHub', host: 'raw.githubusercontent.com', why: 'After you agree: the assistant program files, downloaded once.' },
         { name: 'Your AI provider', host: 'the address you saved a key for', why: 'Only if you add a key. Receives the text you file.' },
         { name: 'Google or Apple', host: 'your browser\'s speech service', why: 'Only if you choose it for listening. Receives your voice recording.' },
