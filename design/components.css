@@ -39,7 +39,7 @@ mark { background: var(--c-accent-soft); color: var(--c-accent-text); border-rad
 
 .iconbtn {
   width: var(--tap); height: var(--tap); display: inline-grid; place-items: center; border-radius: 50%;
-  color: var(--c-text-2); transition: background var(--d-fast) var(--ease-standard), transform var(--d-instant);
+  color: var(--c-text-2); transition: transform var(--d-instant) var(--ease-standard);
 }
 .iconbtn:active { background: var(--c-surface-2); transform: scale(.94); }
 .iconbtn--filled { background: var(--c-surface); box-shadow: var(--e-1); color: var(--c-text); }
@@ -146,7 +146,7 @@ mark { background: var(--c-accent-soft); color: var(--c-accent-text); border-rad
 /* Buttons */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2); min-height: var(--tap); padding: 0 var(--sp-4);
   border-radius: var(--r-md); font-size: var(--fs-subhead); font-weight: var(--fw-semibold); line-height: 1;
-  transition: transform var(--d-instant) var(--ease-standard), background var(--d-fast); }
+  transition: transform var(--d-instant) var(--ease-standard); }
 .btn:active { transform: scale(.97); }
 .btn--primary { background: var(--c-accent); color: var(--c-on-accent); box-shadow: 0 6px 16px var(--accent-shadow); }
 .btn--primary:active { background: var(--c-accent-press); }
@@ -192,9 +192,8 @@ mark { background: var(--c-accent-soft); color: var(--c-accent-text); border-rad
 .typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--c-text-3); animation: dot 1.2s ease-in-out infinite; animation-play-state: var(--orb-play); }
 .typing span:nth-child(2) { animation-delay: .15s; } .typing span:nth-child(3) { animation-delay: .3s; }
 @keyframes dot { 0%, 60%, 100% { opacity: .35; transform: translateY(0); } 30% { opacity: 1; transform: translateY(calc(-3px * var(--motion-distance))); } }
-.shimmer { background: linear-gradient(90deg, var(--c-text-3) 0 35%, var(--c-text) 50%, var(--c-text-3) 65%) 0 0 / 300% 100%;
-  -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 2s linear infinite; animation-play-state: var(--orb-play); }
-@keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.shimmer { color: var(--c-text-2); animation: shimmer 1.6s ease-in-out infinite; animation-play-state: var(--orb-play); }
+@keyframes shimmer { 50% { opacity: .45; } }
 
 /* Quick replies */
 .replies { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-3); }
@@ -419,7 +418,7 @@ mark { background: var(--c-accent-soft); color: var(--c-accent-text); border-rad
   position: relative; overflow: hidden; }
 .bar > span::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, var(--c-sheen), transparent); animation: bar-sheen 1.6s linear infinite; animation-play-state: var(--orb-play); }
 @keyframes bar-sheen { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
-.toggle { width: 51px; height: 31px; border-radius: var(--r-full); background: var(--c-surface-3); position: relative; flex: none; transition: background var(--d-fast); }
+.toggle { width: 51px; height: 31px; border-radius: var(--r-full); background: var(--c-surface-3); position: relative; flex: none; }
 .toggle::before { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: var(--c-on-color); box-shadow: 0 2px 5px var(--c-thumb-shadow); transition: transform var(--d-base) var(--ease-spring); }
 .toggle::after { content: ""; position: absolute; inset: -7px -3px; }
 .toggle[aria-checked="true"] { background: var(--c-accent); }
@@ -440,7 +439,7 @@ mark { background: var(--c-accent-soft); color: var(--c-accent-text); border-rad
 .ob p { margin: 0; color: var(--c-text-2); font-size: var(--fs-body); line-height: var(--lh-body); }
 .ob__foot { display: flex; flex-direction: column; gap: var(--sp-3); align-items: stretch; margin-top: var(--sp-6); }
 .pager { display: flex; gap: 6px; justify-content: center; margin-bottom: var(--sp-2); }
-.pager span { width: 7px; height: 7px; border-radius: 4px; background: var(--c-surface-3); transition: width var(--d-base) var(--ease-standard); }
+.pager span { width: 7px; height: 7px; border-radius: 4px; background: var(--c-surface-3); }
 .pager span.on { width: 22px; background: var(--c-accent); }
 .skip { position: absolute; top: var(--safe-top); right: var(--sp-2); }
 .plist { list-style: none; margin: var(--sp-5) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-4); }

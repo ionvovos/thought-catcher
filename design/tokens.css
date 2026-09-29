@@ -308,13 +308,13 @@
    The orb stays a still gradient; listening shows the level as a static ring width. */
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="full"]) {
-    --d-instant: 1ms; --d-fast: 1ms; --d-base: 120ms; --d-slow: 120ms;
+    --d-instant: 1ms; --d-fast: 1ms; --d-base: 100ms; --d-slow: 100ms;
     --ease-spring: linear; --motion-distance: 0;
     --orb-play: paused;
   }
 }
 :root[data-motion="reduce"] {
-  --d-instant: 1ms; --d-fast: 1ms; --d-base: 120ms; --d-slow: 120ms;
+  --d-instant: 1ms; --d-fast: 1ms; --d-base: 100ms; --d-slow: 100ms;
   --ease-spring: linear; --motion-distance: 0;
   --orb-play: paused;
 }

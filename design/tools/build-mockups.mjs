@@ -66,7 +66,9 @@ const topbar = (left, right = `<button class="iconbtn" aria-label="Settings">${i
 const pillOk = `<button class="pill" aria-label="Assistant runs on this phone. Open settings"><span class="pill__dot"></span>On this phone</button>`;
 const fitem = (t, title, meta, i) => `<div class="fitem" style="--i:${i}">${ticon(t)}<div class="fitem__main"><p class="fitem__title">${title}</p><div class="fitem__meta">${badge(t, true)}${meta}</div></div><button class="iconbtn" aria-label="Edit ${title}">${ic('pencil')}</button></div>`;
 const dchip = (txt) => `<button class="chipdate" aria-label="Change date: ${txt}">${ic('calendar')}${txt}</button>`;
-const pillRules = `<button class="pill pill--off" aria-label="Sorting with simple rules. Open settings"><span class="pill__dot"></span>Simple rules</button>`;
+const pillRules = `<button class="pill pill--off" aria-label="Set up assistant. Opens the download offer"><span class="pill__dot"></span>Set up assistant</button>`;
+const pillBasic = `<button class="pill pill--warn" aria-label="Basic mode. Open settings"><span class="pill__dot"></span>Basic mode</button>`;
+const pillPaused = `<button class="pill pill--warn" aria-label="Assistant paused. Open settings"><span class="pill__dot"></span>Assistant paused</button>`;
 const typeBtn = `<div class="row-actions"><button class="btn btn--secondary btn--pill">${ic('keyboard')}Type</button></div>`;
 const dock = (state = 'idle', right = `<button class="dock__done">Done</button>`) =>
   `<footer class="dock"><button class="iconbtn iconbtn--filled" aria-label="Type instead">${ic('keyboard')}</button>${orb(state, 'orb--dock', 0, state === 'thinking' ? 'Thinking. Tap to stop' : 'Tap to talk')}${right}</footer>`;
@@ -177,7 +179,7 @@ ${topbar(pillRules)}
 ${dock('idle')}`);
 
 add('assistant-downloading', 'Assistant: model downloading after consent', 'downloading', `
-${topbar(`<button class="pill" aria-label="Getting the assistant ready, 42 percent"><span class="pill__ring" style="--p:42"></span>Getting ready 42%</button>`)}
+${topbar(`<button class="pill" aria-label="Setting up the assistant, 42 percent"><span class="pill__ring" style="--p:42"></span>Setting up 42%</button>`)}
 <section class="stage">
   <h1 class="greeting">What's on your mind?</h1>
   ${orb('idle', '', 0)}
@@ -369,7 +371,7 @@ add('settings-model-downloading', 'Settings: on-device model downloading', 'load
   <div class="group">
     <div class="srow srow--stack"><span class="srow__icon bg-iris">${ic('chip')}</span><span class="srow__text"><span class="srow__label">On-device assistant</span><span class="srow__sub">Getting the assistant ready: 42% of 870 MB. You can keep using the app.</span></span><button class="mini-btn" aria-label="Cancel download">Cancel</button>
       <div class="bar" style="--p:42;margin-left:42px" role="progressbar" aria-valuenow="42" aria-valuemin="0" aria-valuemax="100" aria-label="Model download"><span></span></div></div>
-    ${srow('search', 'bg-teal', 'Search by meaning', 'Ready, 29 MB', `<span class="srow__value" style="color:var(--c-success)">${ic('check')}</span>`)}
+    ${srow('search', 'bg-teal', 'Search by meaning', 'Ready, 22 MB', `<span class="srow__value" style="color:var(--c-success)">${ic('check')}</span>`)}
     ${srow('key', 'bg-grey', 'Your own key', 'Optional. Sharper answers, uses the internet.', `<span class="srow__value">Off</span>${ic('right')}`)}
   </div>
   <p class="gfoot">Until it is ready, thoughts are sorted with simple rules. Cancel stops the download; you can start it again here.</p>
@@ -405,7 +407,7 @@ ${topbar(`<button class="pill pill--off" aria-label="Offline"><span class="pill_
 ${dock('idle')}`);
 
 add('no-webgpu-fallback', 'Device cannot run the model: rules', 'not-supported', `
-${topbar(`<button class="pill pill--warn" aria-label="Simple rules. Open settings"><span class="pill__dot"></span>Simple rules</button>`)}
+${topbar(pillBasic)}
 <section class="stage">
   <h1 class="greeting">Good afternoon</h1>
   ${orb('basic', '', 0)}
@@ -414,14 +416,14 @@ ${topbar(`<button class="pill pill--warn" aria-label="Simple rules. Open setting
 </section>
 <div style="padding:0 var(--gutter) var(--sp-3)"><div class="notice" role="status">
   <span class="notice__icon">${ic('chip')}</span>
-  <div><h2>Simple rules on this phone</h2><p>This phone can't run the on-device assistant. I'll sort your thoughts with simple rules. You can add your own AI key in Settings.</p></div>
+  <div><h2>Basic mode on this phone</h2><p>This phone can't run the on-device assistant. I'll sort your thoughts with simple rules. You can add your own AI key in Settings.</p></div>
   <div class="notice__actions"><button class="btn btn--tinted">${ic('key', 'i--sm')}Add your own key</button><button class="btn btn--secondary">Got it</button></div>
 </div></div>
 ${peek}`);
 
 // ---------- Repair round: screens the requirements need (gate VD G4) ----------
 add('assistant-model-failed', 'Assistant: model failed, back to rules', 'error (load-failed)', `
-${topbar(`<button class="pill pill--warn" aria-label="Simple rules. Open settings"><span class="pill__dot"></span>Simple rules</button>`)}
+${topbar(pillPaused)}
 <section class="thread">
   <div class="msg msg--user">Idea: a shared calendar for the flat</div>
   <button class="msg-edit" aria-label="Edit your message">${ic('pencil')}Edit</button>
@@ -430,7 +432,7 @@ ${topbar(`<button class="pill pill--warn" aria-label="Simple rules. Open setting
   <div class="msg msg--assistant" role="status">${mini}<div class="msg__body"><p>Filed as an idea.</p>
     <div class="filed"><div class="fitem" style="--i:0">${ticon('idea')}<div class="fitem__main"><p class="fitem__title">Shared calendar for the flat</p><div class="fitem__meta">${badge('idea', true)}<span class="by">${ic('list')}sorted by rules</span></div></div><button class="iconbtn" aria-label="Edit Shared calendar for the flat">${ic('pencil')}</button></div></div></div></div>
 </section>
-${dock('idle')}`);
+${dock('basic')}`);
 
 add('assistant-speaking', 'Assistant: speaking a reply', 'speaking', `
 ${topbar(pillOk)}
