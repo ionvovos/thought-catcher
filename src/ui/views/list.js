@@ -2,6 +2,7 @@
 import { el } from '../dom.js';
 import { TYPES } from '../../core/model.js';
 import { searchThoughts } from '../../core/search.js';
+import { needsKeyMarker, isUnresolved } from '../../core/clarify.js';
 
 const LABELS = { idea: 'Ideas', task: 'Tasks', journal: 'Journal', reminder: 'Reminders' };
 const capitalise = (s) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -9,8 +10,8 @@ const fmt = () => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', time
 
 function markers(t) {
   const out = [];
-  if (t.clarify?.state === 'unavailable') out.push('needs a key to clarify');
-  else if (t.clarify?.state === 'pending') out.push('unresolved');
+  if (needsKeyMarker(t)) out.push('needs a key to clarify');
+  else if (isUnresolved(t) || t.clarify?.state === 'pending') out.push('unresolved');
   if (t.sort?.by === 'rules') out.push('sorted by rules');
   return out;
 }

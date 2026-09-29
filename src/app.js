@@ -3,6 +3,9 @@ import { createIdbStore } from './storage/idb.js';
 import { createMemoryStore } from './storage/memory.js';
 import { createWebSpeechEngine } from './speech/webspeech.js';
 import { startRouter } from './ui/router.js';
+import { createAiFlow } from './ui/aiFlow.js';
+import { getSettings } from './storage/settings.js';
+import { resolveStale } from './core/clarify.js';
 
 const banner = document.getElementById('banner');
 function showBanner(message) {
@@ -20,7 +23,16 @@ async function main() {
   }
 
   const engines = [createWebSpeechEngine(window)];
-  const speech = { engine: await store.getSetting('speech.engine', 'ask'), failed: new Set() };
+  const speech = { engine: getSettings()['speech.engine'], failed: new Set() };
+  const now = () => new Date();
+
+  // A question left open when the app was closed is never asked again (AC-M4.8).
+  try {
+    const stale = resolveStale(await store.getAll(), now());
+    if (stale.length) await store.putMany(stale);
+  } catch (err) {
+    console.error(err);
+  }
 
   const q = new URLSearchParams(window.location.search);
   let initialFocus = q.get('type') === '1' ? 'text' : q.get('capture') === '1' ? 'record' : null;
@@ -29,11 +41,14 @@ async function main() {
     store,
     engines,
     speech,
-    now: () => new Date(),
+    now,
     navigate: (hash) => { window.location.hash = hash; },
     showBanner,
     consumeInitialFocus: () => { const f = initialFocus; initialFocus = null; return f; },
   };
+
+  ctx.ai = createAiFlow({ store, now, engines, speech });
+  ctx.afterSave = ctx.ai.afterSave;
 
   startRouter({
     root: document.getElementById('app'),
