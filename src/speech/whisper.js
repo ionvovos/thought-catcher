@@ -11,7 +11,9 @@ const MIN_SECONDS = 0.4;
 const SILENCE_RMS = 0.004; // below this the recording is silence; Whisper would invent words for it
 
 async function defaultLoadPipeline(onProgress) {
-  const { pipeline } = await import(TRANSFORMERS_URL);
+  const { pipeline, env } = await import(TRANSFORMERS_URL);
+  // Every request, including the size probes, names the pinned commit and never `main` (gate R2-F1).
+  if (env) env.remotePathTemplate = `{model}/resolve/${WHISPER_REVISION}/`;
   // The runtime remembers a backend that failed to start, so a failed WebGPU attempt cannot be retried on
   // WebAssembly. Ask for a GPU adapter first and use WebGPU only when one really exists.
   let adapter = null;

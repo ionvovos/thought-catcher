@@ -66,3 +66,10 @@ test('build gate G1: the embedding model and the speech model are fetched at a p
   const whisper = readFileSync(fileURLToPath(new URL('../src/speech/whisper.js', import.meta.url)), 'utf8');
   assert.match(whisper, /revision: WHISPER_REVISION/);
 });
+
+test('gate R2-F1: transformers.js requests carry the pinned commit, not main', () => {
+  const worker = readFileSync(fileURLToPath(new URL('../src/brain/embed.worker.js', import.meta.url)), 'utf8');
+  const whisper = readFileSync(fileURLToPath(new URL('../src/speech/whisper.js', import.meta.url)), 'utf8');
+  assert.match(worker, /remotePathTemplate = `\{model\}\/resolve\/\$\{REVISION\}\/`/);
+  assert.match(whisper, /remotePathTemplate = `\{model\}\/resolve\/\$\{WHISPER_REVISION\}\/`/);
+});

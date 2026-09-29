@@ -23,6 +23,8 @@ self.onmessage = async ({ data }) => {
   try {
     if (type === 'load') {
       const lib = await import(LIB_URL);
+      // Every request, including the size probes, names the pinned commit and never `main` (gate R2-F1).
+      if (lib.env) lib.env.remotePathTemplate = `{model}/resolve/${REVISION}/`;
       extractor = await lib.pipeline('feature-extraction', MODEL, {
         revision: REVISION,
         device: 'wasm',
