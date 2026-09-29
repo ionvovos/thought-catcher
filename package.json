@@ -1,0 +1,20 @@
+{
+  "name": "thought-catcher",
+  "version": "0.1.0",
+  "description": "Installable web app that catches thoughts by voice or text, sorts them, asks one clarifying question and resurfaces them. Data stays on the device.",
+  "author": "Ion Vovos (Nexa Systems)",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ionvovos/thought-catcher.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test 'tests/**/*.test.mjs'",
+    "smoke": "node e2e/smoke.mjs"
+  }
+}
