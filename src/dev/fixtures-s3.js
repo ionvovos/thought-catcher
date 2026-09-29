@@ -200,7 +200,7 @@ Object.assign(FIXTURES, {
   }),
   'thought-detail-type-menu': (root) => detailFixture(root, { id: 'i1', ctx: { thoughts: withExpansion(), brain: relatedBrain }, act: (r) => click(r, '.badge--btn') }),
   'thought-detail-edit': (root) => detailFixture(root, {
-    id: 'i1', ctx: { thoughts: withExpansion(), brain: relatedBrain }, act: (r) => { click(r, '[aria-label="More"]'); click(r, '.amenu__item'); },
+    id: 'i1', ctx: { thoughts: withExpansion(), brain: relatedBrain }, act: (r) => { click(r, '[aria-label="More"]'); document.querySelector('.amenu__item').click(); },
   }),
   'thought-detail-delete': (root) => detailFixture(root, { id: 't3', ctx: { thoughts: rulesThoughts(), status: STATUS.rules }, act: (r) => click(r, '.actionbar .btn--secondary') }),
   'thought-detail-missing': (root) => detailFixture(root, { id: 'nope' }),
