@@ -19,14 +19,16 @@ const synth = () => (typeof globalThis.speechSynthesis === 'object' ? globalThis
 // root is an .app frame; onDone() runs after the last page or Skip. `start` (0-2) lets tests open a later page.
 export function showOnboarding(root, ctx, { onDone, start = 0 } = {}) {
   let page = Math.min(2, Math.max(0, start));
-  const choice = { listen: LISTEN.some((l) => l.value === ctx.settings.getSettings()['speech.engine']) ? ctx.settings.getSettings()['speech.engine'] : 'whisper', voice: ctx.settings.getSettings()['voice.name'] ?? null };
+  // No engine is preselected: a person who taps Start without choosing is asked before the first recording, so the
+  // 60 MB on-device download never starts silently (L4a S3 F2).
+  const choice = { listen: LISTEN.some((l) => l.value === ctx.settings.getSettings()['speech.engine']) ? ctx.settings.getSettings()['speech.engine'] : null, voice: ctx.settings.getSettings()['voice.name'] ?? null };
   let stopVoices = null;
 
   function finish(save) {
     synth()?.cancel();
     stopVoices?.();
     if (save) {
-      ctx.settings.setSettings({ 'speech.engine': choice.listen, 'voice.name': choice.voice, 'voice.speak': Boolean(choice.voice) });
+      ctx.settings.setSettings({ ...(choice.listen ? { 'speech.engine': choice.listen } : {}), 'voice.name': choice.voice, 'voice.speak': Boolean(choice.voice) });
     }
     onDone?.();
   }
