@@ -81,3 +81,22 @@ test('an unmarked hour on a named day: 7-11 morning, 1-6 afternoon, 12 noon', ()
   assert.deepEqual(at('tomorrow at 12'), { due_at: local(8, 30, 12), kind: 'clock' });
   assert.deepEqual(at('tomorrow at 7:30'), { due_at: local(8, 30, 7, 30), kind: 'clock' });
 });
+
+import { laterTonight } from '../src/core/timeparse.js';
+import { whenFromAnswer } from '../src/brain/core.js';
+
+test('G8: "tonight" after 20:00 means later tonight, at 08:38, 20:38, 21:38 and 23:38', () => {
+  const at = (h, m) => new Date(2026, 8, 29, h, m, 0, 0);
+  const hm = (iso) => { const d = new Date(iso); return [d.getDate(), d.getHours(), d.getMinutes()]; };
+  assert.deepEqual(hm(whenFromAnswer('Tonight', at(8, 38))), [29, 20, 0]);
+  assert.deepEqual(hm(whenFromAnswer('Tonight', at(20, 38))), [29, 21, 45]);
+  assert.deepEqual(hm(whenFromAnswer('Tonight', at(21, 38))), [29, 22, 45]);
+  assert.deepEqual(hm(whenFromAnswer('Tonight', at(23, 38))), [29, 23, 59]);
+  assert.deepEqual(hm(whenFromAnswer('this evening', at(20, 38))), [29, 21, 45]);
+  assert.deepEqual(hm(parseWhen('remind me tonight', at(22, 10)).due_at), [29, 23, 15]);
+  assert.equal(laterTonight(new Date(2026, 8, 29, 23, 59, 30)), null);
+});
+
+test('G8: an explicit clock time is not changed by the tonight rule', () => {
+  assert.deepEqual(parseWhen('tonight at 7', new Date(2026, 8, 29, 21, 0)), { due_at: null, kind: null });
+});

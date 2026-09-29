@@ -92,6 +92,17 @@ function dayHour(h) {
 
 const NONE = { due_at: null, kind: null };
 
+// "Tonight" said after its default 20:00 has passed still means tonight (build gate G8): one hour from now, rounded up to a
+// quarter hour, and never past midnight (23:59 at the latest). Null only when less than a minute of the day is left.
+export function laterTonight(now) {
+  const t = new Date(now.getTime() + 60 * 60000);
+  t.setSeconds(0, 0);
+  t.setMinutes(Math.ceil(t.getMinutes() / 15) * 15);
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 0, 0);
+  const d = t.getTime() > end.getTime() ? end : t;
+  return d.getTime() - now.getTime() >= 60000 ? d : null;
+}
+
 export function parseWhen(text, now) {
   if (!(now instanceof Date) || Number.isNaN(now.getTime())) throw new TypeError('now must be a valid Date');
   const t = norm(text);
@@ -106,7 +117,7 @@ export function parseWhen(text, now) {
       const evening = today[1] !== 'today';
       const d = c
         ? firstAhead(todayCandidates(c, evening), c.min, now)
-        : firstAhead([DEFAULT_HOUR[today[1]]], 0, now);
+        : firstAhead([DEFAULT_HOUR[today[1]]], 0, now) ?? laterTonight(now);
       return d ? { due_at: d.toISOString(), kind: 'clock' } : NONE;
     }
   }
