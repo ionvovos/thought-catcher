@@ -16,7 +16,8 @@ const sleep = (ms) => new Promise((r) => { setTimeout(r, ms); });
 const realModel = process.argv.includes('--real-model');
 const GPU_FLAGS = ['--enable-unsafe-webgpu', '--enable-gpu', '--use-angle=metal', '--ignore-gpu-blocklist'];
 
-async function launch({ gpu = false } = {}) {
+// profile: a fixed folder name under the temp dir, kept between runs (model weights stay cached); port: fixed so the origin is stable.
+async function launch({ gpu = false, profile = null, port: fixedPort = 0 } = {}) {
   const server = http.createServer((req, res) => {
     const u = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     const f = path.join(repo, u === '/' ? 'LICENSE' : u);
@@ -24,9 +25,11 @@ async function launch({ gpu = false } = {}) {
     res.writeHead(200, { 'content-type': MIME[path.extname(f)] ?? 'text/plain' });
     fs.createReadStream(f).pipe(res);
   });
-  await new Promise((r) => { server.listen(0, '127.0.0.1', r); });
+  await new Promise((r) => { server.listen(fixedPort, '127.0.0.1', r); });
   const base = `http://127.0.0.1:${server.address().port}`;
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tc-brain-'));
+  const dir = profile ? path.join(os.tmpdir(), profile) : fs.mkdtempSync(path.join(os.tmpdir(), 'tc-brain-'));
+  fs.mkdirSync(dir, { recursive: true });
+  try { fs.unlinkSync(path.join(dir, 'DevToolsActivePort')); } catch { /* none */ }
   const flags = ['--headless=new', ...(gpu ? GPU_FLAGS : ['--disable-gpu']), '--remote-debugging-port=0', `--user-data-dir=${dir}`, '--no-first-run', 'about:blank'];
   const chrome = spawn(CHROME, flags, { stdio: 'ignore' });
   let port;
@@ -37,24 +40,26 @@ async function launch({ gpu = false } = {}) {
   let id = 0;
   const pending = new Map();
   const problems = [];
+  const network = [];
   ws.onmessage = (m) => {
     const d = JSON.parse(m.data);
     if (d.id && pending.has(d.id)) { pending.get(d.id)(d); pending.delete(d.id); return; }
+    if (d.method === 'Network.requestWillBeSent') network.push(d.params.request.url);
     if (d.method === 'Runtime.exceptionThrown') problems.push(`exception: ${d.params.exceptionDetails.exception?.description}`);
     if (d.method === 'Runtime.consoleAPICalled' && d.params.type === 'error') problems.push(`console.error: ${d.params.args.map((a) => a.value ?? a.description).join(' ')}`);
     if (d.method === 'Log.entryAdded' && d.params.entry.level === 'error' && !/favicon\.ico/.test(d.params.entry.url ?? '')) problems.push(`log.error: ${d.params.entry.text} ${d.params.entry.url ?? ''}`);
   };
   const send = (method, params = {}) => new Promise((r) => { id += 1; pending.set(id, r); ws.send(JSON.stringify({ id, method, params })); });
-  await send('Runtime.enable'); await send('Log.enable'); await send('Page.enable');
+  await send('Runtime.enable'); await send('Log.enable'); await send('Page.enable'); await send('Network.enable');
   return {
-    base, problems, send,
+    base, problems, network, send,
     async ev(expression, timeout = 60000) {
       const r = await Promise.race([send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }), sleep(timeout).then(() => ({ result: { exceptionDetails: { exception: { description: `timeout after ${timeout} ms` } } } }))]);
       if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description ?? 'eval failed');
       return r.result.result.value;
     },
     async load(p) { await send('Page.navigate', { url: `${base}${p}` }); await sleep(500); },
-    async close() { try { await send('Browser.close'); } catch { /* already closing */ } ws.close(); chrome.kill(); server.close(); await sleep(800); try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 }); } catch { /* a temp profile left behind is harmless */ } },
+    async close() { try { await send('Browser.close'); } catch { /* already closing */ } ws.close(); chrome.kill(); server.close(); await sleep(800); if (!profile) { try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 }); } catch { /* a temp profile left behind is harmless */ } } },
   };
 }
 
@@ -294,39 +299,80 @@ async function probeScores() {
   } finally { await c.close(); }
 }
 
+const MODEL_PROFILE = 'tc-brain-model-profile'; // kept between runs: WebLLM caches the weights in this profile
+const MODEL_PORT = 47831; // fixed: Cache Storage and localStorage belong to the origin, port included
+
 async function realModelChecks() {
-  const c = await launch({ gpu: true });
-  try {
-    await c.load('/LICENSE');
-    const { RAMBLES } = await import('../tests/fixtures/rambles.js');
-    const out = await c.ev(`(async () => {
+  const { RAMBLES } = await import('../tests/fixtures/rambles.js');
+  const rambles = RAMBLES.map((r) => ({ note: r.note, n: r.items.length, types: r.items.map((i) => i.type) }));
+  const setup = `
       const { createBrain } = await import('/src/brain/index.js');
+      const { createDeviceHost } = await import('/src/brain/device.js');
       const { createMemoryStore } = await import('/src/storage/memory.js');
       const { createSettingsApi } = await import('/src/storage/settings.js');
       const NOW = new Date(2026, 8, 29, 10, 0, 0);
-      const brain = createBrain({ store: createMemoryStore(), settings: createSettingsApi(localStorage), now: () => NOW });
+      const host = createDeviceHost();
+      const raw = []; const g = host.generate.bind(host);
+      host.generate = async (m, o) => { const t = await g(m, o); raw.push(t); return t; };
+      const brain = createBrain({ store: createMemoryStore(), settings: createSettingsApi(localStorage), now: () => NOW, llm: host });
+      const states = []; brain.addEventListener('status', (e) => states.push(e.detail.llm.state));
+  `;
+  const runRambles = `
+      const runs = [];
+      for (const r of ${JSON.stringify(rambles)}) {
+        const s = performance.now(); const before = raw.length;
+        const items = await brain.split(r.note, { source: 'typed' });
+        runs.push({ n: r.n, types: r.types, raw: raw.slice(before), got: items.map((i) => [i.type, i.by, i.confidence, i.title, i.due_at && i.due_at.slice(0, 16), i.question && i.question.case]), ms: Math.round(performance.now() - s) });
+      }
+  `;
+  // launch 1: consent, download, load, ten rambles
+  const c = await launch({ gpu: true, profile: MODEL_PROFILE, port: MODEL_PORT });
+  try {
+    await c.load('/LICENSE');
+    const out = await c.ev(`(async () => {
+      ${setup}
       await brain.ready;
       const first = brain.getStatus();
-      const states = []; brain.addEventListener('status', (e) => states.push(e.detail.llm.state + (e.detail.llm.pct !== undefined ? ':' + e.detail.llm.pct : '')));
+      await c.__noop;
       const t0 = performance.now();
       await brain.prepare({ llm: true });
       const loadMs = Math.round(performance.now() - t0);
       const status = brain.getStatus();
-      const runs = [];
-      for (const r of ${JSON.stringify(RAMBLES.map((r) => ({ note: r.note, n: r.items.length, types: r.items.map((i) => i.type) })))}) {
-        const s = performance.now();
-        const items = await brain.split(r.note, { source: 'typed' });
-        runs.push({ n: r.n, types: r.types, got: items.map((i) => [i.type, i.by, i.confidence, i.title, i.due_at && i.due_at.slice(0, 16), i.question && i.question.case]), ms: Math.round(performance.now() - s) });
-      }
-      return { first, loadMs, status, states: [...new Set(states.map((s) => s.split(':')[0]))], runs };
-    })()`, 900000);
-    check('B2 real model: capability ok, then downloading, ready', out.first.llm.state === 'not-downloaded' && out.status.llm.state === 'ready' && out.states.includes('downloading'), `first ${out.first.llm.state}; load ${Math.round(out.loadMs / 1000)} s`);
+      ${runRambles}
+      return { first, loadMs, status, states: [...new Set(states)], runs };
+    })()`.replace('await c.__noop;', ''), 900000);
+    const wasCached = out.first.llm.state !== 'not-downloaded';
+    check('B2 real model: capability ok, prepare downloads (first launch) and reaches ready', out.status.llm.state === 'ready' && (out.states.includes('downloading') || out.states.includes('loading')), `first ${out.first.llm.state}; load ${Math.round(out.loadMs / 1000)} s; states ${out.states.join(',')}${wasCached ? ' (profile already cached)' : ''}`);
     const counted = out.runs.filter((r) => r.got.length === r.n);
     const modelUsed = out.runs.filter((r) => r.got.some(([, by]) => by === 'device'));
-    check('B2 real model: at least 8 of 10 rambles give the expected item count', counted.length >= 8, `${counted.length}/${out.runs.length}; model answered ${modelUsed.length}`);
-    console.log(out.runs.map((r) => `  ${r.ms} ms want ${r.n} ${r.types.join('/')} got ${JSON.stringify(r.got)}`).join('\n'));
+    const typed = out.runs.flatMap((r) => (r.got.length === r.n ? r.got.map(([t], i) => t === r.types[i]) : []));
+    check('B2 real model: at least 8 of 10 rambles give the expected item count', counted.length >= 8, `${counted.length}/${out.runs.length}; model answered ${modelUsed.length}; item types right ${typed.filter(Boolean).length}/${typed.length} in the counted rambles`);
+    out.runs.forEach((r, i) => {
+      const bad = r.got.length !== r.n;
+      console.log(`  ${bad ? 'MISS' : 'ok  '} #${i + 1} ${r.ms} ms want ${r.n} ${r.types.join('/')} got ${JSON.stringify(r.got)}`);
+      if (bad || process.argv.includes('--raw')) console.log(`        raw: ${r.raw.join(' || ').replace(/\s+/g, ' ').slice(0, 900)}`);
+    });
     check('real-model flow: no console error', c.problems.length === 0, c.problems.join(' | '));
   } finally { await c.close(); }
+
+  // launch 2 (AC-B2.3): same profile, the model was downloaded and agreed to: it loads from cache by itself, with no model request
+  const d = await launch({ gpu: true, profile: MODEL_PROFILE, port: MODEL_PORT });
+  try {
+    await d.load('/LICENSE');
+    const t0 = Date.now();
+    const out = await d.ev(`(async () => {
+      ${setup}
+      await brain.ready;
+      const status = brain.getStatus();
+      const items = await brain.split('Buy milk tomorrow and remind me at 6pm to call mum', { source: 'typed' });
+      return { status, states: [...new Set(states)], by: items.map((i) => [i.type, i.by]) };
+    })()`, 300000);
+    const hosts = d.network.map((u) => new URL(u).host).filter((h) => !h.startsWith('127.0.0.1'));
+    const modelHosts = hosts.filter((h) => /huggingface|hf\.co|githubusercontent/.test(h));
+    check('B2.3 second launch: loads from cache without asking, no request to the model hosts', out.status.llm.state === 'ready' && out.states.includes('loading') && modelHosts.length === 0, `${out.states.join(',')}; ${Math.round((Date.now() - t0) / 1000)} s; model-host requests ${modelHosts.length}; other hosts ${[...new Set(hosts)].join(', ')}`);
+    check('B2 second launch: the model answers the split', out.by.some(([, by]) => by === 'device'), JSON.stringify(out.by));
+    check('second-launch flow: no console error', d.problems.length === 0, d.problems.join(' | '));
+  } finally { await d.close(); }
 }
 
 const only = process.argv.find((a) => a.startsWith('--only='))?.split('=')[1];

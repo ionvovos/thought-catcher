@@ -26,7 +26,9 @@ function item(raw, i) {
   return { type: raw.type, title: cleanTitle(raw.title), text, when: cleanWhen(raw.when) };
 }
 
-export function validateSplit(obj) {
+export function validateSplit(rawObj) {
+  // a small model sometimes answers a one-thought note with the bare item instead of { items: [item] }
+  const obj = rawObj && typeof rawObj === 'object' && !Array.isArray(rawObj.items) && rawObj.type && rawObj.text ? { items: [rawObj] } : rawObj;
   if (!obj || typeof obj !== 'object' || !Array.isArray(obj.items)) throw bad('no items list');
   if (obj.items.length === 0) throw bad('the items list is empty');
   return obj.items.slice(0, 8).map(item);

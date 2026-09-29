@@ -99,18 +99,21 @@ function grounded(mi, noteWords) {
 const positionIn = (note, text) => note.toLowerCase().indexOf(oneLine(text).toLowerCase().slice(0, 30));
 
 // Step 5: if the model's items cover under 60% of the note's content words, each uncovered rule part is added.
+// A rule part none of whose content words the model covered is added even when the overall share is higher.
 export function coverageGuard(note, items, now) {
   const noteWords = new Set(contentWords(note));
   if (!noteWords.size) return items.slice(0, MAX_ITEMS);
   const covered = new Set(contentWords(items.map((i) => i.text).join(' ')));
   const share = [...noteWords].filter((w) => covered.has(w)).length / noteWords.size;
-  if (share >= 0.6) return items.slice(0, MAX_ITEMS);
-  const extra = splitByRules(note, now)
-    .filter((p) => {
-      const ws = contentWords(p.text);
-      return ws.length > 0 && ws.filter((w) => covered.has(w)).length / ws.length < 0.5;
-    })
-    .map(ruleItem);
+  const parts = splitByRules(note, now);
+  const missing = (p) => {
+    const ws = contentWords(p.text);
+    return ws.length > 0 && ws.filter((w) => covered.has(w)).length / ws.length;
+  };
+  const extra = parts.filter((p) => {
+    const m = missing(p);
+    return m !== false && (share < 0.6 ? m < 0.5 : m === 0);
+  }).map(ruleItem);
   if (!extra.length) return items.slice(0, MAX_ITEMS);
   let prev = -1;
   const placed = [...items, ...extra].map((it, i) => {
@@ -123,12 +126,59 @@ export function coverageGuard(note, items, now) {
   return placed.map((p) => p.it).slice(0, MAX_ITEMS);
 }
 
-// Step 1-5 over a whole validated model reply. Throws when nothing usable is left (the caller falls back to rules).
+// ---- how far to trust a model split ---------------------------------------------------------------------------
+// Real 1.5B output (e2e/v2-brain.mjs --real-model): the `text` spans are usually faithful, but titles and types are often
+// shifted onto the neighbouring item, one item may swallow two sentences, and a sentence may be dropped. So the model's
+// split is used as it is only when every item is self-consistent (its title shares a word with its text) and the items
+// cover the note; otherwise the rule split is the skeleton and the model only labels the parts it matches unambiguously.
+const stem = (w) => w.replace(/(?:ing|ed|es|s)$/, '');
+const stems = (text) => new Set(contentWords(text).map(stem));
+export const TRUST_COVERAGE = 0.8;
+
+function aligned(mi) {
+  const t = stems(mi.title ?? '');
+  const x = stems(mi.text);
+  if (!t.size || !x.size) return true;
+  for (const w of t) if (x.has(w)) return true;
+  return false;
+}
+
+function coverageShare(note, items) {
+  const noteWords = new Set(contentWords(note));
+  if (!noteWords.size) return 1;
+  const covered = new Set(contentWords(items.map((i) => i.text).join(' ')));
+  return [...noteWords].filter((w) => covered.has(w)).length / noteWords.size;
+}
+
+const overlap = (a, b) => { let n = 0; for (const w of a) if (b.has(w)) n += 1; return n; };
+
+function hybridSplit(usable, note, now, by) {
+  const parts = splitByRules(note, now);
+  const taken = new Set();
+  return parts.map((part) => {
+    const pw = stems(part.text);
+    const hits = pw.size === 0 ? [] : usable.filter((mi) => {
+      const mw = stems(mi.text);
+      const o = overlap(pw, mw);
+      return mw.size > 0 && o / pw.size >= 0.6 && o / mw.size >= 0.6;
+    });
+    if (hits.length === 1 && !taken.has(hits[0])) {
+      taken.add(hits[0]);
+      return refineItem({ ...hits[0], text: part.text }, now, by);
+    }
+    return ruleItem(part);
+  });
+}
+
+// Steps 1-6 over a whole validated model reply. Throws when nothing usable is left (the caller falls back to rules).
 export function refineSplit(modelItems, note, now, by) {
   const noteWords = new Set(contentWords(note));
-  const kept = modelItems.filter((mi) => grounded(mi, noteWords));
-  if (!kept.length) throw new AiError('malformed', 'The AI reply had no usable items.');
-  return coverageGuard(note, kept.map((mi) => refineItem(mi, now, by)), now);
+  const usable = modelItems.filter((mi) => grounded(mi, noteWords) && aligned(mi));
+  if (!usable.length) throw new AiError('malformed', 'The AI reply had no usable items.');
+  if (usable.length === modelItems.length && coverageShare(note, usable) >= TRUST_COVERAGE) {
+    return coverageGuard(note, usable.map((mi) => refineItem(mi, now, by)), now);
+  }
+  return hybridSplit(usable, note, now, by).slice(0, MAX_ITEMS);
 }
 
 // ---- the one question (architecture 2.4) ------------------------------------------------------------------------

@@ -668,3 +668,35 @@ test('createBrainCore is usable directly with stubs and dispatches status events
   core.refresh();
   assert.deepEqual(seen, ['rules']);
 });
+
+// ---- real model output (fixtures/model-raw.js): the refinement absorbs shifted titles, swallowed and dropped sentences ----
+test('real 1.5B replies: every ramble reaches its expected item count (misaligned items are relabelled by the rule split)', async () => {
+  const { REAL_MODEL_RAW } = await import('./fixtures/model-raw.js');
+  assert.equal(REAL_MODEL_RAW.length, RAMBLES.length);
+  let right = 0;
+  for (let i = 0; i < RAMBLES.length; i += 1) {
+    const { brain } = mkBrain({ llm: stubLlm(REAL_MODEL_RAW[i]) });
+    const items = await brain.split(RAMBLES[i].note);
+    if (items.length === RAMBLES[i].items.length) right += 1;
+    else assert.fail(`ramble ${i + 1}: ${items.length} items, expected ${RAMBLES[i].items.length}: ${JSON.stringify(items.map((x) => x.text))}`);
+  }
+  assert.equal(right, RAMBLES.length);
+});
+
+test('real 1.5B reply to ramble 1 (titles shifted one item down): four items, right types, the Friday reminder dated', async () => {
+  const { REAL_MODEL_RAW } = await import('./fixtures/model-raw.js');
+  const { brain } = mkBrain({ llm: stubLlm(REAL_MODEL_RAW[0]) });
+  const items = await brain.split(RAMBLES[0].note);
+  assert.deepEqual(items.map((i) => i.type), ['task', 'task', 'idea', 'reminder']);
+  assert.equal(new Date(items[3].due_at).getDate(), 2);
+  assert.equal(items[0].by, 'device', 'the aligned item keeps its model label');
+  assert.equal(items[1].by, 'rules', 'the dropped sentence comes back from the rule split');
+});
+
+test('a self-consistent model split that covers the note is used as it is, even when the rules would split differently', async () => {
+  const note = 'Call Sam and book the venue. Sam knows the caterer.';
+  const llm = stubLlm(json({ items: [{ type: 'task', title: 'Call Sam and book the venue', text: 'Call Sam and book the venue', when: null }, { type: 'journal', title: 'Sam knows the caterer', text: 'Sam knows the caterer', when: null }] }));
+  const { brain } = mkBrain({ llm });
+  const items = await brain.split(note);
+  assert.deepEqual(items.map((i) => [i.type, i.by]), [['task', 'device'], ['journal', 'device']]);
+});
