@@ -8,7 +8,7 @@ import * as defaultSettings from '../storage/settings.js';
 
 // llm, embedder and provider are injectable for tests: pass a stub, or null for "not available".
 // provider may be an object or a function returning one.
-export function createBrain({ store, settings = defaultSettings, now = () => new Date(), fetch = globalThis.fetch, llm, embedder, provider, online } = {}) {
+export function createBrain({ store, settings = defaultSettings, now = () => new Date(), fetch = globalThis.fetch, llm, embedder, provider, online, timeouts } = {}) {
   if (!store) throw new TypeError('createBrain needs a store');
   const canWork = typeof Worker === 'function';
   const llmHost = llm !== undefined ? llm : (canWork ? createDeviceHost() : null);
@@ -31,7 +31,7 @@ export function createBrain({ store, settings = defaultSettings, now = () => new
   };
   const getProvider = provider === undefined ? fromSettings : (typeof provider === 'function' ? provider : () => provider);
 
-  const brain = createBrainCore({ store, settings, now, llm: llmHost, embedder: embedHost, getProvider, online });
+  const brain = createBrainCore({ store, settings, now, llm: llmHost, embedder: embedHost, getProvider, online, timeouts });
 
   const g = globalThis;
   if (typeof g.addEventListener === 'function') {

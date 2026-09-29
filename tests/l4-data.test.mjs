@@ -26,7 +26,7 @@ test('AC-M8.5 / M9.3: a real settings store holding a key exports without the ke
   assert.equal(text.includes(KEY), false);
   assert.equal(/api[-_ ]?key|sk-ant|x-api-key/i.test(text), false);
   const parsed = JSON.parse(text);
-  assert.equal(parsed.version, 1);
+  assert.equal(parsed.version, 2);
   assert.ok(Date.parse(parsed.exported_at));
   assert.equal(parsed.thoughts.length, 1);
 });
@@ -77,7 +77,7 @@ test('AC-M9.5: every kind of invalid file is rejected with an error and no data'
     'truncated json': JSON.stringify(good).slice(0, 40),
     'number': '42',
     'wrong format': JSON.stringify({ ...good, format: 'x' }),
-    'version 2': JSON.stringify({ ...good, version: 2 }),
+    'version 3': JSON.stringify({ ...good, version: 3 }),
     'version as string': JSON.stringify({ ...good, version: '1' }),
     'thoughts null': JSON.stringify({ ...good, thoughts: null }),
     'title too long': badThought({ title: 'x'.repeat(61) }),

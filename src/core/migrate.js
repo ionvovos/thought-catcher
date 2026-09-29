@@ -17,3 +17,16 @@ export function upgradeThought(row) {
 }
 
 export const isV1 = (row) => row !== null && typeof row === 'object' && row.v !== 2;
+
+// The whole v1 -> v2 walk as data: rows in, { upgraded, quarantined } out. `upgrade` may throw for a row that cannot be
+// handled at all; that is not caught here, so the caller aborts the transaction and the database stays at version 1.
+export function planMigration(rows, upgrade = upgradeThought) {
+  const upgraded = [];
+  const quarantined = [];
+  for (const row of rows) {
+    const up = upgrade(row);
+    if (up === null) quarantined.push(row);
+    else upgraded.push(up);
+  }
+  return { upgraded, quarantined };
+}

@@ -4,7 +4,7 @@
 
 const DONE = /^(?:(?:ok(?:ay)?|yes|yeah|no|great|cool|alright)[\s,]*)?(?:done|that'?s (?:all|it)|that is (?:all|it)|all done|i'?m done|nothing else|no thanks?|thanks?(?: you| a lot)?|thank you(?: very much)?|bye|goodbye|close|finished)[\s.!]*$/i;
 
-const EXPAND = /^(?:(?:please|can you|could you|now|ok(?:ay)?|hey)[\s,]+)*(?:expand|flesh out|develop|elaborate|brainstorm|build on|think through|help me (?:develop|expand|flesh out|think through))(?:\s+(?:on\s+)?(?:that|this|it|the|my|last)(?:\s+(?:idea|one|thought))?)?[\s.!]*$/i;
+const EXPAND = /^(?:(?:please|can you|could you|now|ok(?:ay)?|hey)[\s,]+)*(?:expand|flesh (?:it |that |this )?out|develop|elaborate|brainstorm|build on|think through|help me (?:develop|expand|flesh out|think through))(?:\s+(?:on\s+)?(?:that|this|it|the|my|last)(?:\s+(?:idea|one|thought))?)?[\s.!]*$/i;
 
 const PLAN = /^(?:(?:please|can you|could you|now|ok(?:ay)?|hey)[\s,]+)*(?:plan|make a plan(?: for)?|break (?:that|this|it) (?:down|into steps)|break down|steps for|give me steps for|help me plan)(?:\s+(?:that|this|it|the|my|last)(?:\s+(?:task|one|thing))?)?[\s.!]*$/i;
 
@@ -15,7 +15,8 @@ const ASK_STRONG = [
   /\b(?:did|have) i (?:say|said|write|wrote|note|noted|mention|mentioned|save|saved)\b/i,
   /\bdo i have (?:any|a|an|something|anything)\b/i,
   /^(?:show|find|search|look up|list|tell) (?:me )?(?:my |the |all |any |everything |anything )/i,
-  /^(?:search|find) (?:for )?\S/i,
+  /^search (?:for )?\S/i,
+  /^find (?:for )?(?:my|the|all|any|anything|everything|notes?|thoughts?|ideas?|tasks?|reminders?|about|what|where|when)\b/i,
   /\b(?:anything|something|any (?:ideas?|thoughts?|notes?|tasks?|reminders?)) (?:about|on|regarding)\b/i,
   /\bwhat (?:ideas|tasks|reminders|notes|thoughts) (?:do i|have i)\b/i,
 ];
