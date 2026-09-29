@@ -83,6 +83,13 @@ function firstAhead(hours, min, now) {
   return null;
 }
 
+// An unmarked hour on a named day ("tomorrow at 7", "at 3 tomorrow", "at 7 on friday"): 7-11 is the morning hour,
+// 1-6 is the afternoon hour (+12), 12 is noon.
+function dayHour(h) {
+  if (h === 12) return 12;
+  return h <= 6 ? h + 12 : h;
+}
+
 const NONE = { due_at: null, kind: null };
 
 export function parseWhen(text, now) {
@@ -104,7 +111,7 @@ export function parseWhen(text, now) {
     }
   }
   if (days !== null) {
-    const fixed = c && !c.ambiguous ? c : null; // "tomorrow at 7" does not say which 7: keep the date, not a guessed hour
+    const fixed = c && c.ambiguous ? { h: dayHour(c.h), min: c.min } : c; // "tomorrow at 7" does not say which 7: dayHour picks one
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days, fixed ? fixed.h : 9, fixed ? fixed.min : 0, 0, 0);
     return { due_at: d.toISOString(), kind: fixed ? 'clock' : 'date' };
   }

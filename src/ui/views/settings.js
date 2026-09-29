@@ -66,6 +66,8 @@ export default async function renderSettings(root, ctx) {
     keyInput.placeholder = has ? 'Saved on this device. Type to replace it.' : 'Paste your key';
     if (has) {
       keyHint.textContent = 'A key is saved on this device for this provider. It is sent only to this provider\'s address. Use a key with a spending limit.';
+    } else if (other && p === 'openai') {
+      keyHint.textContent = 'The saved key was entered for a different provider or address and is not used here. A key is optional for a model on your own computer. Saving with this provider removes the old key.';
     } else if (other) {
       keyHint.textContent = `The saved key was entered for a different provider or address and is not used here. Enter a key for ${providerLabel(p)}. Saving with this provider removes the old key.`;
     } else if (p === 'openai') {
@@ -111,9 +113,18 @@ export default async function renderSettings(root, ctx) {
     if (typed) {
       store.setKey(typed, binding);
       keyInput.value = '';
-    } else if (binding && store.reconcileKey(binding) === 'removed') {
-      // A key saved for another provider or address is never sent here: it was removed; ask for a new one.
-      note = ` Enter a key for ${providerLabel(s['ai.provider'])}. The key saved for another provider was removed.`;
+    } else if (binding) {
+      const before = store.getKeyBinding();
+      if (store.reconcileKey(binding) === 'removed') {
+        // A key saved for another provider or address is never sent here: it was removed.
+        const removed = before?.provider === binding.provider
+          ? 'The key saved for the previous address was removed.'
+          : 'The key saved for another provider was removed.';
+        // The OpenAI-compatible provider works without a key; Anthropic does not.
+        note = ` ${removed} ${s['ai.provider'] === 'openai' ? 'No key saved; add one if your server needs it.' : `Enter a key for ${providerLabel(s['ai.provider'])}.`}`;
+      } else if (s['ai.provider'] === 'openai' && !store.hasKeyFor(binding)) {
+        note = ' No key saved; add one if your server needs it.';
+      }
     }
     refreshAi();
     const key = binding ? store.getKeyFor(binding) : null;
@@ -137,7 +148,7 @@ export default async function renderSettings(root, ctx) {
     // Only a key typed just now, or one saved for exactly this provider and address, is ever sent.
     const p = resolveProvider(s, store, { fetch: globalThis.fetch.bind(globalThis), now: ctx.now, typedKey: typed });
     if (!p) {
-      aiStatus.textContent = !typed && binding && store.keyIsForOther(binding)
+      aiStatus.textContent = !typed && binding && s['ai.provider'] === 'anthropic' && store.keyIsForOther(binding)
         ? `Enter a key for ${providerLabel(s['ai.provider'])}.`
         : whatIsMissing(s, typed || (binding ? store.getKeyFor(binding) : null));
       return;

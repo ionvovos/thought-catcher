@@ -119,13 +119,13 @@ test('sw install: caches every shell file, then skipWaiting', async () => {
   const { done } = fire(listeners, 'install');
   await done;
   assert.equal(log.skipWaiting, 1);
-  assert.equal(stores.get('tc-v1').size, shell.length);
+  assert.equal(stores.get('tc-v2').size, shell.length);
 });
 
 test('sw activate: deletes old shell caches but keeps the current, tc-cdn and transformers-cache', async () => {
-  const { listeners, stores, log } = loadSw({ cachesInit: { 'tc-v0': {}, 'tc-v1': {}, 'tc-cdn': {}, 'transformers-cache': {}, other: {} } });
+  const { listeners, stores, log } = loadSw({ cachesInit: { 'tc-v0': {}, 'tc-v1': {}, 'tc-v2': {}, 'tc-cdn': {}, 'transformers-cache': {}, other: {} } });
   await fire(listeners, 'activate').done;
-  assert.deepEqual([...stores.keys()].sort(), ['tc-cdn', 'tc-v1', 'transformers-cache']);
+  assert.deepEqual([...stores.keys()].sort(), ['tc-cdn', 'tc-v2', 'transformers-cache']);
   assert.equal(log.claim, 1);
 });
 

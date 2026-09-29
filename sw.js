@@ -1,6 +1,6 @@
 // Service worker: makes the app open offline. Lives at the site root so its scope is the whole app.
 // Bump VERSION on every release: the old shell cache is deleted on activate and the new files are fetched fresh.
-const VERSION = 'tc-v1';
+const VERSION = 'tc-v2';
 const CDN_CACHE = 'tc-cdn'; // pinned, immutable files from cdn.jsdelivr.net (speech model runtime); survives releases
 const KEEP = new Set([VERSION, CDN_CACHE, 'transformers-cache']);
 

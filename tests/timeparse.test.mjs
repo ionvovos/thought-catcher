@@ -66,6 +66,18 @@ test('G4: an hour with no am/pm is the next such hour today; tonight means pm; n
   const late = new Date(2026, 8, 29, 22, 30, 0);
   assert.deepEqual(parseWhen('at 7', late), { due_at: null, kind: null });                        // both 7s have passed today
   assert.deepEqual(parseWhen('tonight at 7', late), { due_at: null, kind: null });
-  assert.deepEqual(parseWhen('tomorrow at 7', NOW), { due_at: local(8, 30, 9), kind: 'date' });   // which 7 is not stated: keep the date only
+  assert.deepEqual(parseWhen('tomorrow', NOW), { due_at: local(8, 30, 9), kind: 'date' });         // no hour: 09:00 default
+  assert.deepEqual(parseWhen('tomorrow at 13:30', NOW), { due_at: local(8, 30, 13, 30), kind: 'clock' });
   assert.equal(scanWhen('call the dentist at 7').hasClock, true);
+});
+
+test('an unmarked hour on a named day: 7-11 morning, 1-6 afternoon, 12 noon', () => {
+  const at = (text) => parseWhen(text, NOW);
+  assert.deepEqual(at('tomorrow at 7'), { due_at: local(8, 30, 7), kind: 'clock' });
+  assert.deepEqual(at('at 3 tomorrow'), { due_at: local(8, 30, 15), kind: 'clock' });
+  assert.deepEqual(at('at 7 on friday'), { due_at: local(9, 2, 7), kind: 'clock' });
+  assert.deepEqual(at('tomorrow at 11'), { due_at: local(8, 30, 11), kind: 'clock' });
+  assert.deepEqual(at('tomorrow at 6'), { due_at: local(8, 30, 18), kind: 'clock' });
+  assert.deepEqual(at('tomorrow at 12'), { due_at: local(8, 30, 12), kind: 'clock' });
+  assert.deepEqual(at('tomorrow at 7:30'), { due_at: local(8, 30, 7, 30), kind: 'clock' });
 });
