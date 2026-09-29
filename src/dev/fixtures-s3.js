@@ -5,6 +5,7 @@ import { el } from '../ui/dom.js';
 import { createMemoryStore } from '../storage/memory.js';
 import { createSettingsApi, DEFAULTS } from '../storage/settings.js';
 import { newThought } from '../core/model.js';
+import { AiError } from '../core/ai/http.js';
 
 // Tue 29 Sep 2026, 14:30 local: the clock every fixture runs on.
 export const NOW = new Date(2026, 8, 29, 14, 30);
@@ -84,8 +85,8 @@ export function makeBrain(status = STATUS.ready, over = {}) {
     async related() { return []; },
     async topics() { return []; },
     async classify(text) { rec('classify', text); return { text, type: 'idea', alt_type: null, confidence: 0.9, title: text.slice(0, 60), tags: [], due_at: null, by: 'device', question: null, best_guess: false }; },
-    async expand() { rec('expand'); throw Object.assign(new Error('unavailable'), { kind: 'unavailable' }); },
-    async plan() { rec('plan'); throw Object.assign(new Error('unavailable'), { kind: 'unavailable' }); },
+    async expand() { rec('expand'); throw new AiError('unavailable'); },
+    async plan() { rec('plan'); throw new AiError('unavailable'); },
     async merge() {},
     ...over,
   });
@@ -144,12 +145,64 @@ export async function libraryFixture(root, o = {}) {
   return { ctx, sheet, handle };
 }
 
+// ---- detail --------------------------------------------------------------------------------------------------------
+
+export const EXPANSION = {
+  next_steps: ["Check the gym's opening hours before 8:00", 'Pick three 35-minute routines, one per day', 'Block Mon, Wed, Fri 7:15 in the calendar', 'Review after two weeks: kept all six?'],
+  questions: ['What makes two long sessions hard to keep?', 'Which days are free before work?', 'How will I know it is working?'],
+  outline: ['Why three short sessions', 'The weekly schedule', 'What to drop if a week goes wrong'],
+  generated_at: NOW.toISOString(), by: 'device', model: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', done_steps: [0],
+};
+
+const TOPIC_IDS = ['i1', 't3', 'j1', 'j2', 'i6'];
+
+export async function detailFixture(root, o = {}) {
+  const { renderThought } = await import('../ui/detail/index.js');
+  const ctx = await makeCtx(o.ctx);
+  await renderThought(o.id ?? 'i1', root, ctx);
+  await settle();
+  if (o.act) { await o.act(root, ctx); await settle(); }
+  return { ctx };
+}
+
+const relatedBrain = {
+  async related() { return [{ id: 't3', score: 0.7, title: 'Renew gym membership', type: 'task' }, { id: 'j2', score: 0.6, title: 'Slept badly', type: 'journal' }, { id: 'j1', score: 0.5, title: 'Good run', type: 'journal' }]; },
+  async topics() { return [{ label: 'fitness', ids: TOPIC_IDS }]; },
+};
+
+const withExpansion = () => sampleThoughts().map((t) => (t.id === 'i1' ? { ...t, expansion: EXPANSION } : t));
+const rulesThoughts = () => sampleThoughts().map((t) => (t.id === 't3' ? { ...t, sort: { ...t.sort, by: 'rules' } } : t));
+const click = (root, sel) => root.querySelector(sel).click();
+
 export const FIXTURES = {
   'library-half': (root) => libraryFixture(root),
   'library-full-search': (root) => libraryFixture(root, { full: true, query: 'gym' }),
   'library-empty': (root) => libraryFixture(root, { ctx: { thoughts: [] } }),
   'library-search-empty': (root) => libraryFixture(root, { full: true, query: 'passport' }),
 };
+
+Object.assign(FIXTURES, {
+  'thought-detail': (root) => detailFixture(root, { id: 'i1', ctx: { thoughts: withExpansion(), brain: relatedBrain } }),
+  'thought-detail-rules': (root) => detailFixture(root, { id: 't3', ctx: { thoughts: rulesThoughts(), status: STATUS.rules } }),
+  'thought-detail-needs-ai': (root) => detailFixture(root, {
+    id: 't3', ctx: { thoughts: rulesThoughts(), status: STATUS.rules }, act: (r) => click(r, '.needs-ai'),
+  }),
+  'thought-detail-plan': (root) => detailFixture(root, {
+    id: 't3', ctx: { thoughts: sampleThoughts().map((t) => (t.id === 't3' ? { ...t, plan: { steps: [{ text: 'Ask about the off-peak price', done: true }, { text: 'Compare with the pay-as-you-go pass', done: false }, { text: 'Renew before 12 October', done: false }], generated_at: NOW.toISOString(), by: 'key', model: 'claude-haiku-4-5-20251001' } } : t)) },
+  }),
+  'thought-detail-loading': (root) => detailFixture(root, {
+    id: 'i1', ctx: { thoughts: withExpansion(), brain: { ...relatedBrain, expand: () => new Promise(() => {}) } }, act: (r) => click(r, '.mini-btn'),
+  }),
+  'thought-detail-error': (root) => detailFixture(root, {
+    id: 'i1', ctx: { thoughts: withExpansion(), brain: { ...relatedBrain, expand: async () => { throw new AiError('malformed'); } } }, act: (r) => click(r, '.mini-btn'),
+  }),
+  'thought-detail-type-menu': (root) => detailFixture(root, { id: 'i1', ctx: { thoughts: withExpansion(), brain: relatedBrain }, act: (r) => click(r, '.badge--btn') }),
+  'thought-detail-edit': (root) => detailFixture(root, {
+    id: 'i1', ctx: { thoughts: withExpansion(), brain: relatedBrain }, act: (r) => { click(r, '[aria-label="More"]'); click(r, '.amenu__item'); },
+  }),
+  'thought-detail-delete': (root) => detailFixture(root, { id: 't3', ctx: { thoughts: rulesThoughts(), status: STATUS.rules }, act: (r) => click(r, '.actionbar .btn--secondary') }),
+  'thought-detail-missing': (root) => detailFixture(root, { id: 'nope' }),
+});
 
 // Adds a screen module's fixtures. Screens append here as they land.
 export function addFixtures(map) { Object.assign(FIXTURES, map); }

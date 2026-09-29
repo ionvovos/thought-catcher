@@ -1,5 +1,5 @@
 // Library view-model (X4) and small formatters shared by the S3 screens. Pure: no DOM, `now` is always a parameter.
-import { TYPES } from '../../core/model.js';
+import { TYPES, contentWords } from '../../core/model.js';
 import { searchThoughts } from '../../core/search.js';
 
 // Order of the groups in the library (design: reminders and tasks first, they need action).
@@ -110,3 +110,26 @@ export const countsOf = (thoughts) => {
   for (const ty of TYPES) c[ty] = thoughts.filter((t) => t.type === ty).length;
   return c;
 };
+
+// "Sat 26 Sep": a calendar date in the design's format.
+export const dateLabel = (iso) => dayMonth(new Date(iso));
+export const SOURCE_LABEL = Object.freeze({ voice: 'Spoken', typed: 'Typed', import: 'Imported' });
+
+// "Topic: 5 thoughts in 3 weeks" for a group of thoughts (the span of their capture dates, at least one week).
+export function topicLine(members) {
+  const ms = members.map((t) => Date.parse(t.created_at)).filter(Number.isFinite);
+  const weeks = ms.length ? Math.max(1, Math.round((Math.max(...ms) - Math.min(...ms)) / (7 * DAY_MS))) : 1;
+  return `Topic: ${members.length} thoughts in ${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
+}
+
+// One short reason why b relates to a: a shared tag, else a shared content word, else "Similar meaning".
+export function relatedReason(a, b) {
+  const tag = (a.tags ?? []).find((g) => (b.tags ?? []).includes(g));
+  if (tag) return `Same ${tag}`;
+  const bw = new Set(contentWords(`${b.title} ${b.text}`));
+  const word = contentWords(`${a.title} ${a.text}`).find((w) => bw.has(w));
+  return word ? `Both mention ${word}` : 'Similar meaning';
+}
+
+// Whether a language step can run now: only the rules-only engine cannot (architecture 2.2 Status.engine).
+export const aiAvailable = (status) => Boolean(status) && status.engine !== 'rules';
