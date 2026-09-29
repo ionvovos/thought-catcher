@@ -1,5 +1,5 @@
 // Library view-model (X4) and small formatters shared by the S3 screens. Pure: no DOM, `now` is always a parameter.
-import { TYPES, contentWords } from '../../core/model.js';
+import { TYPES, contentWords, captureCore } from '../../core/model.js';
 import { searchThoughts } from '../../core/search.js';
 
 // Order of the groups in the library (design: reminders and tasks first, they need action).
@@ -51,14 +51,15 @@ export function whenLabel(t, now) {
 }
 
 // Two-line snippet: the body when it says more than the title, else nothing.
-export function snippetOf(t, max = 160) {
+// The body under a title. Empty when the body only repeats the title: the same text, or the title plus capture wording that
+// makeTitle removed ("Remind me on Friday at 10 to renew the car insurance"). Any other sentence is content and stays. The detail
+// passes keepWording so it never hides more than an exact repeat (build gate G9).
+export function snippetOf(t, max = 160, { keepWording = false } = {}) {
   const text = String(t.text ?? '').replace(/\s+/g, ' ').trim();
   const title = String(t.title ?? '').trim();
   if (!text || text.toLowerCase() === title.toLowerCase()) return '';
-  // Body that only repeats the title plus its capture wording ("Remind me on Friday at 10 to renew the car insurance")
-  // adds nothing under the title (build gate G4).
-  const at = text.toLowerCase().indexOf(title.toLowerCase());
-  if (title.length >= 8 && at >= 0 && text.length - title.length < 40) return '';
+  const same = (a, b) => a.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim() === b.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  if (!keepWording && title && same(captureCore(text), title)) return '';
   return text.length > max ? `${text.slice(0, max).trim()}…` : text;
 }
 

@@ -374,7 +374,7 @@ export async function renderThought(id, root, ctx) {
       body.push(editForm());
     } else {
       body.push(el('div', { class: 'd-badges' }, badges), el('h1', { class: 'd-title' }, current.title), meta());
-      const extra = snippetOf(current, 4000);
+      const extra = snippetOf(current, 4000, { keepWording: true });
       if (extra) body.push(el('p', { class: 'd-body' }, extra));
       if (aiError) body.push(el('p', { class: 'field-error', role: 'alert' }, [icon('info'), aiError]));
       if (current.type === 'idea') body.push(...expandSection());

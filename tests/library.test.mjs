@@ -140,3 +140,18 @@ test('G5: a reminder beyond tomorrow shows its clock; a task does not', () => {
   assert.equal(whenLabelG5({ type: 'reminder', due_at: iso, done: false, created_at: iso }, now).text, 'Fri 2 Oct 10:00');
   assert.equal(whenLabelG5({ type: 'task', due_at: iso, created_at: iso }, now).text, 'Due 2 Oct');
 });
+
+import { snippetOf as snippetG9 } from '../src/ui/library/view.js';
+import { sortByRules as sortG9 } from '../src/core/sorter.js';
+test('G9: a second sentence is never hidden; only a body that repeats the title with capture wording is', () => {
+  const now = new Date(2026, 8, 29, 10, 0);
+  const t = (text) => ({ text, title: sortG9(text, now).title });
+  for (const text of ['Pay the water bill. It is 84 euros.', 'Call Anna. She moved to Lyon last week.', 'Pay the electricity bill. It is 84 euros.', 'Call the dentist. Ask about the crown too.', 'Renew passport. Photos first!', 'Buy milk. The oat one, not soy.']) {
+    assert.ok(snippetG9(t(text)).length > 0, `library hides: ${text}`);
+    assert.ok(snippetG9(t(text), 4000, { keepWording: true }).length > 0, `detail hides: ${text}`);
+  }
+  assert.equal(snippetG9(t('Remind me on Friday at 10 to renew the car insurance')), '');
+  assert.equal(snippetG9(t('I need to call the dentist tomorrow at 9')), '');
+  assert.equal(snippetG9(t('Buy milk')), '');
+  assert.ok(snippetG9(t('Remind me on Friday at 10 to renew the car insurance'), 4000, { keepWording: true }).length > 0, 'the detail shows what was said');
+});

@@ -62,6 +62,20 @@ function firstSentence(text) {
   return m ? m[0] : text;
 }
 
+// The text with its capture wording removed: leading label, "remind me ... to", filler lead-ins, and date and time phrases.
+// A stored body that equals the title once this is applied only repeats the title (build gate G4, G9).
+export function captureCore(text) {
+  let s = String(text ?? '').trim();
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const re of [LABEL, REMIND_LEAD, ...FILLERS.map((f) => new RegExp(`^${f}(?=\\s|$)\\s*`, 'i'))]) {
+      const next = s.replace(re, '').replace(/^[\s,:;-]+/, '');
+      if (next !== s) { s = next; changed = true; }
+    }
+  }
+  return stripWhenPhrases(s).replace(/[.,;:!?\s]+$/, '').trim();
+}
+
 // stripWhen: true when the thought has a due time, so the date and time words are on its chip and not repeated in the title.
 export function makeTitle(text, { stripWhen = false } = {}) {
   const trimmed = String(text ?? '').trim();
