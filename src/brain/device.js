@@ -3,6 +3,19 @@
 import { LLM_MODEL } from './core.js';
 
 export const WEBLLM_URL = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm';
+// The weights and the model library are pinned to commits, not to `main`: the library is a WebAssembly file that runs in the
+// worker with the app's origin, so a change on the publisher's branch must not reach a download unreviewed (security review F2).
+// The WebLLM 0.2.85 entry for this model, with `model` and `model_lib` replaced by commit URLs (both verified 200).
+export const MODEL_APP_CONFIG = Object.freeze({
+  model_list: Object.freeze([Object.freeze({
+    model: 'https://huggingface.co/mlc-ai/Qwen2.5-1.5B-Instruct-q4f16_1-MLC/resolve/9bd564b064631febf14deadcac492efb761d60c3/',
+    model_id: LLM_MODEL,
+    model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/025bcaf3780fa8254f5e5efd3bfea0a5397248f4/web-llm-models/v0_2_84/base/Qwen2-1.5B-Instruct-q4f16_1_cs1k-webgpu.wasm',
+    vram_required_MB: 1629.75,
+    low_resource_required: true,
+    overrides: Object.freeze({ context_window_size: 4096 }),
+  })]),
+});
 export const WATCHDOG_MS = 30000;
 export const MIN_DEVICE_MEMORY_GB = 4;
 
@@ -58,6 +71,7 @@ export function createDeviceHost(deps = {}) {
             worker.addEventListener?.('error', (e) => abort?.(codeError('load-failed', String(e?.message ?? 'The assistant could not start.'))));
             worker.addEventListener?.('message', (e) => { if (e?.data?.kind === 'worker-error') abort?.(codeError('load-failed', e.data.message)); });
             const created = await lib.CreateWebWorkerMLCEngine(worker, model, {
+              appConfig: MODEL_APP_CONFIG,
               initProgressCallback: (p) => { arm(); onProgress?.(Math.round((p?.progress ?? 0) * 100), p?.text ?? ''); },
             });
             engine = created;
