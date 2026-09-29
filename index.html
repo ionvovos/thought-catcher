@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Catch a thought by voice or typing. Sorted for you. Your data stays on your device.">
+  <title>Thought Catcher</title>
+  <link rel="stylesheet" href="./css/app.css">
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1 class="app-title">Thought Catcher</h1>
+    <nav class="app-nav" aria-label="Main">
+      <a href="#/capture" data-route="capture">Capture</a>
+      <a href="#/inbox" data-route="inbox">Inbox</a>
+      <a href="#/review" data-route="review">Review</a>
+      <a href="#/settings" data-route="settings">Settings</a>
+      <a href="#/about" data-route="about">About</a>
+    </nav>
+  </header>
+  <div id="banner" class="banner" role="status" hidden></div>
+  <main id="app" class="app-main" tabindex="-1"></main>
+  <noscript><p class="banner">Thought Catcher needs JavaScript to run.</p></noscript>
+</body>
+</html>
