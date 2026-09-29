@@ -11,17 +11,32 @@ export class AiError extends Error {
   }
 }
 
-function providerMessage(body) {
+// Any credential the request carried is masked before provider text is kept (security review F8): a provider that echoed the
+// key in a 429 or 5xx body must not make the key appear on screen.
+function secretsIn(headers) {
+  const out = [];
+  for (const [k, v] of Object.entries(headers ?? {})) {
+    if (!/^(authorization|x-api-key|api-key)$/i.test(k)) continue;
+    const raw = String(v ?? '').replace(/^Bearer\s+/i, '').trim();
+    if (raw.length >= 6) out.push(raw);
+  }
+  return out;
+}
+
+export const maskSecrets = (text, secrets) => secrets.reduce((t, s) => t.split(s).join('[key]'), String(text ?? ''));
+
+function providerMessage(body, secrets = []) {
   try {
     const data = JSON.parse(body);
     const m = data?.error?.message ?? data?.message ?? data?.error;
-    if (typeof m === 'string' && m.trim()) return m.trim().slice(0, 200);
+    if (typeof m === 'string' && m.trim()) return maskSecrets(m.trim(), secrets).slice(0, 200);
   } catch { /* body was not JSON */ }
-  return String(body ?? '').trim().slice(0, 200);
+  return maskSecrets(String(body ?? '').trim(), secrets).slice(0, 200);
 }
 
 // POSTs JSON and returns the parsed JSON body. Throws AiError with a kind. The timer covers connect and body read.
 export async function postJson(fetchFn, url, { headers, body, timeoutMs }) {
+  const secrets = secretsIn(headers);
   const controller = new AbortController();
   let timedOut = false;
   let timer;
@@ -52,10 +67,10 @@ export async function postJson(fetchFn, url, { headers, body, timeoutMs }) {
       throw new AiError('auth', 'Key rejected.', { status: res.status });
     }
     if (res.status === 429) {
-      throw new AiError('rate', providerMessage(text) || 'Rate limit reached.', { status: 429 });
+      throw new AiError('rate', providerMessage(text, secrets) || 'Rate limit reached.', { status: 429 });
     }
     if (!res.ok) {
-      throw new AiError('provider', providerMessage(text) || `The provider answered ${res.status}.`, { status: res.status });
+      throw new AiError('provider', providerMessage(text, secrets) || `The provider answered ${res.status}.`, { status: res.status });
     }
     try {
       return JSON.parse(text);
